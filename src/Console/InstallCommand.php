@@ -197,9 +197,35 @@ class InstallCommand extends Command
         }
 
         $envPath = base_path('.env');
-        if (File::exists($envPath)) {
-            File::append($envPath, PHP_EOL . implode(PHP_EOL, $lines) . PHP_EOL);
+
+        // Fall back to copying .env.example if .env doesn't exist yet
+        if (!File::exists($envPath)) {
+            $example = base_path('.env.example');
+            if (File::exists($example)) {
+                File::copy($example, $envPath);
+            } else {
+                File::put($envPath, '');
+            }
         }
+
+        $existing = File::get($envPath);
+
+        foreach ($lines as $line) {
+            if (empty($line) || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            $key = explode('=', $line)[0];
+
+            // Update existing key in-place, or append if not found
+            if (str_contains($existing, $key . '=')) {
+                $existing = preg_replace('/^' . preg_quote($key, '/') . '=.*/m', $line, $existing);
+            } else {
+                $existing .= PHP_EOL . $line;
+            }
+        }
+
+        File::put($envPath, $existing);
     }
 
     private function addAuthRedirects(): void

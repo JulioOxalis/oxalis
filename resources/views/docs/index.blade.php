@@ -204,6 +204,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="nav-section">Getting Started</div>
     <a class="nav-link" href="#installation">Installation</a>
     <a class="nav-link" href="#configuration">Configuration</a>
+    <a class="nav-link" href="#uninstalling">Uninstalling</a>
     <a class="nav-link" href="#env-reference">.env Reference</a>
 
     <div class="nav-section">Auth Methods</div>
@@ -301,6 +302,34 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>php artisan vendor:publish --tag=oxalis-config</code></pre></div>
     <p>This creates <code>config/oxalis.php</code> in your application.</p>
+  </section>
+
+  <!-- UNINSTALLING -->
+  <section id="uninstalling">
+    <h2>Uninstalling</h2>
+    <p>Run the removal wizard first, then remove the package from Composer:</p>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Run the removal wizard</strong>
+        <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+        <pre class="language-bash"><code>php artisan oxalis:remove</code></pre></div>
+        The wizard will:
+        <ul style="margin-top:.5rem;padding-left:1.25rem">
+          <li>Remove all <code>OXALIS_*</code> variables from <code>.env</code></li>
+          <li>Delete <code>config/oxalis.php</code></li>
+          <li>Ask whether to delete published views in <code>resources/views/vendor/oxalis/</code></li>
+          <li>Remove the Oxalis redirect block from <code>routes/web.php</code></li>
+          <li>Ask whether to drop the database tables (deletes all auth data — use with caution)</li>
+        </ul>
+      </div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Remove the package</strong>
+        <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+        <pre class="language-bash"><code>composer remove julio/oxalis</code></pre></div>
+      </div></div>
+    </div>
+    <div class="alert-box alert-warn">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div>Dropping tables permanently deletes all passkeys, TOTP secrets, OTP challenges, magic links, and auth event logs. Back up your database first if you need to keep that data.</div>
+    </div>
   </section>
 
   <!-- ENV REFERENCE -->

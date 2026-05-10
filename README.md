@@ -38,6 +38,15 @@ php artisan oxalis:install
 
 The interactive wizard configures everything — auth methods, social credentials, redirects, and runs migrations automatically.
 
+## Uninstalling
+
+```bash
+php artisan oxalis:remove
+composer remove julio/oxalis
+```
+
+`oxalis:remove` cleans up `.env` variables, config, published views, route redirects, and optionally drops the database tables.
+
 ---
 
 ## Quick start

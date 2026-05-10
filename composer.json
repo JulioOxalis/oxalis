@@ -1,0 +1,30 @@
+{
+    "name": "julio/oxalis",
+    "description": "Passkey-first authentication package for Laravel 12",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^12.0",
+        "web-auth/webauthn-framework": "^5.2",
+        "pragmarx/google2fa": "^8.0",
+        "laravel/socialite": "^5.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Oxalis\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Oxalis\\OxalisServiceProvider"],
+            "aliases": {
+                "Oxalis": "Oxalis\\Facades\\Oxalis"
+            }
+        }
+    },
+    "minimum-stability": "stable"
+}

@@ -263,7 +263,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <h2>Requirements</h2>
     <ul style="padding-left:1.25rem">
       <li>PHP 8.2 or higher</li>
-      <li>Laravel 11 or 12</li>
+      <li>Laravel 11+</li>
       <li>A relational database (MySQL, PostgreSQL, or SQLite) — <strong>even if your app's default is MongoDB</strong>, set <code>OXALIS_DB_CONNECTION</code> to a separate SQL connection</li>
       <li>Mail configured for OTP / magic-link / notifications</li>
     </ul>

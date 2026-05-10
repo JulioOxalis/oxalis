@@ -24,7 +24,7 @@ Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic 
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11 or 12
+- Laravel 11+
 - MySQL / PostgreSQL / SQLite (for Oxalis tables)
 
 ---

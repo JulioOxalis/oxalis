@@ -133,6 +133,8 @@ class InstallCommand extends Command
         $this->comment('Add to any route: ->middleware("oxalis") to require login');
         $this->comment('Add to any route: ->middleware("oxalis.step-up") to require re-verification');
         $this->newLine();
+        $this->callSilent('optimize:clear');
+        $this->line('  <fg=green>✓</> Application cache cleared');
 
         return self::SUCCESS;
     }

@@ -76,14 +76,7 @@ class InstallCommand extends Command
             }
         }
 
-        // ── 5. Replace Laravel default auth ──────────────────────────────────
-        $this->newLine();
-        $replaceAuth = $this->confirm(
-            'Add redirects for /login and /register → oxalis routes?',
-            true,
-        );
-
-        // ── 6. User model stub ────────────────────────────────────────────────
+        // ── 5. User model stub ────────────────────────────────────────────────
         $publishUser = $this->confirm(
             'Publish User model stub (adds HasPasskeys trait to app/Models/User.php)?',
             false,
@@ -108,11 +101,9 @@ class InstallCommand extends Command
         $this->appendEnv($enabledKeys, $smartDispatch, $googleEnabled, $githubEnabled, $googleId, $googleSecret, $githubId, $githubSecret);
         $this->line('  <fg=green>✓</> .env updated');
 
-        // ── Replace default auth ──────────────────────────────────────────────
-        if ($replaceAuth) {
-            $this->addAuthRedirects();
-            $this->line('  <fg=green>✓</> Default auth routes redirected to oxalis');
-        }
+        // ── Replace default auth routes (always automatic) ───────────────────
+        $this->addAuthRedirects();
+        $this->line('  <fg=green>✓</> /login and /register now redirect to oxalis');
 
         // ── Migrate ───────────────────────────────────────────────────────────
         if ($this->confirm('Run php artisan migrate now?', true)) {
@@ -235,28 +226,34 @@ class InstallCommand extends Command
             return;
         }
 
-        $shim = <<<'PHP'
-
-
-// oxalis — redirect Laravel default auth URLs to oxalis
-Route::redirect('/login',          '/oxalis/login')->name('login');
-Route::redirect('/register',       '/oxalis/register');
-Route::redirect('/password/reset', '/oxalis/forgot-password');
-PHP;
-
         $content = File::get($webRoutes);
-        if (!str_contains($content, 'oxalis — redirect Laravel default auth URLs')) {
-            File::append($webRoutes, $shim . PHP_EOL);
-        }
 
-        // Comment out require of auth.php in web.php if it exists (Breeze / Livewire starters)
-        // We comment the require line rather than touching auth.php to avoid block-comment nesting errors
-        $webContent = File::get($webRoutes);
-        $webContent = preg_replace(
+        // 1. Comment out: require __DIR__.'/auth.php';  (Breeze / Livewire starters)
+        $content = preg_replace(
             '/^(require\s+__DIR__\s*\.\s*[\'"]\/auth\.php[\'"]\s*;)/m',
             '// [oxalis] $1',
-            $webContent
+            $content
         );
-        File::put($webRoutes, $webContent);
+
+        // 2. Comment out: Auth::routes();  (Laravel UI / older starters)
+        $content = preg_replace(
+            '/^(\s*Auth::routes\s*\(.*?\)\s*;)/m',
+            '// [oxalis] $1',
+            $content
+        );
+
+        // 3. Append the oxalis redirect shim once
+        if (!str_contains($content, 'oxalis — redirect /login and /register')) {
+            $content .= PHP_EOL . implode(PHP_EOL, [
+                '',
+                '// oxalis — redirect /login and /register to oxalis routes',
+                "Route::redirect('/login',          '/oxalis/login')->name('login');",
+                "Route::redirect('/register',       '/oxalis/register')->name('register');",
+                "Route::redirect('/password/reset', '/oxalis/forgot-password');",
+                '',
+            ]);
+        }
+
+        File::put($webRoutes, $content);
     }
 }

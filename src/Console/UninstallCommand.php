@@ -136,9 +136,14 @@ class UninstallCommand extends Command
             $content
         );
 
-        // Restore the require of auth.php if we commented it out
+        // Restore require of auth.php and Auth::routes() if we commented them out
         $content = preg_replace(
             '/^\/\/ \[oxalis\] (require\s+__DIR__.*auth\.php.*)/m',
+            '$1',
+            $content
+        );
+        $content = preg_replace(
+            '/^\/\/ \[oxalis\] (\s*Auth::routes.*)/m',
             '$1',
             $content
         );

@@ -204,6 +204,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="nav-section">Getting Started</div>
     <a class="nav-link" href="#installation">Installation</a>
     <a class="nav-link" href="#configuration">Configuration</a>
+    <a class="nav-link" href="#updating">Updating</a>
     <a class="nav-link" href="#uninstalling">Uninstalling</a>
     <a class="nav-link" href="#env-reference">.env Reference</a>
 
@@ -302,6 +303,19 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>php artisan vendor:publish --tag=oxalis-config</code></pre></div>
     <p>This creates <code>config/oxalis.php</code> in your application.</p>
+  </section>
+
+  <!-- UPDATING -->
+  <section id="updating">
+    <h2>Updating</h2>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>composer update julio/oxalis
+php artisan migrate</code></pre></div>
+    <p>Always run <code>php artisan migrate</code> after updating — new releases may include additional migrations.</p>
+    <div class="alert-box alert-tip">
+      <i class="bi bi-lightbulb-fill"></i>
+      <div>If you published views with <code>vendor:publish --tag=oxalis-views</code>, re-publish after a major update to get the latest UI: <code>php artisan vendor:publish --tag=oxalis-views --force</code></div>
+    </div>
   </section>
 
   <!-- UNINSTALLING -->

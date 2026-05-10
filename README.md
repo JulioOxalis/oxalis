@@ -38,6 +38,15 @@ php artisan oxalis:install
 
 The interactive wizard configures everything — auth methods, social credentials, redirects, and runs migrations automatically.
 
+## Updating
+
+```bash
+composer update julio/oxalis
+php artisan migrate
+```
+
+Run `migrate` after updating in case new migrations were added in the release.
+
 ## Uninstalling
 
 ```bash

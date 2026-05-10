@@ -129,10 +129,17 @@ class UninstallCommand extends Command
 
         $content = File::get($path);
 
-        // Remove the oxalis redirect block we added during install
+        // Remove the oxalis redirect block added during install
         $content = preg_replace(
-            '/\n*\/\/ oxalis.*?oxalis\/forgot-password\'\);\n?/s',
-            '',
+            '/\n*\/\/ oxalis[^\n]*\n(?:Route::redirect[^\n]*\n){1,5}/s',
+            "\n",
+            $content
+        );
+
+        // Restore the require of auth.php if we commented it out
+        $content = preg_replace(
+            '/^\/\/ \[oxalis\] (require\s+__DIR__.*auth\.php.*)/m',
+            '$1',
             $content
         );
 

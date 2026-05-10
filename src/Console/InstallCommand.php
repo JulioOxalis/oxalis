@@ -249,13 +249,14 @@ PHP;
             File::append($webRoutes, $shim . PHP_EOL);
         }
 
-        // Wrap routes/auth.php content in a block comment if it exists (Breeze / UI)
-        $authFile = base_path('routes/auth.php');
-        if (File::exists($authFile)) {
-            $existing = File::get($authFile);
-            if (!str_starts_with(ltrim($existing), '// [oxalis]')) {
-                File::put($authFile, '// [oxalis] Original routes commented out — using oxalis instead' . PHP_EOL . '/*' . PHP_EOL . $existing . PHP_EOL . '*/');
-            }
-        }
+        // Comment out require of auth.php in web.php if it exists (Breeze / Livewire starters)
+        // We comment the require line rather than touching auth.php to avoid block-comment nesting errors
+        $webContent = File::get($webRoutes);
+        $webContent = preg_replace(
+            '/^(require\s+__DIR__\s*\.\s*[\'"]\/auth\.php[\'"]\s*;)/m',
+            '// [oxalis] $1',
+            $webContent
+        );
+        File::put($webRoutes, $webContent);
     }
 }

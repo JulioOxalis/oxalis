@@ -54,14 +54,14 @@ document.getElementById('btn-enroll').addEventListener('click',async()=>{
 });
 function friendlyErr(e){
   const m=(e.message||'').toLowerCase();
+  if(e.name==='InvalidStateError'||m.includes('excludecredentials'))
+    return 'A passkey for this account already exists on this device. Use it to sign in, or add a passkey from a different device.';
   if(m.includes('timed out')||m.includes('not allowed')||m.includes('operation either'))
     return 'Passkey creation was cancelled or timed out. Please click "Create passkey" and complete the browser prompt without waiting.';
   if(m.includes('not supported')||m.includes('authenticatorselection'))
     return 'Your browser or device does not support passkeys. Try Chrome, Edge 114+, or Safari 16+.';
   if(m.includes('security')||m.includes('invalid domain'))
     return 'Security check failed — make sure you are visiting: '+window.location.origin+'/oxalis/passkeys/enroll';
-  if(m.includes('excludecredentials'))
-    return 'A passkey already exists for this account on this device.';
   return 'Could not create passkey ('+e.name+'). Please try again or use another sign-in method.';
 }
 function showErr(m){const e=document.getElementById('enroll-err');e.textContent=m;e.classList.remove('d-none');}

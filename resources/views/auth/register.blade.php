@@ -39,6 +39,16 @@
     <label for="email">Email address</label>
     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
   </div>
+  @if(config('oxalis.invites.required', false))
+  <div class="form-floating mb-3">
+    <input type="text" name="invite_code" id="invite_code"
+      class="form-control rounded-3 @error('invite_code') is-invalid @enderror"
+      placeholder="i" value="{{ old('invite_code') }}" autocomplete="off"
+      style="text-transform:uppercase;letter-spacing:.08em">
+    <label for="invite_code">Invite code</label>
+    @error('invite_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+  </div>
+  @endif
   <button class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2">
     Continue <i class="bi bi-arrow-right"></i>
   </button>

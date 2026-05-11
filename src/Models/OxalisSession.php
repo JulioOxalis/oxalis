@@ -19,7 +19,7 @@ class OxalisSession extends OxalisModel
         string $ip,
         string $userAgent,
         string $method,
-    ): array {
+    ): string {
         $token = Str::random(64);
 
         static::create([
@@ -40,7 +40,7 @@ class OxalisSession extends OxalisModel
         return static::where('token', hash('sha256', $token))->first();
     }
 
-    public function touch(): void
+    public function refreshActivity(): void
     {
         $this->update(['last_active_at' => now()]);
     }

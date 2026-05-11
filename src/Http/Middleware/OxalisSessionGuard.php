@@ -32,7 +32,7 @@ class OxalisSessionGuard
 
             // Refresh last active timestamp (throttled to once per minute)
             if (!$session->last_active_at || $session->last_active_at->diffInSeconds(now()) > 60) {
-                $session->touch();
+                $session->refreshActivity();
             }
         } catch (\Throwable) {
             // Sessions table missing — skip guard silently

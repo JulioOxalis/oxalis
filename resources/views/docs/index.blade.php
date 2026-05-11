@@ -234,7 +234,6 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
 
     <div class="nav-section">Analytics</div>
     <a class="nav-link" href="#app-stats">User Stats Dashboard</a>
-    <a class="nav-link" href="#adoption">Package Adoption</a>
   </nav>
 </aside>
 
@@ -760,29 +759,6 @@ AuthEvent::selectRaw('method, count(*) as total')
     ->get();</code></pre></div>
   </section>
 
-  <!-- ADOPTION -->
-  <section id="adoption">
-    <h2>Package Adoption Metrics</h2>
-    <p>Once published to <a href="https://packagist.org" target="_blank">Packagist.org</a>, download counts are tracked automatically.</p>
-    <h3>Check via Packagist API</h3>
-    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
-    <pre class="language-bash"><code>curl https://packagist.org/packages/julio/oxalis.json | jq '.package.downloads'</code></pre></div>
-    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
-    <pre class="language-json"><code>{
-  "total": 4821,
-  "monthly": 391,
-  "daily": 18
-}</code></pre></div>
-    <h3>Optional anonymous telemetry</h3>
-    <p>Oxalis supports an opt-in ping that reports <strong>zero user data</strong> — only package version, PHP/Laravel version, enabled methods, and a one-way hash of the app domain:</p>
-    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
-    <pre class="language-bash"><code>OXALIS_TELEMETRY=true
-OXALIS_TELEMETRY_ENDPOINT=https://stats.julio.dev/oxalis/ping</code></pre></div>
-    <div class="alert-box alert-info">
-      <i class="bi bi-info-circle-fill"></i>
-      <div>Telemetry is <strong>opt-in and off by default</strong>. No PII is ever sent — only aggregated feature metadata.</div>
-    </div>
-  </section>
 
 </div><!-- /.doc-content -->
 </main>

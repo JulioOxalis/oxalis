@@ -244,14 +244,15 @@ class InstallCommand extends Command
             $content
         );
 
-        // 3. Append the oxalis redirect shim once
+        // 3. Append the oxalis redirect shim once — uses OXALIS_PREFIX if set
         if (!str_contains($content, 'oxalis — redirect /login and /register')) {
+            $p = config('oxalis.routes.prefix', 'oxalis');
             $content .= PHP_EOL . implode(PHP_EOL, [
                 '',
                 '// oxalis — redirect /login and /register to oxalis routes',
-                "Route::redirect('/login',          '/oxalis/login')->name('login');",
-                "Route::redirect('/register',       '/oxalis/register')->name('register');",
-                "Route::redirect('/password/reset', '/oxalis/forgot-password');",
+                "Route::redirect('/login',          '/{$p}/login')->name('login');",
+                "Route::redirect('/register',       '/{$p}/register')->name('register');",
+                "Route::redirect('/password/reset', '/{$p}/forgot-password');",
                 '',
             ]);
         }

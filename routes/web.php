@@ -179,12 +179,11 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
 });
 
 // ── Replace default Laravel auth URLs ─────────────────────────────────────────
-// These run outside the oxalis prefix so /login and /register redirect to Oxalis.
-// The 'login' named route is what Laravel's auth middleware uses — overriding it
-// here means any unauthenticated redirect automatically goes to the Oxalis login.
+// Uses the configured prefix so custom prefixes work automatically.
 Route::middleware(config('oxalis.routes.middleware', ['web']))->group(function () {
-    Route::redirect('/login',          '/oxalis/login')->name('login');
-    Route::redirect('/register',       '/oxalis/register');
-    Route::redirect('/password/reset', '/oxalis/forgot-password');
-    Route::redirect('/logout',         '/oxalis/login');
+    $p = config('oxalis.routes.prefix', 'oxalis');
+    Route::redirect('/login',          "/{$p}/login")->name('login');
+    Route::redirect('/register',       "/{$p}/register");
+    Route::redirect('/password/reset', "/{$p}/forgot-password");
+    Route::redirect('/logout',         "/{$p}/login");
 });

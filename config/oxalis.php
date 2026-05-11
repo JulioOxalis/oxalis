@@ -81,11 +81,12 @@ return [
     ],
 
     // ── Routing ───────────────────────────────────────────────────────────────
+    // Change OXALIS_PREFIX to use a custom URL prefix, e.g. "auth" → /auth/login
     'routes' => [
-        'prefix'     => 'oxalis',
+        'prefix'     => env('OXALIS_PREFIX', 'oxalis'),
         'middleware' => ['web'],
-        'home'       => '/dashboard',
-        'login'      => '/oxalis/login',
+        'home'       => env('OXALIS_HOME', '/dashboard'),
+        'login'      => '/'.env('OXALIS_PREFIX', 'oxalis').'/login',
     ],
 
     // ── User model ────────────────────────────────────────────────────────────

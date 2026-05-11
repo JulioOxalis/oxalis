@@ -34,7 +34,7 @@
 <div class="text-center mb-4">
     <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}"
          alt="{{ config('app.name') }}"
-         style="height:48px;width:auto;object-fit:contain"
+         style="max-height:52px;max-width:220px;width:auto;object-fit:contain"
          onerror="this.style.display='none'">
 </div>
 @if(session('status'))

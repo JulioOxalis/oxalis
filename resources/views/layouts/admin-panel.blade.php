@@ -100,9 +100,10 @@
 <aside id="adm-side">
   <div class="adm-logo">
     <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
-         style="height:36px;width:auto;object-fit:contain;margin-bottom:.45rem;display:block"
-         onerror="this.style.display='none'">
-    <div class="brand">JULIO <span>OXALIS</span></div>
+         style="max-height:40px;max-width:150px;width:auto;object-fit:contain;display:block;margin-bottom:.35rem"
+         onerror="this.style.display='none'"
+         onload="var t=document.getElementById('adm-brand-text');if(t)t.style.display='none'">
+    <div class="brand" id="adm-brand-text">JULIO <span>OXALIS</span></div>
     <div class="sub">Admin panel</div>
   </div>
   <nav class="adm-nav">

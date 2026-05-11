@@ -34,7 +34,7 @@
 <div class="login-card">
   <div class="text-center mb-3">
     <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
-         style="height:52px;width:auto;object-fit:contain"
+         style="max-height:52px;max-width:200px;width:auto;object-fit:contain"
          onerror="this.style.display='none'">
   </div>
   <div class="login-icon"><i class="bi bi-shield-fill-lock"></i></div>

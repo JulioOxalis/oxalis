@@ -31,15 +31,40 @@ class PasskeyController extends Controller
 
     public function finishAuthentication(Request $request)
     {
+        // Per-account passkey lockout — track by credential_id
+        $credentialId = $request->input('id', '');
+        $lockKey      = 'passkey_auth:' . hash('sha256', $credentialId);
+
+        try {
+            $lockout = \Oxalis\Models\Lockout::firstOrCreate(['key' => $lockKey], ['attempts' => 0]);
+            if ($lockout->isLocked()) {
+                return response()->json(['error' => 'Too many failed attempts. Try again later.'], 429);
+            }
+        } catch (\Throwable) {}
+
         try {
             $user = oxalis::finishAuthentication($request->all());
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
+            // Increment per-credential lockout on failure
+            try {
+                $lockout = \Oxalis\Models\Lockout::firstOrCreate(['key' => $lockKey], ['attempts' => 0]);
+                $attempts = $lockout->attempts + 1;
+                $lockout->update([
+                    'attempts'     => $attempts,
+                    'locked_until' => $attempts >= 5 ? now()->addMinutes(15) : null,
+                ]);
+            } catch (\Throwable) {}
             return response()->json(['error' => 'Authentication failed'], 422);
         }
 
         if (!$user) {
             return response()->json(['error' => 'Credential not recognised'], 422);
         }
+
+        // Reset lockout on success
+        try {
+            \Oxalis\Models\Lockout::where('key', $lockKey)->update(['attempts' => 0, 'locked_until' => null]);
+        } catch (\Throwable) {}
 
         Auth::login($user, true);
 
@@ -78,7 +103,7 @@ class PasskeyController extends Controller
 
     public function showManage()
     {
-        $passkeys = Auth::user()->passkeys()->latest()->get();
+        $passkeys = Passkey::where('user_id', Auth::id())->latest()->get();
         return view('oxalis::passkeys.manage', compact('passkeys'));
     }
 

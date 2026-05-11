@@ -2,6 +2,9 @@
 use Oxalis\Http\Controllers\AccountController;
 use Oxalis\Http\Controllers\AdminAuthController;
 use Oxalis\Http\Controllers\AdminController;
+use Oxalis\Http\Controllers\InviteController;
+use Oxalis\Http\Controllers\SessionController;
+use Oxalis\Http\Controllers\WebhookController;
 use Oxalis\Http\Controllers\AuthController;
 use Oxalis\Http\Controllers\DocsController;
 use Oxalis\Http\Controllers\EmailChangeController;
@@ -163,12 +166,26 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
         // Auth analytics
         Route::get('/stats', [StatsController::class, 'index'])->name('oxalis.stats');
 
+        // Active sessions
+        Route::get('/account/sessions',          [SessionController::class, 'index'])->name('oxalis.sessions');
+        Route::post('/account/sessions/revoke',  [SessionController::class, 'revoke'])->name('oxalis.sessions.revoke');
+        Route::post('/account/sessions/revoke-all',[SessionController::class, 'revokeAll'])->name('oxalis.sessions.revoke-all');
+
         // Admin panel — protected by OxalisAdminAuth middleware
         Route::middleware('oxalis.admin-auth')->prefix('admin')->group(function () {
             Route::get('/',               [AdminController::class,     'index'])          ->name('oxalis.admin');
             Route::get('/change-password',[AdminAuthController::class, 'showChangePassword'])->name('oxalis.admin.password');
             Route::post('/change-password',[AdminAuthController::class,'changePassword']) ->name('oxalis.admin.password.post');
             Route::post('/logout',        [AdminAuthController::class, 'logout'])         ->name('oxalis.admin.logout');
+            // Invites
+            Route::get('/invites',        [InviteController::class, 'index'])  ->name('oxalis.admin.invites');
+            Route::post('/invites',       [InviteController::class, 'store'])  ->name('oxalis.admin.invites.store');
+            Route::post('/invites/delete',[InviteController::class, 'destroy'])->name('oxalis.admin.invites.destroy');
+            // Webhooks
+            Route::get('/webhooks',         [WebhookController::class, 'index'])  ->name('oxalis.admin.webhooks');
+            Route::post('/webhooks',        [WebhookController::class, 'store'])  ->name('oxalis.admin.webhooks.store');
+            Route::post('/webhooks/toggle', [WebhookController::class, 'toggle']) ->name('oxalis.admin.webhooks.toggle');
+            Route::post('/webhooks/delete', [WebhookController::class, 'destroy'])->name('oxalis.admin.webhooks.destroy');
         });
         // Admin login/setup (outside auth middleware — accessible without admin session)
         Route::get('/admin/setup',  [AdminAuthController::class, 'showSetup'])->middleware('oxalis.admin-auth')->name('oxalis.admin.setup');

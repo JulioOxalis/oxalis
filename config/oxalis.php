@@ -117,6 +117,20 @@ return [
         'delete_user_model' => env('OXALIS_DELETE_USER_MODEL', true),
     ],
 
+    // ── Email domain allowlist ────────────────────────────────────────────────
+    // Comma-separated. Empty = allow all. e.g. "mycompany.com,partner.org"
+    'allowed_domains' => env('OXALIS_ALLOWED_DOMAINS', ''),
+
+    // ── Invite-only registration ──────────────────────────────────────────────
+    'invites' => [
+        'required' => env('OXALIS_INVITE_ONLY', false),
+    ],
+
+    // ── Webhooks ──────────────────────────────────────────────────────────────
+    'webhooks' => [
+        'enabled' => env('OXALIS_WEBHOOKS', false),
+    ],
+
     // ── Anonymous telemetry (opt-in, default OFF) ─────────────────────────────
     // Sends: package version, PHP/Laravel version, enabled methods (booleans),
     // and a one-way SHA-256 hash of APP_URL. Never any user PII.

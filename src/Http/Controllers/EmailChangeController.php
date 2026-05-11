@@ -18,11 +18,18 @@ class EmailChangeController extends Controller
     public function send(Request $request)
     {
         $userModel = config('oxalis.user_model');
+        $user      = Auth::user();
 
         $request->validate([
-            'email' => ['required', 'email', 'different:'.Auth::user()->email,
+            'current_password' => 'required',
+            'email'            => ['required', 'email', 'different:'.$user->email,
                 'unique:'.(new $userModel)->getTable().',email'],
         ]);
+
+        // Verify current password before allowing email change
+        if (!password_verify($request->current_password, $user->password ?? '')) {
+            return back()->withErrors(['current_password' => 'Incorrect password.']);
+        }
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -75,7 +82,8 @@ class EmailChangeController extends Controller
             return back()->withErrors(['code' => 'Incorrect code. Try again.']);
         }
 
-        $user = Auth::user();
+        $userModel = config('oxalis.user_model');
+        $user = $userModel::find(Auth::id());
         $user->email = $newEmail;
         $user->email_verified_at = now();
         $user->save();

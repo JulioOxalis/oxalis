@@ -213,6 +213,19 @@
 </div>
 @endif
 
+{{-- Active sessions --}}
+<div class="ox-section-label">Security</div>
+<div class="ox-card mb-5 d-flex align-items-center gap-3 flex-wrap">
+    <div class="d-flex align-items-center justify-content-center rounded-3" style="width:42px;height:42px;background:var(--ox-sf);color:var(--ox);font-size:1.1rem;flex-shrink:0">
+        <i class="bi bi-phone-laptop"></i>
+    </div>
+    <div class="flex-grow-1">
+        <div class="fw-semibold">Active sessions</div>
+        <div class="text-secondary" style="font-size:.78rem">See all devices currently signed in and revoke any you don't recognise</div>
+    </div>
+    <a href="{{ route('oxalis.sessions') }}" class="btn btn-sm btn-ox-out text-nowrap">Manage →</a>
+</div>
+
 {{-- Danger zone --}}
 @if(config('oxalis.account_deletion.enabled', true))
 <div class="ox-section-label mt-5" style="color:#dc3545">Danger zone</div>

@@ -11,6 +11,8 @@ use Oxalis\EmailOtp\OtpService;
 use Oxalis\EmailVerification\EmailVerificationService;
 use Oxalis\Http\Middleware\OxalisAdminAuth;
 use Oxalis\Http\Middleware\OxalisIpThrottle;
+use Oxalis\Http\Middleware\OxalisSessionGuard;
+use Oxalis\Webhooks\WebhookService;
 use Oxalis\Http\Middleware\OxalisThrottle;
 use Oxalis\Http\Middleware\RequireEmailVerified;
 use Oxalis\Http\Middleware\RequireOxalis;
@@ -37,6 +39,7 @@ class OxalisServiceProvider extends ServiceProvider
         $this->app->singleton(StepUpService::class);
         $this->app->singleton(OxalisManager::class);
         $this->app->singleton(EmailVerificationService::class);
+        $this->app->singleton(WebhookService::class);
     }
 
     public function boot(): void
@@ -82,7 +85,8 @@ class OxalisServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oxalis.ip',            OxalisIpThrottle::class);
         $router->aliasMiddleware('oxalis.verified',      RequireEmailVerified::class);
         $router->aliasMiddleware('oxalis.passkey-session', ValidatePasskeySession::class);
-        $router->aliasMiddleware('oxalis.admin-auth',     OxalisAdminAuth::class);
+        $router->aliasMiddleware('oxalis.admin-auth',    OxalisAdminAuth::class);
+        $router->aliasMiddleware('oxalis.session-guard', OxalisSessionGuard::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([InstallCommand::class, LogCommand::class, UninstallCommand::class, UserCommand::class]);

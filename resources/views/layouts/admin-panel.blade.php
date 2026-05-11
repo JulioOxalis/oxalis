@@ -119,6 +119,16 @@
       <i class="bi bi-ban"></i> Lockouts
     </a>
 
+    <div class="adm-nav-section">Tools</div>
+    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin.invites*') ? 'active' : '' }}"
+       href="{{ route('oxalis.admin.invites') }}">
+      <i class="bi bi-ticket-perforated"></i> Invite codes
+    </a>
+    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin.webhooks*') ? 'active' : '' }}"
+       href="{{ route('oxalis.admin.webhooks') }}">
+      <i class="bi bi-send-fill"></i> Webhooks
+    </a>
+
     <div class="adm-nav-section">Settings</div>
     <a class="adm-nav-link {{ request()->routeIs('oxalis.admin.password') ? 'active' : '' }}"
        href="{{ route('oxalis.admin.password') }}">

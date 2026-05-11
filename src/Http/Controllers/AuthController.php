@@ -2,6 +2,7 @@
 namespace Oxalis\Http\Controllers;
 
 use Oxalis\Mail\OtpMail;
+use Oxalis\Models\Invite;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -28,9 +29,32 @@ class AuthController extends Controller
         $userModel = config('oxalis.user_model');
 
         $data = $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => ['required', 'email', 'unique:' . (new $userModel)->getTable() . ',email'],
+            'name'        => 'required|string|max:255',
+            'email'       => ['required', 'email', 'unique:' . (new $userModel)->getTable() . ',email'],
+            'invite_code' => config('oxalis.invites.required', false) ? 'required|string' : 'nullable|string',
         ]);
+
+        // Domain allowlist
+        $allowed = array_filter(array_map('trim', explode(',', config('oxalis.allowed_domains', ''))));
+        if (!empty($allowed)) {
+            $domain = strtolower(substr($data['email'], strpos($data['email'], '@') + 1));
+            if (!in_array($domain, array_map('strtolower', $allowed))) {
+                return back()->withErrors(['email' => 'Registration is restricted to specific email domains.']);
+            }
+        }
+
+        // Invite code check
+        if (config('oxalis.invites.required', false)) {
+            try {
+                $invite = Invite::where('code', strtoupper(trim($data['invite_code'] ?? '')))->first();
+                if (!$invite || !$invite->isValid()) {
+                    return back()->withErrors(['invite_code' => 'Invalid or expired invite code.']);
+                }
+                session(['oxalis_reg_invite_id' => $invite->id]);
+            } catch (\Throwable) {
+                return back()->withErrors(['invite_code' => 'Invite system unavailable.']);
+            }
+        }
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -124,10 +148,16 @@ class AuthController extends Controller
 
     private function createUser(?string $password): \Illuminate\Http\RedirectResponse
     {
-        $name  = session('oxalis_reg_name');
-        $email = session('oxalis_reg_email');
+        $name     = session('oxalis_reg_name');
+        $email    = session('oxalis_reg_email');
+        $inviteId = session('oxalis_reg_invite_id');
 
-        session()->forget(['oxalis_reg_name','oxalis_reg_email','oxalis_reg_code','oxalis_reg_expires','oxalis_reg_verified','oxalis_reg_dev_code']);
+        // Consume invite if one was used
+        if ($inviteId) {
+            try { Invite::find($inviteId)?->consume(); } catch (\Throwable) {}
+        }
+
+        session()->forget(['oxalis_reg_name','oxalis_reg_email','oxalis_reg_code','oxalis_reg_expires','oxalis_reg_verified','oxalis_reg_dev_code','oxalis_reg_invite_id']);
 
         $userModel = config('oxalis.user_model');
 

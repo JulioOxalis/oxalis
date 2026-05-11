@@ -4,8 +4,10 @@ namespace Oxalis\Auth;
 use Oxalis\Events\UserLoggedIn;
 use Oxalis\Mail\LoginNotificationMail;
 use Oxalis\Models\AuthEvent;
+use Oxalis\Models\OxalisSession;
 use Oxalis\Models\TotpSecret;
 use Oxalis\Models\TotpTrustedDevice;
+use Oxalis\Webhooks\WebhookService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -63,20 +65,7 @@ class LoginHandler
 
         Auth::login($user, $remember);
 
-        AuthEvent::create([
-            'user_id'    => $user->getAuthIdentifier(),
-            'event'      => 'login',
-            'method'     => $method,
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-            'status'     => 'success',
-        ]);
-
-        event(new UserLoggedIn($user, $method, $ip, $userAgent));
-
-        if (config('oxalis.login_notification', false) && !in_array(config('mail.default'), ['log', 'array', 'null'])) {
-            Mail::to($user->email)->send(new LoginNotificationMail($method, $ip, $userAgent, now()->toDateTimeString()));
-        }
+        $this->recordLogin($user, $method, $ip, $userAgent);
 
         return redirect(config('oxalis.routes.home', '/dashboard'));
     }
@@ -96,21 +85,54 @@ class LoginHandler
 
         $fullMethod = $method ? "{$method}+totp" : 'totp';
 
-        AuthEvent::create([
-            'user_id'    => $user->getAuthIdentifier(),
-            'event'      => 'login',
-            'method'     => $fullMethod,
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-            'status'     => 'success',
-        ]);
-
-        event(new UserLoggedIn($user, $fullMethod, $ip, $userAgent));
-
-        if (config('oxalis.login_notification', false) && !in_array(config('mail.default'), ['log', 'array', 'null'])) {
-            Mail::to($user->email)->send(new LoginNotificationMail($fullMethod, $ip, $userAgent, now()->toDateTimeString()));
-        }
+        $this->recordLogin($user, $fullMethod, $ip, $userAgent);
 
         return redirect(config('oxalis.routes.home', '/dashboard'));
+    }
+
+    private function recordLogin(
+        \Illuminate\Contracts\Auth\Authenticatable $user,
+        string $method,
+        string $ip,
+        string $userAgent,
+    ): void {
+        try {
+            AuthEvent::create([
+                'user_id'    => $user->getAuthIdentifier(),
+                'event'      => 'login',
+                'method'     => $method,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+                'status'     => 'success',
+            ]);
+        } catch (\Throwable) {}
+
+        // Record active session
+        try {
+            $token = OxalisSession::createForUser(
+                userId:    $user->getAuthIdentifier(),
+                ip:        $ip,
+                userAgent: $userAgent,
+                method:    $method,
+            );
+            session(['oxalis_session_token' => $token]);
+        } catch (\Throwable) {}
+
+        event(new UserLoggedIn($user, $method, $ip, $userAgent));
+
+        // Webhook
+        try {
+            app(WebhookService::class)->fire('login', [
+                'user_id' => hash('sha256', (string) $user->getAuthIdentifier()),
+                'method'  => $method,
+                'ip'      => $ip,
+            ]);
+        } catch (\Throwable) {}
+
+        if (config('oxalis.login_notification', false) && !in_array(config('mail.default'), ['log', 'array', 'null'])) {
+            try {
+                Mail::to($user->email)->send(new LoginNotificationMail($method, $ip, $userAgent, now()->toDateTimeString()));
+            } catch (\Throwable) {}
+        }
     }
 }

@@ -2,6 +2,7 @@
 namespace Oxalis\Http\Controllers;
 
 use Oxalis\Mail\PasswordResetMail;
+use Oxalis\Models\OxalisSession;
 use Oxalis\Models\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -91,8 +92,13 @@ class PasswordResetController extends Controller
         $user->update(['password' => Hash::make($data['password'])]);
         $reset->update(['used_at' => now()]);
 
+        // Invalidate all active sessions after password reset
+        try {
+            OxalisSession::revokeAllForUser($user->getAuthIdentifier());
+        } catch (\Throwable) {}
+
         return redirect()->route('oxalis.login')
-            ->with('status', 'Password reset successfully. You can now sign in.');
+            ->with('status', 'Password reset successfully. All active sessions have been signed out.');
     }
 
     private function sendMail(string $email, string $url): void

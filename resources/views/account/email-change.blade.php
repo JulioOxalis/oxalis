@@ -15,6 +15,13 @@
     <label for="email">New email address</label>
     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
   </div>
+  <div class="form-floating mb-4">
+    <input type="password" name="current_password" id="current_password"
+      class="form-control rounded-3 @error('current_password') is-invalid @enderror"
+      placeholder="p" autocomplete="current-password">
+    <label for="current_password">Current password <span class="text-secondary fw-normal small">(to confirm it's you)</span></label>
+    @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+  </div>
   <button class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2">
     Send verification code <i class="bi bi-arrow-right"></i>
   </button>

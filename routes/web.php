@@ -1,5 +1,6 @@
 <?php
 use Oxalis\Http\Controllers\AccountController;
+use Oxalis\Http\Controllers\AdminAuthController;
 use Oxalis\Http\Controllers\AdminController;
 use Oxalis\Http\Controllers\AuthController;
 use Oxalis\Http\Controllers\DocsController;
@@ -162,8 +163,18 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
         // Auth analytics
         Route::get('/stats', [StatsController::class, 'index'])->name('oxalis.stats');
 
-        // Admin panel
-        Route::get('/admin', [AdminController::class, 'index'])->name('oxalis.admin');
+        // Admin panel — protected by OxalisAdminAuth middleware
+        Route::middleware('oxalis.admin-auth')->prefix('admin')->group(function () {
+            Route::get('/',               [AdminController::class,     'index'])          ->name('oxalis.admin');
+            Route::get('/change-password',[AdminAuthController::class, 'showChangePassword'])->name('oxalis.admin.password');
+            Route::post('/change-password',[AdminAuthController::class,'changePassword']) ->name('oxalis.admin.password.post');
+            Route::post('/logout',        [AdminAuthController::class, 'logout'])         ->name('oxalis.admin.logout');
+        });
+        // Admin login/setup (outside auth middleware — accessible without admin session)
+        Route::get('/admin/setup',  [AdminAuthController::class, 'showSetup'])->middleware('oxalis.admin-auth')->name('oxalis.admin.setup');
+        Route::post('/admin/setup', [AdminAuthController::class, 'setup'])    ->middleware('oxalis.admin-auth')->name('oxalis.admin.setup.post');
+        Route::get('/admin/login',  [AdminAuthController::class, 'showLogin'])->middleware('oxalis.admin-auth')->name('oxalis.admin.login');
+        Route::post('/admin/login', [AdminAuthController::class, 'login'])    ->middleware(['oxalis.admin-auth','oxalis.ip:5,5'])->name('oxalis.admin.login.post');
     });
 });
 

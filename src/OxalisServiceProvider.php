@@ -9,6 +9,7 @@ use Oxalis\Console\UninstallCommand;
 use Oxalis\Console\UserCommand;
 use Oxalis\EmailOtp\OtpService;
 use Oxalis\EmailVerification\EmailVerificationService;
+use Oxalis\Http\Middleware\OxalisAdminAuth;
 use Oxalis\Http\Middleware\OxalisIpThrottle;
 use Oxalis\Http\Middleware\OxalisThrottle;
 use Oxalis\Http\Middleware\RequireEmailVerified;
@@ -81,6 +82,7 @@ class OxalisServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oxalis.ip',            OxalisIpThrottle::class);
         $router->aliasMiddleware('oxalis.verified',      RequireEmailVerified::class);
         $router->aliasMiddleware('oxalis.passkey-session', ValidatePasskeySession::class);
+        $router->aliasMiddleware('oxalis.admin-auth',     OxalisAdminAuth::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([InstallCommand::class, LogCommand::class, UninstallCommand::class, UserCommand::class]);

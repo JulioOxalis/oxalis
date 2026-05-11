@@ -1,157 +1,196 @@
-@extends('oxalis::layouts.account')
-@section('title','Oxalis Admin')
+@extends('oxalis::layouts.admin-panel')
+@section('title','Dashboard')
 @section('content')
 
-<div class="d-flex align-items-center gap-3 mb-4">
-    <div style="width:44px;height:44px;border-radius:12px;background:var(--ox-sf);display:flex;align-items:center;justify-content:center;color:var(--ox);font-size:1.2rem">
-        <i class="bi bi-shield-fill-check"></i>
-    </div>
-    <div>
-        <h4 class="fw-bold mb-0">Oxalis Admin</h4>
-        <div class="text-secondary" style="font-size:.8rem">Authentication overview for {{ config('app.name') }}</div>
-    </div>
-</div>
-
 {{-- KPI row --}}
-<div class="row g-3 mb-5">
-    @php
-    $kpis = [
-        ['icon'=>'bi-people-fill',        'label'=>'Total users',    'value'=>number_format($users->total()), 'color'=>'var(--ox)',  'bg'=>'var(--ox-sf)'],
-        ['icon'=>'bi-box-arrow-in-right',  'label'=>'Total sign-ins', 'value'=>number_format($totalLogins),   'color'=>'#10b981',   'bg'=>'rgba(16,185,129,.12)'],
-        ['icon'=>'bi-x-circle-fill',       'label'=>'Failed attempts','value'=>number_format($totalFailed),   'color'=>'#ef4444',   'bg'=>'rgba(239,68,68,.1)'],
-        ['icon'=>'bi-ban',                 'label'=>'Currently locked','value'=>number_format($lockedNow),    'color'=>'#f59e0b',   'bg'=>'rgba(245,158,11,.12)'],
-    ];
-    @endphp
-    @foreach($kpis as $k)
-    <div class="col-6 col-md-3">
-        <div class="ox-card h-100">
-            <div class="d-flex align-items-center gap-3">
-                <div style="width:40px;height:40px;border-radius:10px;background:{{ $k['bg'] }};display:flex;align-items:center;justify-content:center;color:{{ $k['color'] }};font-size:1.05rem;flex-shrink:0">
-                    <i class="{{ $k['icon'] }}"></i>
-                </div>
-                <div>
-                    <div class="fw-bold" style="font-size:1.35rem;letter-spacing:-.02em;color:{{ $k['color'] }}">{{ $k['value'] }}</div>
-                    <div class="text-secondary" style="font-size:.72rem">{{ $k['label'] }}</div>
-                </div>
-            </div>
+<div class="row g-3 mb-2">
+  @php
+  $kpis=[
+    ['icon'=>'bi-people-fill',      'val'=>number_format($totalUsers),    'label'=>'Total users',     'c'=>'var(--ox)',   'bg'=>'var(--ox-sf)'],
+    ['icon'=>'bi-fingerprint',      'val'=>number_format($totalPasskeys), 'label'=>'Passkeys',        'c'=>'#818cf8',   'bg'=>'rgba(129,140,248,.12)'],
+    ['icon'=>'bi-check-circle-fill','val'=>number_format($totalLogins),   'label'=>'Successful logins','c'=>'#34d399',  'bg'=>'rgba(52,211,153,.1)'],
+    ['icon'=>'bi-x-circle-fill',    'val'=>number_format($totalFailed),   'label'=>'Failed attempts', 'c'=>'#f87171',   'bg'=>'rgba(248,113,113,.1)'],
+    ['icon'=>'bi-ban',              'val'=>number_format($lockedNow),     'label'=>'IPs locked now',  'c'=>'#fcd34d',   'bg'=>'rgba(252,211,77,.08)'],
+  ];
+  @endphp
+  @foreach($kpis as $k)
+  <div class="col-6 col-md-4 col-lg">
+    <div class="adm-card">
+      <div class="adm-kpi">
+        <div class="adm-kpi-icon" style="background:{{ $k['bg'] }};color:{{ $k['c'] }}"><i class="{{ $k['icon'] }}"></i></div>
+        <div>
+          <div class="adm-kpi-val" style="color:{{ $k['c'] }}">{{ $k['val'] }}</div>
+          <div class="adm-kpi-label">{{ $k['label'] }}</div>
         </div>
+      </div>
     </div>
-    @endforeach
+  </div>
+  @endforeach
 </div>
 
-{{-- Users table --}}
-<div class="ox-section-label">Users</div>
-<div class="ox-card mb-5" style="padding:0">
-    <div style="overflow-x:auto;border-radius:var(--ox-r)">
-    <table class="table table-sm table-hover mb-0" style="font-size:.78rem">
-        <thead>
-            <tr style="border-bottom:1px solid var(--bs-border-color)">
-                <th class="ps-4 py-3 text-secondary fw-normal">Name</th>
-                <th class="py-3 text-secondary fw-normal">Email</th>
-                <th class="py-3 text-secondary fw-normal text-center">Passkeys</th>
-                <th class="py-3 text-secondary fw-normal text-center">TOTP</th>
-                <th class="py-3 text-secondary fw-normal d-none d-md-table-cell">Last sign-in</th>
-                <th class="pe-4 py-3 text-secondary fw-normal">Registered</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($users as $u)
-            @php $uid = (string) $u->getAuthIdentifier(); @endphp
-            <tr>
-                <td class="ps-4 py-3 align-middle fw-medium">{{ $u->name ?? '—' }}</td>
-                <td class="py-3 align-middle" style="font-size:.75rem">{{ $u->email }}</td>
-                <td class="py-3 align-middle text-center">
-                    @if($passkeyCounts[$uid] ?? 0)
-                    <span style="color:var(--ox)">{{ $passkeyCounts[$uid] }}</span>
-                    @else
-                    <span class="text-secondary">—</span>
-                    @endif
-                </td>
-                <td class="py-3 align-middle text-center">
-                    @if(isset($totpEnabled[$uid]))
-                    <i class="bi bi-check-circle-fill text-success"></i>
-                    @else
-                    <span class="text-secondary" style="font-size:.7rem">off</span>
-                    @endif
-                </td>
-                <td class="py-3 align-middle text-secondary d-none d-md-table-cell">
-                    {{ isset($lastLogin[$uid]) ? \Carbon\Carbon::parse($lastLogin[$uid])->diffForHumans() : 'Never' }}
-                </td>
-                <td class="pe-4 py-3 align-middle text-secondary">{{ $u->created_at?->diffForHumans() ?? '—' }}</td>
-            </tr>
-            @empty
-            <tr><td colspan="6" class="text-center py-4 text-secondary">No users yet.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-    </div>
+{{-- Users --}}
+<div class="adm-section">Users</div>
+
+<form method="GET" action="{{ route('oxalis.admin') }}" class="adm-toolbar">
+  <input type="text" name="search" class="adm-search" placeholder="Search name or email…" value="{{ $search }}" autocomplete="off">
+  <div class="d-flex gap-1 flex-wrap">
+    <a href="{{ route('oxalis.admin', array_merge(request()->except('filter','page'), ['filter'=>'all'])) }}"
+       class="adm-filter-btn {{ $filter==='all' ? 'active' : '' }}">All</a>
+    <a href="{{ route('oxalis.admin', array_merge(request()->except('filter','page'), ['filter'=>'passkey'])) }}"
+       class="adm-filter-btn {{ $filter==='passkey' ? 'active' : '' }}"><i class="bi bi-fingerprint me-1"></i>Has passkey</a>
+    <a href="{{ route('oxalis.admin', array_merge(request()->except('filter','page'), ['filter'=>'totp'])) }}"
+       class="adm-filter-btn {{ $filter==='totp' ? 'active' : '' }}"><i class="bi bi-phone me-1"></i>TOTP on</a>
+  </div>
+  @if($search)
+  <a href="{{ route('oxalis.admin') }}" class="adm-filter-btn" style="color:#f87171;border-color:rgba(248,113,113,.3)">
+    <i class="bi bi-x me-1"></i>Clear
+  </a>
+  @endif
+</form>
+
+<div class="adm-table-wrap mb-3">
+  <div style="overflow-x:auto">
+  <table class="adm-table">
+    <thead>
+      <tr>
+        <th style="padding-left:1.25rem">User</th>
+        <th>Email</th>
+        <th class="text-center">Passkeys</th>
+        <th class="text-center">TOTP</th>
+        <th class="d-none d-lg-table-cell">Last sign-in</th>
+        <th class="d-none d-md-table-cell" style="padding-right:1.25rem">Registered</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($users as $u)
+      @php
+        $uid=(string)$u->getAuthIdentifier();
+        $pkCount=$passkeyCounts[$uid]??0;
+        $hasTotpOn=isset($totpEnabled[$uid]);
+        $last=$lastLogin[$uid]??null;
+      @endphp
+      @if($filter==='passkey' && !$pkCount) @continue @endif
+      @if($filter==='totp' && !$hasTotpOn) @continue @endif
+      <tr>
+        <td style="padding-left:1.25rem">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--ox-sf);color:var(--ox);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;flex-shrink:0">
+              {{ strtoupper(substr($u->name??$u->email??'?',0,1)) }}
+            </div>
+            <span style="font-weight:500;color:#e8ecf8">{{ $u->name ?? '—' }}</span>
+          </div>
+        </td>
+        <td style="font-size:.75rem;color:var(--adm-muted)">{{ $u->email }}</td>
+        <td class="text-center">
+          @if($pkCount)
+          <span class="adm-badge adm-badge-ox"><i class="bi bi-fingerprint"></i>{{ $pkCount }}</span>
+          @else
+          <span style="color:var(--adm-muted);font-size:.72rem">—</span>
+          @endif
+        </td>
+        <td class="text-center">
+          @if($hasTotpOn)
+          <span class="adm-badge adm-badge-green"><i class="bi bi-shield-check"></i>On</span>
+          @else
+          <span style="color:var(--adm-muted);font-size:.72rem">Off</span>
+          @endif
+        </td>
+        <td class="d-none d-lg-table-cell" style="color:var(--adm-muted);font-size:.75rem">
+          {{ $last ? \Carbon\Carbon::parse($last)->diffForHumans() : 'Never' }}
+        </td>
+        <td class="d-none d-md-table-cell" style="color:var(--adm-muted);font-size:.75rem;padding-right:1.25rem">
+          {{ $u->created_at?->diffForHumans() ?? '—' }}
+        </td>
+      </tr>
+      @empty
+      <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--adm-muted)">No users found.</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+  </div>
 </div>
+
+{{-- Pagination --}}
 @if($users->hasPages())
-<div class="d-flex justify-content-center mb-5">{{ $users->links() }}</div>
+<div class="d-flex align-items-center justify-content-between mb-2" style="font-size:.75rem;color:var(--adm-muted)">
+  <span>Showing {{ $users->firstItem() }}–{{ $users->lastItem() }} of {{ number_format($users->total()) }} users</span>
+  <div class="d-flex gap-1">
+    @if($users->onFirstPage())
+    <span class="adm-filter-btn" style="opacity:.4;cursor:default">&lsaquo; Prev</span>
+    @else
+    <a href="{{ $users->previousPageUrl() }}" class="adm-filter-btn">&lsaquo; Prev</a>
+    @endif
+    @if($users->hasMorePages())
+    <a href="{{ $users->nextPageUrl() }}" class="adm-filter-btn">Next &rsaquo;</a>
+    @else
+    <span class="adm-filter-btn" style="opacity:.4;cursor:default">Next &rsaquo;</span>
+    @endif
+  </div>
+</div>
 @endif
 
-{{-- Recent events --}}
-<div class="row g-4">
-<div class="col-12 col-md-6">
-    <div class="ox-section-label">Recent sign-ins</div>
-    <div class="ox-card" style="padding:0">
-        <div style="overflow-x:auto;border-radius:var(--ox-r)">
-        <table class="table table-sm mb-0" style="font-size:.75rem">
-            <thead><tr style="border-bottom:1px solid var(--bs-border-color)">
-                <th class="ps-3 py-3 text-secondary fw-normal">When</th>
-                <th class="py-3 text-secondary fw-normal">Method</th>
-                <th class="pe-3 py-3 text-secondary fw-normal text-end">Status</th>
-            </tr></thead>
-            <tbody>
-                @foreach($recentEvents as $e)
-                <tr>
-                    <td class="ps-3 py-2 align-middle text-secondary">{{ $e->created_at->diffForHumans() }}</td>
-                    <td class="py-2 align-middle">
-                        <span class="badge rounded-pill px-2 fw-normal" style="background:var(--ox-sf);color:var(--ox)">{{ $e->method }}</span>
-                    </td>
-                    <td class="pe-3 py-2 align-middle text-end">
-                        @if($e->status==='success')
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                        @else
-                        <i class="bi bi-x-circle-fill text-danger"></i>
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        </div>
+{{-- Auth Events + Lockouts side by side --}}
+<div class="row g-3 mt-1">
+  <div class="col-12 col-xl-7">
+    <div class="adm-section" id="events">Recent auth events</div>
+    <div class="adm-table-wrap">
+      <div style="overflow-x:auto">
+      <table class="adm-table">
+        <thead><tr>
+          <th style="padding-left:1.25rem">When</th>
+          <th>Method</th>
+          <th class="d-none d-sm-table-cell">IP</th>
+          <th style="padding-right:1.25rem;text-align:right">Status</th>
+        </tr></thead>
+        <tbody>
+          @forelse($recentEvents as $e)
+          <tr>
+            <td style="padding-left:1.25rem;color:var(--adm-muted);white-space:nowrap">{{ $e->created_at->diffForHumans() }}</td>
+            <td><span class="adm-badge adm-badge-ox">{{ $e->method }}</span></td>
+            <td class="d-none d-sm-table-cell" style="font-family:monospace;font-size:.7rem;color:var(--adm-muted)">{{ $e->ip_address??'—' }}</td>
+            <td style="padding-right:1.25rem;text-align:right">
+              @if($e->status==='success')
+              <span class="adm-badge adm-badge-green"><i class="bi bi-check-circle-fill"></i></span>
+              @else
+              <span class="adm-badge adm-badge-red"><i class="bi bi-x-circle-fill"></i></span>
+              @endif
+            </td>
+          </tr>
+          @empty
+          <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--adm-muted)">No events yet.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+      </div>
     </div>
-</div>
-<div class="col-12 col-md-6">
-    <div class="ox-section-label">Recent lockouts</div>
-    <div class="ox-card" style="padding:0">
-        <div style="overflow-x:auto;border-radius:var(--ox-r)">
-        <table class="table table-sm mb-0" style="font-size:.75rem">
-            <thead><tr style="border-bottom:1px solid var(--bs-border-color)">
-                <th class="ps-3 py-3 text-secondary fw-normal">Key</th>
-                <th class="py-3 text-secondary fw-normal text-center">Attempts</th>
-                <th class="pe-3 py-3 text-secondary fw-normal text-end">Locked until</th>
-            </tr></thead>
-            <tbody>
-                @forelse($recentLockouts as $l)
-                <tr>
-                    <td class="ps-3 py-2 align-middle font-monospace text-secondary" style="font-size:.68rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $l->key }}</td>
-                    <td class="py-2 align-middle text-center">
-                        <span style="color:{{ $l->attempts >= 5 ? '#ef4444' : 'var(--bs-body-color)' }}">{{ $l->attempts }}</span>
-                    </td>
-                    <td class="pe-3 py-2 align-middle text-end text-secondary">
-                        {{ $l->locked_until ? $l->locked_until->diffForHumans() : '—' }}
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="3" class="text-center py-3 text-secondary">No lockouts.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-        </div>
+  </div>
+  <div class="col-12 col-xl-5">
+    <div class="adm-section" id="lockouts">Active lockouts</div>
+    <div class="adm-table-wrap">
+      <div style="overflow-x:auto">
+      <table class="adm-table">
+        <thead><tr>
+          <th style="padding-left:1.25rem">Key</th>
+          <th class="text-center">Hits</th>
+          <th style="padding-right:1.25rem;text-align:right">Locked until</th>
+        </tr></thead>
+        <tbody>
+          @forelse($recentLockouts as $l)
+          <tr>
+            <td style="padding-left:1.25rem;font-family:monospace;font-size:.68rem;color:var(--adm-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $l->key }}</td>
+            <td class="text-center"><span class="adm-badge {{ $l->attempts>=5?'adm-badge-red':'adm-badge-gray' }}">{{ $l->attempts }}</span></td>
+            <td style="padding-right:1.25rem;text-align:right;font-size:.73rem;color:var(--adm-muted)">
+              {{ $l->locked_until ? $l->locked_until->diffForHumans() : '—' }}
+            </td>
+          </tr>
+          @empty
+          <tr><td colspan="3" style="text-align:center;padding:1.5rem;color:var(--adm-muted)">No lockouts.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+      </div>
     </div>
-</div>
+  </div>
 </div>
 
 @endsection

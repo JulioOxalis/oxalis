@@ -24,22 +24,24 @@ class AdminController extends Controller
 
         $uids = $users->pluck($users->first()?->getKeyName() ?? 'id')->map(fn($id) => (string) $id)->toArray();
 
+        // PHP-level aggregation — compatible with both MySQL and MongoDB
         $passkeyCounts = Passkey::whereIn('user_id', $uids)
-            ->selectRaw('user_id, count(*) as total')
+            ->get(['user_id'])
             ->groupBy('user_id')
-            ->pluck('total', 'user_id');
+            ->map(fn($g) => $g->count());
 
         $totpEnabled = TotpSecret::whereIn('user_id', $uids)
             ->whereNotNull('confirmed_at')
+            ->get(['user_id'])
             ->pluck('user_id')
             ->map(fn($id) => (string) $id)
             ->flip();
 
         $lastLogin = AuthEvent::whereIn('user_id', $uids)
             ->where('status', 'success')
-            ->selectRaw('user_id, max(created_at) as last_at')
+            ->get(['user_id', 'created_at'])
             ->groupBy('user_id')
-            ->pluck('last_at', 'user_id');
+            ->map(fn($g) => $g->max('created_at'));
 
         $recentLockouts = Lockout::where('attempts', '>', 0)
             ->latest('updated_at')

@@ -24,27 +24,27 @@ class StatsController extends Controller
             ? round($totalLogins / ($totalLogins + $totalFailed) * 100)
             : 100;
 
-        // Method breakdown
+        // Method breakdown — PHP aggregation, works with MySQL and MongoDB
         $methods = $q()->where('status', 'success')
-            ->selectRaw('method, count(*) as total')
+            ->get(['method'])
             ->groupBy('method')
-            ->orderByDesc('total')
-            ->get();
+            ->map(fn($g) => (object)['method' => $g->first()->method, 'total' => $g->count()])
+            ->sortByDesc('total')
+            ->values();
 
         $methodMax = $methods->max('total') ?: 1;
 
-        // Last 7 days daily logins
-        $daily = $q()->where('status', 'success')
+        // Last 7 days daily logins — PHP aggregation
+        $recentEvents = $q()->where('status', 'success')
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
-            ->selectRaw("DATE(created_at) as day, count(*) as total")
-            ->groupBy('day')
-            ->orderBy('day')
-            ->pluck('total', 'day');
+            ->get(['created_at']);
 
         $days = collect();
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
-            $days[$date] = $daily[$date] ?? 0;
+            $days[$date] = $recentEvents->filter(
+                fn($e) => \Carbon\Carbon::parse($e->created_at)->format('Y-m-d') === $date
+            )->count();
         }
         $dayMax = $days->max() ?: 1;
 

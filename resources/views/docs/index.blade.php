@@ -186,6 +186,9 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
 <aside id="sidebar">
   <div class="sidebar-logo">
     <div>
+      <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
+           style="height:32px;width:auto;object-fit:contain;margin-bottom:.4rem;display:block"
+           onerror="this.style.display='none'">
       <div class="brand">JULIO <span>OXALIS</span></div>
     </div>
     <button class="theme-toggle" id="theme-btn" title="Toggle theme">

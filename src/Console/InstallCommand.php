@@ -93,6 +93,9 @@ class InstallCommand extends Command
         $this->newLine();
         $this->info('Installing...');
 
+        $this->callSilent('vendor:publish', ['--tag' => 'oxalis-assets', '--force' => true]);
+        $this->line('  <fg=green>✓</> Assets published → public/vendor/oxalis/');
+
         $this->callSilent('vendor:publish', ['--tag' => 'oxalis-migrations', '--force' => $this->option('force')]);
         $this->line('  <fg=green>✓</> Migrations published');
 

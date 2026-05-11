@@ -52,6 +52,9 @@
 
     <div class="d-flex align-items-center justify-content-between mb-5">
         <a href="{{ config('oxalis.routes.home','/dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none text-secondary" style="font-size:.85rem">
+            <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Logo"
+                 style="height:28px;width:auto;object-fit:contain"
+                 onerror="this.style.display='none'">
             <i class="bi bi-arrow-left"></i><span>Back</span>
         </a>
         <div class="d-flex align-items-center gap-1" id="ox-theme-toggle" role="group" aria-label="Theme">

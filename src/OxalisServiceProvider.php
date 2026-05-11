@@ -60,6 +60,10 @@ class OxalisServiceProvider extends ServiceProvider
             __DIR__.'/../stubs/User.php' => app_path('Models/User.php'),
         ], 'oxalis-user');
 
+        $this->publishes([
+            __DIR__.'/../public' => public_path('vendor/oxalis'),
+        ], 'oxalis-assets');
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'oxalis');
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
@@ -70,7 +74,7 @@ class OxalisServiceProvider extends ServiceProvider
         Blade::if('oxalisAdmin', fn() => session('oxalis_admin_authenticated') === true);
 
         // @oxalisUser — renders content only when a regular user is logged in
-        Blade::if('oxalisUser', fn() => auth()->check());
+        Blade::if('oxalisUser', fn() => \Illuminate\Support\Facades\Auth::check());
 
         foreach (['google', 'github'] as $provider) {
             $cfg = config("oxalis.social.{$provider}");

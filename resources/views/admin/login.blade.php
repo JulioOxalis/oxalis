@@ -32,6 +32,11 @@
 </head>
 <body>
 <div class="login-card">
+  <div class="text-center mb-3">
+    <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
+         style="height:52px;width:auto;object-fit:contain"
+         onerror="this.style.display='none'">
+  </div>
   <div class="login-icon"><i class="bi bi-shield-fill-lock"></i></div>
   <h1>Admin access</h1>
   <p class="sub">{{ config('app.name') }} · Restricted area</p>

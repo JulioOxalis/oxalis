@@ -39,6 +39,11 @@
 </head>
 <body>
 <div class="setup-card">
+  <div class="text-center mb-3">
+    <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
+         style="height:52px;width:auto;object-fit:contain"
+         onerror="this.style.display='none'">
+  </div>
   <div class="setup-icon"><i class="bi bi-shield-lock-fill"></i></div>
   <h1>Set up admin access</h1>
   <p class="sub">This is a one-time setup. Choose a strong password to protect the Oxalis admin panel — this is where all user data is managed.</p>

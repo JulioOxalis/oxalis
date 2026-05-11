@@ -204,6 +204,8 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="nav-section">Getting Started</div>
     <a class="nav-link" href="#installation">Installation</a>
     <a class="nav-link" href="#configuration">Configuration</a>
+    <a class="nav-link" href="#reconfiguring">Reconfiguring</a>
+    <a class="nav-link" href="#dev-mode">Dev mode</a>
     <a class="nav-link" href="#updating">Updating</a>
     <a class="nav-link" href="#uninstalling">Uninstalling</a>
     <a class="nav-link" href="#env-reference">.env Reference</a>
@@ -303,6 +305,65 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>php artisan vendor:publish --tag=oxalis-config</code></pre></div>
     <p>This creates <code>config/oxalis.php</code> in your application.</p>
+  </section>
+
+  <!-- RECONFIGURING -->
+  <section id="reconfiguring">
+    <h2>Reconfiguring after install</h2>
+    <p>Forgot to enable an auth method during setup? No need to reinstall — edit <code>.env</code> directly and it takes effect immediately.</p>
+
+    <h3>Toggle any method on or off</h3>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_ENABLE_PASSKEY=true
+OXALIS_ENABLE_MAGIC_LINK=true
+OXALIS_ENABLE_EMAIL_OTP=true
+OXALIS_ENABLE_TOTP=true
+OXALIS_ENABLE_PASSWORD=true
+OXALIS_SMART_DISPATCH=false</code></pre></div>
+
+    <h3>Enable social login later</h3>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_ENABLE_SOCIAL=true
+
+# Google
+OXALIS_GOOGLE_ENABLED=true
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-secret
+GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback
+
+# GitHub
+OXALIS_GITHUB_ENABLED=true
+GITHUB_CLIENT_ID=your-client-id
+GITHUB_CLIENT_SECRET=your-secret
+GITHUB_REDIRECT_URI=https://myapp.com/oxalis/social/github/callback</code></pre></div>
+
+    <p>Or re-run the installer at any time — it updates existing <code>.env</code> values in-place without overwriting anything else:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>php artisan oxalis:install</code></pre></div>
+
+    <div class="alert-box alert-tip">
+      <i class="bi bi-lightbulb-fill"></i>
+      <div>After changing <code>.env</code>, run <code>php artisan config:clear</code> if you have config caching enabled in production.</div>
+    </div>
+  </section>
+
+  <!-- DEV MODE -->
+  <section id="dev-mode">
+    <h2>Dev mode</h2>
+    <p>When <code>APP_ENV=local</code>, Oxalis shows sensitive values on-screen so you can test without a working mail server:</p>
+    <table>
+      <thead><tr><th>Feature</th><th>What shows in local</th><th>In production</th></tr></thead>
+      <tbody>
+        <tr><td>Email OTP</td><td>6-digit code shown in yellow box on verify page</td><td>Code sent by email only, never shown</td></tr>
+        <tr><td>Magic link</td><td>Full sign-in URL shown on screen</td><td>Link sent by email only, never shown</td></tr>
+        <tr><td>Registration OTP</td><td>6-digit code shown in yellow box on step 2</td><td>Code sent by email only, never shown</td></tr>
+        <tr><td>Test hub</td><td>Available at <code>/oxalis/test</code></td><td>Returns 403 Forbidden</td></tr>
+      </tbody>
+    </table>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div>All dev hints are gated behind <code>app()->isLocal()</code>. Setting <code>APP_ENV=production</code> in <code>.env</code> disables every one of them — no extra configuration needed.</div>
+    </div>
   </section>
 
   <!-- UPDATING -->

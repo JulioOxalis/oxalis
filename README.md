@@ -38,6 +38,48 @@ php artisan oxalis:install
 
 The interactive wizard configures everything — auth methods, social credentials, redirects, and runs migrations automatically.
 
+## Reconfiguring after install
+
+Forgot to enable an auth method? Just edit `.env` directly — no need to reinstall.
+
+**Enable social login later:**
+```env
+OXALIS_ENABLE_SOCIAL=true
+
+OXALIS_GOOGLE_ENABLED=true
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-secret
+GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback
+
+OXALIS_GITHUB_ENABLED=true
+GITHUB_CLIENT_ID=your-client-id
+GITHUB_CLIENT_SECRET=your-secret
+GITHUB_REDIRECT_URI=https://myapp.com/oxalis/social/github/callback
+```
+
+**Toggle any method on/off:**
+```env
+OXALIS_ENABLE_PASSKEY=true
+OXALIS_ENABLE_MAGIC_LINK=true
+OXALIS_ENABLE_EMAIL_OTP=true
+OXALIS_ENABLE_TOTP=true
+OXALIS_ENABLE_PASSWORD=true
+OXALIS_SMART_DISPATCH=false
+```
+
+Or re-run the wizard at any time — it updates existing values in-place:
+```bash
+php artisan oxalis:install
+```
+
+---
+
+## Dev mode
+
+When `APP_ENV=local`, Oxalis shows OTP codes and magic link URLs directly on-screen so you can test without email. **These never appear in production** (`APP_ENV=production`).
+
+---
+
 ## Updating
 
 ```bash

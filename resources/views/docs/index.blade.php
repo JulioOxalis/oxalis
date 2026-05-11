@@ -203,6 +203,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="nav-section">Getting Started</div>
     <a class="nav-link" href="#installation">Installation</a>
     <a class="nav-link" href="#configuration">Configuration</a>
+    <a class="nav-link" href="#custom-prefix">Custom route prefix</a>
     <a class="nav-link" href="#reconfiguring">Reconfiguring</a>
     <a class="nav-link" href="#dev-mode">Dev mode</a>
     <a class="nav-link" href="#updating">Updating</a>
@@ -310,6 +311,30 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>php artisan vendor:publish --tag=oxalis-config</code></pre></div>
     <p>This creates <code>config/oxalis.php</code> in your application.</p>
+  </section>
+
+  <!-- CUSTOM PREFIX -->
+  <section id="custom-prefix">
+    <h2>Custom route prefix</h2>
+    <p>By default all Oxalis routes are prefixed with <code>/oxalis/</code>. Change it to anything you want with one line in <code>.env</code>:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_PREFIX=auth</code></pre></div>
+    <p>Every route updates immediately — no other changes needed:</p>
+    <table>
+      <thead><tr><th>Default</th><th>With <code>OXALIS_PREFIX=auth</code></th></tr></thead>
+      <tbody>
+        <tr><td><code>/oxalis/login</code></td><td><code>/auth/login</code></td></tr>
+        <tr><td><code>/oxalis/register</code></td><td><code>/auth/register</code></td></tr>
+        <tr><td><code>/oxalis/account</code></td><td><code>/auth/account</code></td></tr>
+        <tr><td><code>/oxalis/admin</code></td><td><code>/auth/admin</code></td></tr>
+        <tr><td><code>/oxalis/docs</code></td><td><code>/auth/docs</code></td></tr>
+      </tbody>
+    </table>
+    <p>The <code>/login</code> and <code>/register</code> redirects in <code>routes/web.php</code> also update automatically to point to the new prefix.</p>
+    <div class="alert-box alert-tip">
+      <i class="bi bi-lightbulb-fill"></i>
+      <div>You can also change the post-login redirect: <code>OXALIS_HOME=/home</code> — defaults to <code>/dashboard</code>.</div>
+    </div>
   </section>
 
   <!-- RECONFIGURING -->

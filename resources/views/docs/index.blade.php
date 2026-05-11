@@ -219,18 +219,33 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <a class="nav-link" href="#social">Social Login</a>
     <a class="nav-link" href="#smart-dispatch">Smart Dispatch</a>
 
+    <div class="nav-section">Registration</div>
+    <a class="nav-link" href="#reg-flow">Registration flow</a>
+    <a class="nav-link" href="#reg-passwordless">Passwordless mode</a>
+    <a class="nav-link" href="#reg-domain">Domain allowlist</a>
+    <a class="nav-link" href="#reg-invites">Invite-only</a>
+
+    <div class="nav-section">User Account</div>
+    <a class="nav-link" href="#account-features">Account page</a>
+    <a class="nav-link" href="#active-sessions">Active sessions</a>
+    <a class="nav-link" href="#account-email-change">Email change</a>
+
     <div class="nav-section">Developer API</div>
     <a class="nav-link" href="#routes">Routes Reference</a>
     <a class="nav-link" href="#components">Blade Components</a>
     <a class="nav-link" href="#events">Events</a>
+    <a class="nav-link" href="#webhooks-dev">Webhooks</a>
     <a class="nav-link" href="#security">Security Features</a>
-    <a class="nav-link" href="#account-features">Account features</a>
     <a class="nav-link" href="#user-command">oxalis:user command</a>
+    <a class="nav-link" href="#project-ideas">Project ideas</a>
     <a class="nav-link" href="#customizing">Customizing</a>
 
     <div class="nav-section">Admin Panel</div>
     <a class="nav-link" href="#admin-setup">Setup &amp; login</a>
     <a class="nav-link" href="#admin-dashboard">Dashboard</a>
+    <a class="nav-link" href="#admin-lockouts">Lockouts</a>
+    <a class="nav-link" href="#admin-invites-doc">Invite codes</a>
+    <a class="nav-link" href="#admin-webhooks-doc">Webhooks</a>
     <a class="nav-link" href="#admin-security">Admin security</a>
 
     <div class="nav-section">Analytics</div>
@@ -557,6 +572,191 @@ GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback</code></pre>
     <pre class="language-bash"><code>OXALIS_SMART_DISPATCH=true</code></pre></div>
   </section>
 
+  <!-- REGISTRATION FLOW -->
+  <section id="reg-flow">
+    <h2>Registration flow</h2>
+    <p>Oxalis uses a 3-step verified registration by default. Every step is conditional on your config.</p>
+    <table>
+      <thead><tr><th>Step</th><th>What happens</th><th>Config flag</th></tr></thead>
+      <tbody>
+        <tr><td>1 — Details</td><td>User enters name + email (+ invite code if required)</td><td>Always shown</td></tr>
+        <tr><td>2 — Verify</td><td>6-digit OTP sent to email, user confirms ownership</td><td>Always shown</td></tr>
+        <tr><td>3 — Password</td><td>User sets a password</td><td>Hidden when <code>OXALIS_ENABLE_PASSWORD=false</code></td></tr>
+      </tbody>
+    </table>
+    <p>After registration, if passkeys are enabled the user is redirected to <code>/oxalis/passkeys/enroll</code> to add a passkey. Otherwise they go to <code>OXALIS_HOME</code>.</p>
+  </section>
+
+  <!-- PASSWORDLESS MODE -->
+  <section id="reg-passwordless">
+    <h2>Passwordless registration</h2>
+    <p>Set <code>OXALIS_ENABLE_PASSWORD=false</code> to remove the password step entirely. Users register in 2 steps (name + email → verify), then enroll a passkey.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_ENABLE_PASSWORD=false
+OXALIS_ENABLE_PASSKEY=true      # users sign in with fingerprint/Face ID
+OXALIS_ENABLE_MAGIC_LINK=true   # fallback: email link
+OXALIS_ENABLE_EMAIL_OTP=true    # fallback: 6-digit code</code></pre></div>
+    <p>With this config, the registration form shows a 2-step indicator instead of 3. At login, the password button is hidden — users sign in using passkey, magic link, or OTP.</p>
+    <div class="alert-box alert-tip">
+      <i class="bi bi-lightbulb-fill"></i>
+      <div><strong>Best practice:</strong> Always keep at least one email-based fallback (<code>magic_link</code> or <code>email_otp</code>) enabled alongside passkeys. If a user loses their device they need a way back in.</div>
+    </div>
+    <h3>Why passkeys are the strongest option</h3>
+    <ul style="padding-left:1.25rem">
+      <li><strong>No phishing possible</strong> — the private key never leaves the device, ever</li>
+      <li><strong>No MITM attacks</strong> — the challenge is signed by the device, not typed by the user</li>
+      <li><strong>No password reuse</strong> — there is no password to reuse or steal</li>
+      <li><strong>Biometric verification</strong> — Touch ID, Face ID, Windows Hello before every sign-in</li>
+      <li><strong>Cross-device</strong> — Chrome/Edge show a QR code to authenticate from your phone via Bluetooth</li>
+      <li><strong>Speed</strong> — one tap to sign in vs typing email + password + OTP</li>
+    </ul>
+  </section>
+
+  <!-- DOMAIN ALLOWLIST -->
+  <section id="reg-domain">
+    <h2>Email domain allowlist</h2>
+    <p>Restrict registration to specific email domains — ideal for internal tools or company apps where only staff should register.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_ALLOWED_DOMAINS=mycompany.com,partner.org</code></pre></div>
+    <p>When set, the registration form shows a notice: <em>"Registration is restricted to: mycompany.com, partner.org"</em>. Attempting to register with any other domain returns a validation error. Leave the value empty (default) to allow any domain.</p>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div>The allowlist is also enforced for social login — a Google account with a non-allowed domain cannot register through OAuth either.</div>
+    </div>
+  </section>
+
+  <!-- INVITE ONLY -->
+  <section id="reg-invites">
+    <h2>Invite-only registration</h2>
+    <p>Restrict registration to users who have a valid invite code — perfect for closed betas, early access, or private communities.</p>
+    <h3>Enable invite-only mode</h3>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_INVITE_ONLY=true</code></pre></div>
+    <p>Once enabled, the registration form shows an <strong>Invite code</strong> field. Without a valid code, registration is blocked.</p>
+    <h3>Generate invite codes</h3>
+    <p>Go to <code>/oxalis/admin/invites</code> in the admin panel. For each code you can set:</p>
+    <ul style="padding-left:1.25rem">
+      <li><strong>Note</strong> — who it's for (e.g. "Beta tester — John")</li>
+      <li><strong>Max uses</strong> — how many users can use this code (default 1)</li>
+      <li><strong>Expiry</strong> — optional expiry in days</li>
+    </ul>
+    <p>Codes are random 8-character strings (e.g. <code>A3BF72KQ</code>). Send them to your users however you like — email, Slack, etc.</p>
+    <h3>What happens when a code is deleted</h3>
+    <p><strong>Users who already registered are not affected.</strong> The code is consumed at registration time (uses counter increments). Deleting a code only prevents future registrations with that code. All accounts already created remain active.</p>
+    <h3>Combining with domain allowlist</h3>
+    <p>You can use both together — the email domain AND the invite code must both pass for registration to succeed. Useful for companies that want to allow only staff + only invited staff.</p>
+  </section>
+
+  <!-- ACTIVE SESSIONS -->
+  <section id="active-sessions">
+    <h2>Active sessions</h2>
+    <p>Every login creates a record in <code>oxalis_sessions</code>. Users can see and revoke their sessions at <code>/oxalis/account/sessions</code>.</p>
+    <table>
+      <thead><tr><th>What's shown</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>Device label</td><td>Auto-detected from user agent: "Chrome on Windows", "Safari on iPhone"</td></tr>
+        <tr><td>IP address</td><td>The IP at time of login</td></tr>
+        <tr><td>Auth method</td><td>How they signed in (passkey, otp, magic_link, etc.)</td></tr>
+        <tr><td>Last active</td><td>Refreshed every 60 seconds of activity</td></tr>
+        <tr><td>Current session</td><td>Marked with a green badge</td></tr>
+      </tbody>
+    </table>
+    <p>The <strong>Revoke</strong> button deletes the session record. On the next request from that device, <code>OxalisSessionGuard</code> detects the missing record and signs them out. Revoking the current session logs the user out immediately.</p>
+    <p><strong>Password reset</strong> also wipes all sessions — anyone signed in on another device is automatically signed out when the password changes.</p>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div>Session guard is applied globally to the <code>web</code> middleware group. It checks once per request and refreshes the <code>last_active_at</code> timestamp at most once per minute to avoid excessive writes.</div>
+    </div>
+  </section>
+
+  <!-- EMAIL CHANGE -->
+  <section id="account-email-change">
+    <h2>Email change</h2>
+    <p>Users can change their email from <code>/oxalis/account</code> — click the <strong>Change</strong> badge next to their email.</p>
+    <p>The flow requires the user to enter their <strong>current password</strong> first, then verify ownership of the new email with an OTP. This prevents a stolen session from silently swapping the account email.</p>
+    <p>On success, <code>email_verified_at</code> is updated to now — the new address is considered verified because the user just proved ownership via OTP.</p>
+  </section>
+
+  <!-- WEBHOOKS DEV -->
+  <section id="webhooks-dev">
+    <h2>Webhooks</h2>
+    <p>Oxalis can POST to your configured endpoints on every auth event. Enable and configure in the admin panel at <code>/oxalis/admin/webhooks</code>.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_WEBHOOKS=true</code></pre></div>
+    <h3>Payload format</h3>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-json"><code>{
+  "event": "login",
+  "fired_at": "2026-05-11T14:32:00+00:00",
+  "payload": {
+    "user_id": "a3f8c2d1... (SHA-256 hash, not raw ID)",
+    "method": "passkey",
+    "ip": "192.168.1.1"
+  }
+}</code></pre></div>
+    <h3>Verifying the signature</h3>
+    <p>Every request includes <code>X-Oxalis-Signature: sha256=...</code>. Verify it server-side:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-php"><code>$body      = file_get_contents('php://input');
+$signature = $_SERVER['HTTP_X_OXALIS_SIGNATURE'] ?? '';
+$expected  = 'sha256=' . hash_hmac('sha256', $body, $yourWebhookSecret);
+
+if (!hash_equals($expected, $signature)) {
+    http_response_code(401);
+    exit;
+}</code></pre></div>
+    <h3>Available events</h3>
+    <table>
+      <thead><tr><th>Event</th><th>Fired when</th></tr></thead>
+      <tbody>
+        <tr><td><code>login</code></td><td>Every successful sign-in</td></tr>
+        <tr><td><code>*</code></td><td>All events (wildcard)</td></tr>
+      </tbody>
+    </table>
+    <div class="alert-box alert-warn">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div>After 10 consecutive delivery failures (timeout or non-2xx response), the webhook is automatically disabled. Re-enable it from the admin panel after fixing the endpoint.</div>
+    </div>
+  </section>
+
+  <!-- PROJECT IDEAS -->
+  <section id="project-ideas">
+    <h2>Project ideas</h2>
+    <p>Here are real-world scenarios where Oxalis covers the entire auth layer out of the box:</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="bi bi-building"></i></div>
+        <h4>Internal company tool</h4>
+        <p>Set <code>OXALIS_ALLOWED_DOMAINS=yourcompany.com</code> so only staff can register. Enable passkeys for fast sign-in without IT managing passwords.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="bi bi-rocket"></i></div>
+        <h4>Closed beta / early access</h4>
+        <p>Set <code>OXALIS_INVITE_ONLY=true</code>. Generate invite codes in the admin panel and send to selected users. Full control over who can join.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="bi bi-credit-card"></i></div>
+        <h4>Fintech / high-security app</h4>
+        <p>Enable passkeys + TOTP. Disable password method. Protect payment routes with <code>oxalis.step-up</code> middleware to require re-verification.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="bi bi-people"></i></div>
+        <h4>SaaS with social login</h4>
+        <p>Enable Google/GitHub OAuth. Users sign in with their work accounts. Magic link as fallback. Webhooks fire to Slack on every new registration.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="bi bi-shield-fill-check"></i></div>
+        <h4>Healthcare / compliance</h4>
+        <p>Passkey-only (no password). TOTP enforced. Login notifications on every sign-in. Session revocation available so admins can force sign-out.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="bi bi-terminal"></i></div>
+        <h4>Developer tool / API</h4>
+        <p>Domain allowlist for dev emails. Passkey + OTP. Smart Dispatch for one-field auth. Webhooks to trigger CI/CD pipelines on authentication events.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ROUTES -->
   <section id="routes">
     <h2>Routes Reference</h2>
@@ -750,6 +950,58 @@ OXALIS_ADMIN_GATE=admin    # optional — ties to a Laravel Gate for extra prote
 
     <h3>Change password</h3>
     <p><code>/oxalis/admin/change-password</code> requires the current password to confirm. On success, <code>session_version</code> rotates — <strong>all other active admin sessions are immediately invalidated</strong>. Only the session that made the change stays valid.</p>
+  </section>
+
+  <!-- ADMIN LOCKOUTS -->
+  <section id="admin-lockouts">
+    <h2>Admin panel — Lockouts</h2>
+    <p>The Lockouts page at <code>/oxalis/admin/lockouts</code> shows all IPs and credentials that have triggered rate limiting.</p>
+    <h3>How lockouts are created</h3>
+    <table>
+      <thead><tr><th>Source</th><th>Trigger</th><th>Duration</th></tr></thead>
+      <tbody>
+        <tr><td>IP rate limit</td><td>Too many POST requests to auth endpoints from one IP</td><td><code>OXALIS_LOCKOUT_MINUTES</code> (default 15)</td></tr>
+        <tr><td>Password lockout</td><td>N failed password attempts for the same email+IP</td><td><code>OXALIS_LOCKOUT_MINUTES</code></td></tr>
+        <tr><td>Passkey lockout</td><td>5 failed signature verifications for the same credential</td><td>15 minutes (fixed)</td></tr>
+        <tr><td>Admin login</td><td>5 failed admin login attempts from one IP</td><td>30 minutes (fixed)</td></tr>
+      </tbody>
+    </table>
+    <h3>What the admin can do</h3>
+    <ul style="padding-left:1.25rem">
+      <li><strong>Unlock</strong> a specific IP/credential — clears attempts and removes the lock immediately</li>
+      <li><strong>Clear all active lockouts</strong> — bulk clears everything currently locked</li>
+      <li><strong>Filter</strong> — view only active lockouts or all historical records</li>
+    </ul>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div>Lockouts are per-IP or per-credential — not per-user account. Unlocking an IP doesn't grant access to any account; the user still needs to authenticate normally.</div>
+    </div>
+  </section>
+
+  <!-- ADMIN INVITES DOC -->
+  <section id="admin-invites-doc">
+    <h2>Admin panel — Invite codes</h2>
+    <p>Manage invite codes at <code>/oxalis/admin/invites</code>. Only relevant when <code>OXALIS_INVITE_ONLY=true</code>.</p>
+    <h3>Creating a code</h3>
+    <p>Click <strong>Generate code</strong> and fill in:</p>
+    <table>
+      <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Note</td><td>Who it's for — your reference only, not shown to users</td></tr>
+        <tr><td>Max uses</td><td>How many people can use this code (1 = single-use, e.g. 50 = batch invite)</td></tr>
+        <tr><td>Expires in (days)</td><td>Optional expiry — leave blank for no expiry</td></tr>
+      </tbody>
+    </table>
+    <h3>Deleting a code</h3>
+    <p><strong>Does not delete any users.</strong> Users who already used the code are fully registered and unaffected. Deleting only prevents the code from being used for future registrations. The uses counter tells you how many people have already registered with it.</p>
+  </section>
+
+  <!-- ADMIN WEBHOOKS DOC -->
+  <section id="admin-webhooks-doc">
+    <h2>Admin panel — Webhooks</h2>
+    <p>Configure HTTP webhooks at <code>/oxalis/admin/webhooks</code>. Requires <code>OXALIS_WEBHOOKS=true</code>.</p>
+    <p>Add a URL, choose which events trigger it, and save. Oxalis will POST a signed JSON payload to that URL every time the selected event fires. Use <code>https://webhook.site</code> to test without a real server.</p>
+    <p>Each webhook has a <strong>secret</strong> shown at creation time — store it safely. Use it to verify the <code>X-Oxalis-Signature</code> header on your receiving server. After 10 consecutive failures the webhook auto-disables — re-enable it once your endpoint is fixed.</p>
   </section>
 
   <!-- ADMIN DASHBOARD -->

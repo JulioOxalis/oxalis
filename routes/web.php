@@ -175,8 +175,12 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
 
         // Admin panel — protected by OxalisAdminAuth middleware
         Route::middleware('oxalis.admin-auth')->prefix('admin')->group(function () {
-            Route::get('/',               [AdminController::class,     'index'])          ->name('oxalis.admin');
-            Route::get('/change-password',[AdminAuthController::class, 'showChangePassword'])->name('oxalis.admin.password');
+            Route::get('/',                    [AdminController::class,     'index'])           ->name('oxalis.admin');
+            Route::get('/events',              [AdminController::class,     'events'])          ->name('oxalis.admin.events');
+            Route::get('/lockouts',            [AdminController::class,     'lockouts'])        ->name('oxalis.admin.lockouts');
+            Route::post('/lockouts/clear',     [AdminController::class,     'clearLockout'])    ->name('oxalis.admin.lockouts.clear');
+            Route::post('/lockouts/clear-all', [AdminController::class,     'clearAllLockouts'])->name('oxalis.admin.lockouts.clear-all');
+            Route::get('/change-password',     [AdminAuthController::class, 'showChangePassword'])->name('oxalis.admin.password');
             Route::post('/change-password',[AdminAuthController::class,'changePassword']) ->name('oxalis.admin.password.post');
             Route::post('/logout',        [AdminAuthController::class, 'logout'])         ->name('oxalis.admin.logout');
             // Invites

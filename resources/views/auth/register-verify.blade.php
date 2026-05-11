@@ -2,6 +2,7 @@
 @section('title','Verify your email')
 @section('content')
 
+@php $withPassword = config('oxalis.methods.password', true); @endphp
 {{-- Step indicator --}}
 <div class="d-flex align-items-center justify-content-center gap-0 mb-4">
   <div class="d-flex flex-column align-items-center">
@@ -15,11 +16,13 @@
     <div style="width:28px;height:28px;border-radius:50%;background:var(--ox);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700">2</div>
     <div style="font-size:.65rem;color:var(--ox);margin-top:.3rem;font-weight:600">Verify</div>
   </div>
+  @if($withPassword)
   <div style="width:40px;height:2px;background:var(--bs-border-color);margin-bottom:1.1rem"></div>
   <div class="d-flex flex-column align-items-center">
     <div style="width:28px;height:28px;border-radius:50%;background:var(--bs-tertiary-bg,#f0f0f0);color:var(--bs-secondary-color);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700">3</div>
     <div style="font-size:.65rem;color:var(--bs-secondary-color);margin-top:.3rem">Password</div>
   </div>
+  @endif
 </div>
 
 <div class="ox-icon"><i class="bi bi-envelope-open"></i></div>

@@ -104,18 +104,18 @@
   </div>
   <nav class="adm-nav">
     <div class="adm-nav-section">Monitoring</div>
-    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin') ? 'active' : '' }}"
+    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin') && !request()->routeIs('oxalis.admin.*') ? 'active' : '' }}"
        href="{{ route('oxalis.admin') }}">
       <i class="bi bi-speedometer2"></i> Dashboard
     </a>
 
     <div class="adm-nav-section">Data</div>
-    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin') && request()->get('section') === 'events' ? 'active' : '' }}"
-       href="{{ route('oxalis.admin') }}#events">
+    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin.events') ? 'active' : '' }}"
+       href="{{ route('oxalis.admin.events') }}">
       <i class="bi bi-activity"></i> Auth events
     </a>
-    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin') && request()->get('section') === 'lockouts' ? 'active' : '' }}"
-       href="{{ route('oxalis.admin') }}#lockouts">
+    <a class="adm-nav-link {{ request()->routeIs('oxalis.admin.lockouts') ? 'active' : '' }}"
+       href="{{ route('oxalis.admin.lockouts') }}">
       <i class="bi bi-ban"></i> Lockouts
     </a>
 

@@ -75,9 +75,9 @@ class AdminController extends Controller
             }
         });
 
-        $cred         = AdminCredential::first();
-        $recentEvents = AuthEvent::latest()->take(15)->get();
-        $recentLockouts = Lockout::where('attempts', '>', 0)->latest('updated_at')->take(10)->get();
+        $cred           = AdminCredential::first();
+        $recentEvents   = AuthEvent::latest()->take(10)->get();
+        $recentLockouts = Lockout::where('attempts', '>', 0)->latest('updated_at')->take(8)->get();
 
         return view('oxalis::admin.index', compact(
             'users', 'passkeyCounts', 'totpEnabled', 'lastLogin',
@@ -85,5 +85,62 @@ class AdminController extends Controller
             'totalLogins', 'totalFailed', 'lockedNow', 'totalUsers', 'totalPasskeys',
             'search', 'filter', 'cred',
         ));
+    }
+
+    public function events(Request $request)
+    {
+        $method = $request->get('method');
+        $status = $request->get('status');
+
+        $query = AuthEvent::latest();
+
+        if ($method) {
+            $query->where('method', $method);
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $events  = $query->paginate(50)->withQueryString();
+        $methods = [];
+        try {
+            $methods = AuthEvent::get(['method'])->pluck('method')->unique()->sort()->values();
+        } catch (\Throwable) {}
+
+        return view('oxalis::admin.events', compact('events', 'methods', 'method', 'status'));
+    }
+
+    public function lockouts(Request $request)
+    {
+        $active = $request->boolean('active', true);
+
+        $query = Lockout::where('attempts', '>', 0);
+        if ($active) {
+            $query->where('locked_until', '>', now());
+        }
+
+        $lockouts = $query->latest('updated_at')->paginate(50)->withQueryString();
+
+        return view('oxalis::admin.lockouts', compact('lockouts', 'active'));
+    }
+
+    public function clearLockout(Request $request)
+    {
+        $request->validate(['lockout_id' => 'required']);
+        try {
+            Lockout::find($request->lockout_id)?->update(['attempts' => 0, 'locked_until' => null]);
+        } catch (\Throwable) {}
+
+        return back()->with('admin_success', 'Lockout cleared.');
+    }
+
+    public function clearAllLockouts()
+    {
+        try {
+            Lockout::where('locked_until', '>', now())
+                ->update(['attempts' => 0, 'locked_until' => null]);
+        } catch (\Throwable) {}
+
+        return back()->with('admin_success', 'All active lockouts cleared.');
     }
 }

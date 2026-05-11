@@ -17,8 +17,14 @@ class OxalisIpThrottle
 {
     public function handle(Request $request, Closure $next, int $maxHits = 30, int $decayMinutes = 1)
     {
-        $key     = 'ip:' . $decayMinutes . ':' . hash('sha256', $request->ip());
-        $lockout = Lockout::firstOrCreate(['key' => $key], ['attempts' => 0]);
+        $key = 'ip:' . $decayMinutes . ':' . hash('sha256', $request->ip());
+
+        try {
+            $lockout = Lockout::firstOrCreate(['key' => $key], ['attempts' => 0]);
+        } catch (\Throwable) {
+            // Table doesn't exist yet — migrations not run. Let request through.
+            return $next($request);
+        }
 
         // Reset counter if the window has expired
         if ($lockout->locked_until && $lockout->locked_until->isPast()) {

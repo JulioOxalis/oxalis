@@ -21,7 +21,11 @@ class OxalisThrottle
         $email = $request->input('email', '');
         $key   = Lockout::keyFor($email, $request->ip());
 
-        $lockout = Lockout::firstOrCreate(['key' => $key], ['attempts' => 0]);
+        try {
+            $lockout = Lockout::firstOrCreate(['key' => $key], ['attempts' => 0]);
+        } catch (\Throwable) {
+            return $next($request);
+        }
 
         if ($lockout->isLocked()) {
             return back()->withErrors([

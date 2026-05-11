@@ -224,7 +224,14 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <a class="nav-link" href="#components">Blade Components</a>
     <a class="nav-link" href="#events">Events</a>
     <a class="nav-link" href="#security">Security Features</a>
+    <a class="nav-link" href="#account-features">Account features</a>
+    <a class="nav-link" href="#user-command">oxalis:user command</a>
     <a class="nav-link" href="#customizing">Customizing</a>
+
+    <div class="nav-section">Admin Panel</div>
+    <a class="nav-link" href="#admin-setup">Setup &amp; login</a>
+    <a class="nav-link" href="#admin-dashboard">Dashboard</a>
+    <a class="nav-link" href="#admin-security">Admin security</a>
 
     <div class="nav-section">Analytics</div>
     <a class="nav-link" href="#app-stats">User Stats Dashboard</a>
@@ -449,6 +456,9 @@ OXALIS_REQUIRE_ATTESTATION=false   # true = enterprise devices only</code></pre>
       <i class="bi bi-info-circle-fill"></i>
       <div><strong>Local dev:</strong> <code>OXALIS_RP_ID=localhost</code> and <code>OXALIS_ORIGINS=http://localhost:8000</code>. The RP ID must exactly match the browser hostname — no port, no scheme.</div>
     </div>
+    <h3>Conditional UI autofill</h3>
+    <p>On the login page, the email field has <code>autocomplete="username webauthn"</code>. When the page loads, Oxalis silently starts a discoverable credential request in the background. When the user clicks the email field, their browser shows registered passkeys in the autofill dropdown — no button click, no email required.</p>
+    <p>Works on Chrome 108+, Edge 108+, Safari 16+. Falls back gracefully to the regular button flow on older browsers.</p>
   </section>
 
   <!-- EMAIL OTP -->
@@ -489,6 +499,11 @@ MAIL_HOST=smtp.gmail.com</code></pre></div>
     <p>From now on, after any successful auth method, <code>LoginHandler</code> checks TOTP and redirects to the TOTP verify page if enabled.</p>
     <h3>Recovery codes</h3>
     <p>8 random codes generated at TOTP setup. Each is bcrypt-hashed and consumed on use. Users can regenerate them at <code>/oxalis/account</code>.</p>
+    <h3>Remember this device</h3>
+    <p>On the TOTP verify page, users can tick <strong>"Remember this device for 30 days"</strong>. A signed token is set as an <code>httpOnly</code> cookie. On the next login, if the cookie matches a valid record in <code>oxalis_totp_trusted_devices</code>, TOTP is skipped entirely for that device.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_TOTP_TRUST=true       # enable/disable the feature (default true)
+OXALIS_TOTP_TRUST_DAYS=30    # how long the device is trusted</code></pre></div>
   </section>
 
   <!-- PASSWORD -->
@@ -544,6 +559,13 @@ GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback</code></pre>
         <tr><td>GET /oxalis/step-up</td><td><code>oxalis.step-up.prompt</code></td><td>Step-up prompt <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>POST /oxalis/logout</td><td><code>oxalis.logout</code></td><td>Sign out <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>GET /oxalis/stats</td><td><code>oxalis.stats</code></td><td>Usage dashboard <span style="color:var(--ox)">(auth)</span></td></tr>
+        <tr><td>GET /oxalis/account/email</td><td><code>oxalis.account.email.show</code></td><td>Change email <span style="color:var(--ox)">(auth)</span></td></tr>
+        <tr><td>POST /oxalis/account/delete</td><td><code>oxalis.account.delete</code></td><td>Delete account <span style="color:var(--ox)">(auth)</span></td></tr>
+        <tr><td>POST /oxalis/passkeys/login/autofill-begin</td><td><code>oxalis.passkeys.login.autofill</code></td><td>Conditional passkey begin</td></tr>
+        <tr><td>GET /oxalis/admin</td><td><code>oxalis.admin</code></td><td>Admin dashboard <span style="color:#ef4444">(admin)</span></td></tr>
+        <tr><td>GET /oxalis/admin/setup</td><td><code>oxalis.admin.setup</code></td><td>First-time admin setup</td></tr>
+        <tr><td>GET /oxalis/admin/login</td><td><code>oxalis.admin.login</code></td><td>Admin login</td></tr>
+        <tr><td>GET /oxalis/admin/change-password</td><td><code>oxalis.admin.password</code></td><td>Change admin password <span style="color:#ef4444">(admin)</span></td></tr>
         <tr><td>GET /oxalis/docs</td><td><code>oxalis.docs</code></td><td>This page</td></tr>
         <tr><td>GET /login</td><td><code>login</code></td><td>Redirects → /oxalis/login</td></tr>
         <tr><td>GET /register</td><td>—</td><td>Redirects → /oxalis/register</td></tr>
@@ -632,6 +654,90 @@ class EventServiceProvider
   --ox-r: 14px;       /* border radius */
 }</code></pre></div>
     <p>The account page and email templates follow the same <code>--ox</code> variable — change it once, updates everywhere.</p>
+  </section>
+
+  <!-- ACCOUNT FEATURES -->
+  <section id="account-features">
+    <h2>Account features</h2>
+    <p>All user-facing account management lives at <code>/oxalis/account</code>. Features shown are filtered by which methods the developer enabled in config.</p>
+
+    <h3>Email change</h3>
+    <p>A <strong>Change</strong> badge next to the email address opens a 2-step flow: enter new email → receive OTP → verify → email updated with <code>email_verified_at = now()</code>. Works the same as registration verification.</p>
+
+    <h3>Account deletion</h3>
+    <p>A collapsible <strong>Danger zone</strong> at the bottom of the account page. User must type their email to confirm. Deletes all Oxalis records for that user (passkeys, TOTP, OTP challenges, magic links, auth events, trusted devices). Configurable:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_ACCOUNT_DELETION=true       # show/hide the danger zone
+OXALIS_DELETE_USER_MODEL=true      # also delete the user row from your users table</code></pre></div>
+    <div class="alert-box alert-warn">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div>Set <code>OXALIS_DELETE_USER_MODEL=false</code> if you want to keep the user record but wipe all authentication data — useful for soft-deletes or compliance workflows.</div>
+    </div>
+  </section>
+
+  <!-- USER COMMAND -->
+  <section id="user-command">
+    <h2>oxalis:user command</h2>
+    <p>Manage users directly from the CLI — useful for seeding, CI pipelines, or support tasks.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>php artisan oxalis:user              # interactive menu
+php artisan oxalis:user create       # create a user (prompts name, email, password)
+php artisan oxalis:user list         # table of all users
+php artisan oxalis:user delete       # delete user + all their Oxalis data</code></pre></div>
+    <p><code>oxalis:user delete</code> removes the user from the users table AND all associated Oxalis records — passkeys, TOTP secrets, OTP challenges, magic links, auth events, and trusted devices.</p>
+  </section>
+
+  <!-- ADMIN SETUP -->
+  <section id="admin-setup">
+    <h2>Admin panel — Setup &amp; login</h2>
+    <p>The admin panel is disabled by default. Enable it with:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_ADMIN=true
+OXALIS_ADMIN_GATE=admin    # optional — ties to a Laravel Gate for extra protection</code></pre></div>
+
+    <h3>First visit — setup wizard</h3>
+    <p>The first time anyone visits <code>/oxalis/admin</code>, they are redirected to a one-time setup page at <code>/oxalis/admin/setup</code>:</p>
+    <ol style="padding-left:1.25rem">
+      <li>Set an admin password — the form enforces 12+ chars, uppercase, number, and symbol via a live strength meter. The submit button stays disabled until all requirements pass.</li>
+      <li>Optionally enable TOTP — scan a QR code with Google Authenticator or Authy, confirm with the first 6-digit code. Adds a second factor to every future admin login.</li>
+    </ol>
+    <p>Once set up, the setup page is permanently inaccessible.</p>
+
+    <h3>Login</h3>
+    <p>Every visit to <code>/oxalis/admin</code> requires signing in at <code>/oxalis/admin/login</code>. The login page shows the last login time and IP so you can immediately spot unauthorized access. After <strong>5 failed attempts</strong>, the IP is locked out for <strong>30 minutes</strong>.</p>
+    <p>After sign-in, the session lasts <strong>2 hours of inactivity</strong> (sliding window — refreshed on every request). The sidebar has a manual <strong>Sign out</strong> button.</p>
+
+    <h3>Change password</h3>
+    <p><code>/oxalis/admin/change-password</code> requires the current password to confirm. On success, <code>session_version</code> rotates — <strong>all other active admin sessions are immediately invalidated</strong>. Only the session that made the change stays valid.</p>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="admin-dashboard">
+    <h2>Admin panel — Dashboard</h2>
+    <p>The dashboard at <code>/oxalis/admin</code> gives a full view of authentication activity across your app.</p>
+    <table>
+      <thead><tr><th>Feature</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>KPI cards</td><td>Total users, passkeys, successful logins, failed attempts, IPs currently locked</td></tr>
+        <tr><td>User table</td><td>Paginated (50/page), search by name or email, filter by "Has passkey" or "TOTP on"</td></tr>
+        <tr><td>Per-user stats</td><td>Passkey count, TOTP status, last sign-in time — cached for 5 minutes (safe for 100k+ users)</td></tr>
+        <tr><td>Auth events</td><td>15 most recent attempts with method, IP, and pass/fail indicator</td></tr>
+        <tr><td>Lockouts</td><td>Active lockouts with attempt count and expiry time</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ADMIN SECURITY -->
+  <section id="admin-security">
+    <h2>Admin panel — Security model</h2>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-key-fill"></i></div><h4>Separate credentials</h4><p>Admin password is stored in <code>oxalis_admin_credentials</code> — completely separate from your app's user table. No user account needed.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-phone-fill"></i></div><h4>Optional TOTP</h4><p>Enable 2FA for admin login during setup. Every sign-in requires password + authenticator code.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-fill-exclamation"></i></div><h4>Rate limiting</h4><p>5 failed login attempts → 30-minute IP lockout. Uses the same DB-backed Lockout model as user auth.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-clock-history"></i></div><h4>Session timeout</h4><p>2-hour sliding window. Every request refreshes the timer. Idle for 2 hours → auto-logout.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-arrow-repeat"></i></div><h4>Session versioning</h4><p>Changing the admin password rotates <code>session_version</code> and invalidates all other active sessions instantly.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-geo-alt-fill"></i></div><h4>Login audit</h4><p>Every successful login records timestamp and IP. Shown on the login page and in the sidebar so you always see the last access.</p></div>
+    </div>
   </section>
 
   <!-- APP STATS -->

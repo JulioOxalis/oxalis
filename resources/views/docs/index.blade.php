@@ -583,15 +583,19 @@ GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback</code></pre>
         <tr><td>GET /oxalis/account</td><td><code>oxalis.account</code></td><td>Account settings <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>GET /oxalis/step-up</td><td><code>oxalis.step-up.prompt</code></td><td>Step-up prompt <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>POST /oxalis/logout</td><td><code>oxalis.logout</code></td><td>Sign out <span style="color:var(--ox)">(auth)</span></td></tr>
-        <tr><td>GET /oxalis/stats</td><td><code>oxalis.stats</code></td><td>Usage dashboard <span style="color:var(--ox)">(auth)</span></td></tr>
-        <tr><td>GET /oxalis/account/email</td><td><code>oxalis.account.email.show</code></td><td>Change email <span style="color:var(--ox)">(auth)</span></td></tr>
-        <tr><td>POST /oxalis/account/delete</td><td><code>oxalis.account.delete</code></td><td>Delete account <span style="color:var(--ox)">(auth)</span></td></tr>
+        <tr><td>GET /oxalis/account/sessions</td><td><code>oxalis.sessions</code></td><td>Active sessions <span style="color:var(--ox)">(user)</span></td></tr>
+        <tr><td>GET /oxalis/account/email</td><td><code>oxalis.account.email.show</code></td><td>Change email <span style="color:var(--ox)">(user)</span></td></tr>
+        <tr><td>POST /oxalis/account/delete</td><td><code>oxalis.account.delete</code></td><td>Delete account <span style="color:var(--ox)">(user)</span></td></tr>
         <tr><td>POST /oxalis/passkeys/login/autofill-begin</td><td><code>oxalis.passkeys.login.autofill</code></td><td>Conditional passkey begin</td></tr>
-        <tr><td>GET /oxalis/admin</td><td><code>oxalis.admin</code></td><td>Admin dashboard <span style="color:#ef4444">(admin)</span></td></tr>
+        <tr style="border-top:2px solid var(--border)"><td colspan="3" style="color:#ef4444;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding-top:.75rem">Admin-only — requires <code>OXALIS_ADMIN=true</code> + admin password</td></tr>
+        <tr><td>GET /oxalis/admin</td><td><code>oxalis.admin</code></td><td>Dashboard — users, events, lockouts <span style="color:#ef4444">(admin)</span></td></tr>
         <tr><td>GET /oxalis/admin/setup</td><td><code>oxalis.admin.setup</code></td><td>First-time admin setup</td></tr>
-        <tr><td>GET /oxalis/admin/login</td><td><code>oxalis.admin.login</code></td><td>Admin login</td></tr>
+        <tr><td>GET /oxalis/admin/login</td><td><code>oxalis.admin.login</code></td><td>Admin sign in</td></tr>
+        <tr><td>GET /oxalis/admin/invites</td><td><code>oxalis.admin.invites</code></td><td>Invite code management <span style="color:#ef4444">(admin)</span></td></tr>
+        <tr><td>GET /oxalis/admin/webhooks</td><td><code>oxalis.admin.webhooks</code></td><td>Webhook configuration <span style="color:#ef4444">(admin)</span></td></tr>
         <tr><td>GET /oxalis/admin/change-password</td><td><code>oxalis.admin.password</code></td><td>Change admin password <span style="color:#ef4444">(admin)</span></td></tr>
-        <tr><td>GET /oxalis/docs</td><td><code>oxalis.docs</code></td><td>This page</td></tr>
+        <tr><td>GET /oxalis/stats</td><td><code>oxalis.stats</code></td><td>Auth analytics <span style="color:#ef4444">(admin)</span></td></tr>
+        <tr><td>GET /oxalis/docs</td><td><code>oxalis.docs</code></td><td>This page — public</td></tr>
         <tr><td>GET /login</td><td><code>login</code></td><td>Redirects → /oxalis/login</td></tr>
         <tr><td>GET /register</td><td>—</td><td>Redirects → /oxalis/register</td></tr>
       </tbody>
@@ -613,6 +617,18 @@ GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback</code></pre>
     <p>Link users here — shows only the auth methods the developer enabled in config.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-html"><code>&lt;a href="{{ route('oxalis.account') }}"&gt;Account settings&lt;/a&gt;</code></pre></div>
+    <h3>@oxalisAdmin directive</h3>
+    <p>Show content only when an admin session is active. Use this to conditionally show admin links in your app's navigation — regular users never see them.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-html"><code>@oxalisAdmin
+  &lt;a href="{{ route('oxalis.admin') }}"&gt;Admin panel&lt;/a&gt;
+@endOxalisAdmin</code></pre></div>
+    <p>The <code>&lt;x-oxalis-user-menu /&gt;</code> component already uses this internally — an <strong>Admin panel</strong> link appears in the dropdown only when you are signed into the admin panel.</p>
+    <div class="alert-box alert-warn">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div>This directive only hides the UI. Admin routes are independently protected by <code>oxalis.admin-auth</code> middleware — a regular user can never access <code>/oxalis/admin/*</code> even if they know the URL.</div>
+    </div>
+
     <h3>Step-up auth middleware</h3>
     <p>Protect sensitive routes by requiring fresh TOTP or passkey verification:</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>

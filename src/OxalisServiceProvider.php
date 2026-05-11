@@ -66,6 +66,12 @@ class OxalisServiceProvider extends ServiceProvider
 
         Blade::componentNamespace('Oxalis\\View\\Components', 'oxalis');
 
+        // @oxalisAdmin / @endOxalisAdmin — renders content only when admin is authenticated
+        Blade::if('oxalisAdmin', fn() => session('oxalis_admin_authenticated') === true);
+
+        // @oxalisUser — renders content only when a regular user is logged in
+        Blade::if('oxalisUser', fn() => auth()->check());
+
         foreach (['google', 'github'] as $provider) {
             $cfg = config("oxalis.social.{$provider}");
             if ($cfg && ($cfg['enabled'] ?? false)) {

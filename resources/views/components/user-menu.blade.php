@@ -44,6 +44,21 @@
             </a>
         </li>
 
+        {{-- Admin link — only visible when admin session is active --}}
+        @oxalisAdmin
+        <li><hr class="dropdown-divider my-1" style="border-color:var(--bs-border-color,#dee2e6)"></li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2 mx-1 rounded-2"
+               href="{{ route('oxalis.admin') }}"
+               style="font-size:.875rem;color:#5c6ac4">
+                <span style="width:26px;height:26px;border-radius:8px;background:rgba(92,106,196,.12);color:#5c6ac4;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0">
+                    <i class="bi bi-shield-fill-check"></i>
+                </span>
+                Admin panel
+            </a>
+        </li>
+        @endOxalisAdmin
+
         <li><hr class="dropdown-divider my-1" style="border-color:var(--bs-border-color,#dee2e6)"></li>
 
         {{-- Sign out --}}

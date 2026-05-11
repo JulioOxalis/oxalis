@@ -163,8 +163,10 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
         Route::get('/account/email/verify',  [EmailChangeController::class, 'showVerify'])->name('oxalis.account.email.verify.show');
         Route::post('/account/email/verify', [EmailChangeController::class, 'verify'])->middleware('oxalis.ip:10,5')->name('oxalis.account.email.verify');
 
-        // Auth analytics
-        Route::get('/stats', [StatsController::class, 'index'])->name('oxalis.stats');
+        // Auth analytics — admin session required
+        Route::get('/stats', [StatsController::class, 'index'])
+            ->middleware('oxalis.admin-auth')
+            ->name('oxalis.stats');
 
         // Active sessions
         Route::get('/account/sessions',          [SessionController::class, 'index'])->name('oxalis.sessions');

@@ -125,20 +125,41 @@ class InstallCommand extends Command
         $p    = config('oxalis.routes.prefix', 'oxalis');
         $home = $smartDispatch ? "{$p}/start" : "{$p}/login";
 
+        $this->line('  <fg=cyan;options=bold>User-facing routes:</>');
         $this->table(
-            ['Route', 'What it does'],
+            ['Route', 'Who sees it'],
             [
-                [url($home),                  $smartDispatch ? 'Login (Smart Dispatch — one field)' : 'Login page'],
-                [url("{$p}/register"),         'Register'],
-                [url("{$p}/passkeys/manage"),  'Manage passkeys'],
-                [url("{$p}/totp/setup"),       'Set up authenticator app'],
-                [url("{$p}/step-up"),          'Step-up auth prompt'],
+                [url($home),                  $smartDispatch ? 'Login (Smart Dispatch)' : 'Login page — all visitors'],
+                [url("{$p}/register"),         'Registration — all visitors'],
+                [url("{$p}/account"),          'Account settings — logged-in users'],
+                [url("{$p}/account/sessions"), 'Active sessions — logged-in users'],
+                [url("{$p}/passkeys/enroll"),  'Add passkey — logged-in users'],
+                [url("{$p}/totp/setup"),       'Set up 2FA — logged-in users'],
             ],
         );
 
         $this->newLine();
-        $this->comment('Add to any route: ->middleware("oxalis") to require login');
-        $this->comment('Add to any route: ->middleware("oxalis.step-up") to require re-verification');
+        $this->line('  <fg=yellow;options=bold>⚠  Admin-only routes (add OXALIS_ADMIN=true to .env first):</>');
+        $this->table(
+            ['Route', 'What it does'],
+            [
+                [url("{$p}/admin"),          'Dashboard — users, events, lockouts'],
+                [url("{$p}/admin/invites"),  'Invite code management'],
+                [url("{$p}/admin/webhooks"), 'Webhook configuration'],
+                [url("{$p}/stats"),          'Auth analytics'],
+            ],
+        );
+
+        $this->newLine();
+        $this->line('  <fg=yellow>Admin routes require a separate admin password set on first visit.</>');
+        $this->line('  <fg=yellow>Regular users are blocked from /admin/* even if they know the URL.</>');
+        $this->newLine();
+        $this->comment('Show admin links in Blade only when admin is signed in:');
+        $this->line('    <fg=white>@oxalisAdmin</> ... <fg=white>@endOxalisAdmin</>');
+        $this->newLine();
+        $this->comment('Middleware shortcuts:');
+        $this->comment('  ->middleware("oxalis")          require user login');
+        $this->comment('  ->middleware("oxalis.step-up")  require re-verification');
         $this->newLine();
         $this->callSilent('optimize:clear');
         $this->line('  <fg=green>✓</> Application cache cleared');

@@ -5,6 +5,7 @@ use Oxalis\Events\UserLoggedIn;
 use Oxalis\Mail\LoginNotificationMail;
 use Oxalis\Models\AuthEvent;
 use Oxalis\Models\TotpSecret;
+use Oxalis\Models\TotpTrustedDevice;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -30,16 +31,35 @@ class LoginHandler
             ->exists();
 
         if ($hasTotpEnabled) {
+            // Check if this device was trusted after a previous TOTP verification
+            if (config('oxalis.totp_trust.enabled', true)) {
+                $trustToken = request()->cookie('oxalis_totp_trust');
+                if ($trustToken) {
+                    try {
+                        $trusted = TotpTrustedDevice::where('user_id', $user->getAuthIdentifier())
+                            ->where('token', hash('sha256', $trustToken))
+                            ->where('expires_at', '>', now())
+                            ->first();
+                        if ($trusted) {
+                            // Device is trusted — skip TOTP and log in directly
+                            goto login;
+                        }
+                    } catch (\Throwable) {}
+                }
+            }
+
             session([
-                'oxalis_totp_pending_user_id'     => $user->getAuthIdentifier(),
-                'oxalis_totp_pending_method'       => $method,
-                'oxalis_totp_pending_remember'     => $remember,
-                'oxalis_totp_pending_ip'           => $ip,
-                'oxalis_totp_pending_user_agent'   => $userAgent,
+                'oxalis_totp_pending_user_id'   => $user->getAuthIdentifier(),
+                'oxalis_totp_pending_method'     => $method,
+                'oxalis_totp_pending_remember'   => $remember,
+                'oxalis_totp_pending_ip'         => $ip,
+                'oxalis_totp_pending_user_agent' => $userAgent,
             ]);
 
             return redirect()->route('oxalis.totp.verify.show');
         }
+
+        login:
 
         Auth::login($user, $remember);
 

@@ -8,7 +8,12 @@
     <div class="ox-avatar">{{ strtoupper(substr(auth()->user()->name ?? auth()->user()->email ?? '?', 0, 1)) }}</div>
     <div>
         <h4 class="fw-bold mb-0" style="letter-spacing:-.02em">{{ auth()->user()->name ?? 'User' }}</h4>
-        <div class="text-secondary mt-1" style="font-size:.875rem">{{ auth()->user()->email }}</div>
+        <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+            <span class="text-secondary" style="font-size:.875rem">{{ auth()->user()->email }}</span>
+            <a href="{{ route('oxalis.account.email.show') }}" class="badge rounded-pill text-decoration-none" style="background:var(--ox-sf);color:var(--ox);font-size:.68rem;font-weight:500;padding:.25rem .65rem">
+                <i class="bi bi-pencil me-1"></i>Change
+            </a>
+        </div>
     </div>
 </div>
 
@@ -204,6 +209,42 @@
             @endforeach
         </tbody>
     </table>
+    </div>
+</div>
+@endif
+
+{{-- Danger zone --}}
+@if(config('oxalis.account_deletion.enabled', true))
+<div class="ox-section-label mt-5" style="color:#dc3545">Danger zone</div>
+<div class="ox-card" style="border-color:rgba(220,53,69,.3)">
+    <div class="d-flex align-items-start gap-3 flex-wrap">
+        <div class="flex-grow-1">
+            <div class="fw-semibold" style="color:#dc3545">Delete account</div>
+            <div class="text-secondary" style="font-size:.8rem;margin-top:.25rem">
+                Permanently deletes your account and all associated data. This cannot be undone.
+            </div>
+        </div>
+        <button class="btn btn-sm rounded-pill text-nowrap" style="border:1.5px solid #dc3545;color:#dc3545"
+            data-bs-toggle="collapse" data-bs-target="#delete-form">
+            Delete my account
+        </button>
+    </div>
+    <div class="collapse mt-4" id="delete-form">
+        <form action="{{ route('oxalis.account.delete') }}" method="POST"
+            onsubmit="return confirm('This is permanent. Your account and all data will be deleted.')">
+            @csrf
+            <p class="text-secondary small mb-2">Type your email address to confirm:</p>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <input type="email" name="confirm_email"
+                    class="form-control rounded-3 @error('confirm_email') is-invalid @enderror"
+                    placeholder="{{ auth()->user()->email }}" style="max-width:260px">
+                @error('confirm_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <button type="submit" class="btn btn-sm rounded-pill px-4"
+                    style="background:#dc3545;color:#fff;border:none;font-weight:500">
+                    Confirm deletion
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endif

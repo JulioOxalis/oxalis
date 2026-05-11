@@ -2,10 +2,12 @@
 namespace Oxalis\Http\Controllers;
 
 use Oxalis\Auth\LoginHandler;
+use Oxalis\Models\TotpTrustedDevice;
 use Oxalis\Totp\TotpService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class TotpController extends Controller
 {
@@ -99,12 +101,29 @@ class TotpController extends Controller
             'oxalis_totp_pending_user_agent',
         ]);
 
-        return $this->login->loginAfterTotp(
+        $response = $this->login->loginAfterTotp(
             user:      $user,
             method:    $method,
             ip:        $ip,
             userAgent: $userAgent,
             remember:  $remember,
         );
+
+        // Set a trusted device cookie if the user opted in
+        if (config('oxalis.totp_trust.enabled', true) && $request->boolean('remember_device')) {
+            try {
+                $token = Str::random(64);
+                TotpTrustedDevice::createForUser(
+                    userId:    $user->getAuthIdentifier(),
+                    token:     $token,
+                    ip:        $request->ip(),
+                    userAgent: $request->userAgent() ?? '',
+                );
+                $days = config('oxalis.totp_trust.days', 30);
+                $response->withCookie(cookie('oxalis_totp_trust', $token, $days * 1440, '/', null, true, true));
+            } catch (\Throwable) {}
+        }
+
+        return $response;
     }
 }

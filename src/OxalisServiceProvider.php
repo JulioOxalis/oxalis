@@ -6,6 +6,7 @@ use Oxalis\Telemetry\TelemetryService;
 use Oxalis\Console\InstallCommand;
 use Oxalis\Console\LogCommand;
 use Oxalis\Console\UninstallCommand;
+use Oxalis\Console\UserCommand;
 use Oxalis\EmailOtp\OtpService;
 use Oxalis\EmailVerification\EmailVerificationService;
 use Oxalis\Http\Middleware\OxalisIpThrottle;
@@ -82,7 +83,7 @@ class OxalisServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oxalis.passkey-session', ValidatePasskeySession::class);
 
         if ($this->app->runningInConsole()) {
-            $this->commands([InstallCommand::class, LogCommand::class, UninstallCommand::class]);
+            $this->commands([InstallCommand::class, LogCommand::class, UninstallCommand::class, UserCommand::class]);
         }
 
         // Optional anonymous telemetry — fires at most once per 24h, opt-in only

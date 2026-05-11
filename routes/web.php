@@ -1,7 +1,9 @@
 <?php
 use Oxalis\Http\Controllers\AccountController;
+use Oxalis\Http\Controllers\AdminController;
 use Oxalis\Http\Controllers\AuthController;
 use Oxalis\Http\Controllers\DocsController;
+use Oxalis\Http\Controllers\EmailChangeController;
 use Oxalis\Http\Controllers\StatsController;
 use Oxalis\Http\Controllers\TestHubController;
 use Oxalis\Http\Controllers\EmailVerificationController;
@@ -51,12 +53,16 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
         Route::post('/register/password',  [AuthController::class, 'registerPassword'])->middleware('oxalis.ip:30,1')->name('oxalis.register.password');
 
         // Passkey login — begin is the probe point bots would hammer
-        Route::post('/passkeys/login/begin',  [PasskeyController::class, 'beginAuthentication'])
+        Route::post('/passkeys/login/begin',   [PasskeyController::class, 'beginAuthentication'])
             ->middleware('oxalis.ip:30,1')
             ->name('oxalis.passkeys.login.begin');
-        Route::post('/passkeys/login/finish', [PasskeyController::class, 'finishAuthentication'])
+        Route::post('/passkeys/login/finish',  [PasskeyController::class, 'finishAuthentication'])
             ->middleware('oxalis.ip:30,1')
             ->name('oxalis.passkeys.login.finish');
+        // Conditional UI (autofill passkey) — no email required
+        Route::post('/passkeys/login/autofill-begin', [PasskeyController::class, 'beginAutofill'])
+            ->middleware('oxalis.ip:30,1')
+            ->name('oxalis.passkeys.login.autofill');
 
         // Email OTP — send is strictly limited to prevent email spam
         Route::post('/otp/send',   [OtpController::class, 'send'])
@@ -142,11 +148,22 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
         Route::post('/recovery-code/regenerate', [RecoveryCodeController::class, 'regenerate'])->name('oxalis.recovery.regenerate');
 
         // Account (unified settings page)
-        Route::get('/account', [AccountController::class, 'index'])->name('oxalis.account');
+        Route::get('/account',        [AccountController::class, 'index'])->name('oxalis.account');
+        Route::post('/account/delete',[AccountController::class, 'deleteAccount'])->name('oxalis.account.delete');
         // Legacy alias kept for backwards compat
         Route::get('/account/security', [SecurityController::class, 'index'])->name('oxalis.account.security');
+
+        // Email change flow
+        Route::get('/account/email',         [EmailChangeController::class, 'show'])->name('oxalis.account.email.show');
+        Route::post('/account/email',        [EmailChangeController::class, 'send'])->middleware('oxalis.ip:5,5')->name('oxalis.account.email.send');
+        Route::get('/account/email/verify',  [EmailChangeController::class, 'showVerify'])->name('oxalis.account.email.verify.show');
+        Route::post('/account/email/verify', [EmailChangeController::class, 'verify'])->middleware('oxalis.ip:10,5')->name('oxalis.account.email.verify');
+
         // Auth analytics
         Route::get('/stats', [StatsController::class, 'index'])->name('oxalis.stats');
+
+        // Admin panel
+        Route::get('/admin', [AdminController::class, 'index'])->name('oxalis.admin');
     });
 });
 

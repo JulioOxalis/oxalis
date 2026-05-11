@@ -28,7 +28,7 @@
   <br>Visit <a href="{{ (config('oxalis.origins')[0]??'http://localhost').'/oxalis/login' }}" class="fw-semibold">the correct URL</a> or update <code>OXALIS_ORIGINS</code>.
 </div>
 <div class="form-floating mb-2">
-  <input type="email" id="pk-email" class="form-control rounded-3" placeholder="e" autocomplete="email">
+  <input type="email" id="pk-email" class="form-control rounded-3" placeholder="e" autocomplete="username webauthn">
   <label>Email address</label>
 </div>
 <button id="btn-pk" class="btn btn-ox w-100 mb-2 d-flex align-items-center justify-content-center gap-2">
@@ -119,6 +119,27 @@ function friendlyErr(e){
 function showErr(m){const e=document.getElementById('pk-err');e.textContent=m;e.classList.remove('d-none');}
 function hideErr(){document.getElementById('pk-err').classList.add('d-none');}
 function reset(){const b=document.getElementById('btn-pk');b.disabled=false;b.innerHTML='<i class="bi bi-fingerprint fs-5"></i> Sign in with Passkey';}
+// ── Conditional UI (autofill passkey) ─────────────────────────────────────────
+// Starts a background discoverable credential request so the browser can offer
+// passkeys in the autofill dropdown when the user focuses the email field.
+(async()=>{
+  try{
+    if(!window.PublicKeyCredential?.isConditionalMediationAvailable)return;
+    const ok=await PublicKeyCredential.isConditionalMediationAvailable();
+    if(!ok)return;
+    const toB=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+    const toS=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const r=await fetch('{{ route('oxalis.passkeys.login.autofill') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:'{}' });
+    const o=await r.json();if(o.error)return;
+    o.challenge=toB(o.challenge);
+    if(o.allowCredentials)o.allowCredentials=o.allowCredentials.map(c=>({...c,id:toB(c.id)}));
+    const cred=await navigator.credentials.get({publicKey:o,mediation:'conditional'});
+    if(!cred)return;
+    const r2=await fetch('{{ route('oxalis.passkeys.login.finish') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({id:cred.id,rawId:toS(cred.rawId),type:cred.type,response:{clientDataJSON:toS(cred.response.clientDataJSON),authenticatorData:toS(cred.response.authenticatorData),signature:toS(cred.response.signature),userHandle:cred.response.userHandle?toS(cred.response.userHandle):null}})});
+    const d=await r2.json();
+    if(d.redirect)window.location.href=d.redirect;
+  }catch(e){/* conditional UI silently ignored — user can still click the button */}
+})();
 </script>
 @endpush
 @endif

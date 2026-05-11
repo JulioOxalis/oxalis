@@ -11,6 +11,14 @@
     placeholder="000000" autofocus autocomplete="one-time-code"
     style="font-size:1.8rem;letter-spacing:.2em;font-family:monospace">
   @error('code')<div class="invalid-feedback text-center mb-2">{{ $message }}</div>@enderror
+  @if(config('oxalis.totp_trust.enabled', true))
+  <div class="d-flex align-items-center gap-2 mb-3 justify-content-center">
+    <input class="form-check-input mt-0" type="checkbox" name="remember_device" id="rem-dev" value="1">
+    <label class="form-check-label small text-secondary" for="rem-dev">
+      Remember this device for {{ config('oxalis.totp_trust.days', 30) }} days
+    </label>
+  </div>
+  @endif
   <button class="btn btn-ox w-100">Verify</button>
 </form>
 <hr class="my-3">

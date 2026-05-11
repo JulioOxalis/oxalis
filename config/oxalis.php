@@ -96,6 +96,26 @@ return [
     // ── Login notification email ──────────────────────────────────────────────
     'login_notification' => env('OXALIS_LOGIN_NOTIFICATION', false),
 
+    // ── TOTP trusted device ("remember this device") ─────────────────────────
+    'totp_trust' => [
+        'enabled' => env('OXALIS_TOTP_TRUST', true),
+        'days'    => env('OXALIS_TOTP_TRUST_DAYS', 30),
+    ],
+
+    // ── Admin panel (/oxalis/admin) ───────────────────────────────────────────
+    // Disabled by default — set OXALIS_ADMIN=true to enable.
+    // Optionally gate with a Laravel Gate: OXALIS_ADMIN_GATE=admin
+    'admin' => [
+        'enabled' => env('OXALIS_ADMIN', false),
+        'gate'    => env('OXALIS_ADMIN_GATE', null),
+    ],
+
+    // ── Account deletion ──────────────────────────────────────────────────────
+    'account_deletion' => [
+        'enabled'           => env('OXALIS_ACCOUNT_DELETION', true),
+        'delete_user_model' => env('OXALIS_DELETE_USER_MODEL', true),
+    ],
+
     // ── Anonymous telemetry (opt-in, default OFF) ─────────────────────────────
     // Sends: package version, PHP/Laravel version, enabled methods (booleans),
     // and a one-way SHA-256 hash of APP_URL. Never any user PII.

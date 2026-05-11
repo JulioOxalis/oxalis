@@ -59,6 +59,16 @@ class PasskeyController extends Controller
         return response()->json(['redirect' => config('oxalis.routes.home', '/dashboard')]);
     }
 
+    // ── Guest: conditional (autofill) begin ─────────────────────────────────
+    // No email required — browser shows passkeys in the autofill dropdown.
+    // Uses WebAuthn discoverable credentials (empty allowCredentials).
+
+    public function beginAutofill()
+    {
+        $options = oxalis::beginAuthentication(null);
+        return response()->json($options);
+    }
+
     // ── Authenticated: enrollment ────────────────────────────────────────────
 
     public function showEnroll()

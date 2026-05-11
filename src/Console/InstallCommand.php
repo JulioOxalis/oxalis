@@ -76,7 +76,14 @@ class InstallCommand extends Command
             }
         }
 
-        // ── 5. User model stub ────────────────────────────────────────────────
+        // ── 5. Route prefix + home redirect ──────────────────────────────────
+        $this->newLine();
+        $prefix = $this->ask('Route prefix? (all Oxalis URLs will start with this)', 'oxalis');
+        $prefix = preg_replace('/[^a-z0-9\-_]/i', '', trim($prefix, '/')) ?: 'oxalis';
+
+        $home = $this->ask('Redirect users here after login', '/dashboard');
+
+        // ── 6. User model stub ────────────────────────────────────────────────
         $publishUser = $this->confirm(
             'Publish User model stub (adds HasPasskeys trait to app/Models/User.php)?',
             false,
@@ -98,7 +105,7 @@ class InstallCommand extends Command
         }
 
         // ── Write .env ────────────────────────────────────────────────────────
-        $this->appendEnv($enabledKeys, $smartDispatch, $googleEnabled, $githubEnabled, $googleId, $googleSecret, $githubId, $githubSecret);
+        $this->appendEnv($enabledKeys, $smartDispatch, $googleEnabled, $githubEnabled, $googleId, $googleSecret, $githubId, $githubSecret, $prefix, $home);
         $this->line('  <fg=green>✓</> .env updated');
 
         // ── Replace default auth routes (always automatic) ───────────────────
@@ -148,6 +155,8 @@ class InstallCommand extends Command
         ?string $googleSecret,
         ?string $githubId,
         ?string $githubSecret,
+        string  $prefix = 'oxalis',
+        string  $home   = '/dashboard',
     ): void {
         $host = parse_url(config('app.url', 'http://localhost'), PHP_URL_HOST) ?: 'localhost';
         $name = config('app.name', 'App');
@@ -158,6 +167,8 @@ class InstallCommand extends Command
         $lines = [
             '',
             '# Oxalis',
+            "OXALIS_PREFIX={$prefix}",
+            "OXALIS_HOME={$home}",
             "OXALIS_RP_ID={$host}",
             "OXALIS_RP_NAME=\"{$name}\"",
             "OXALIS_ORIGINS={$url}",
@@ -244,7 +255,7 @@ class InstallCommand extends Command
             $content
         );
 
-        // 3. Append the oxalis redirect shim once — uses OXALIS_PREFIX if set
+        // 3. Append the oxalis redirect shim once
         if (!str_contains($content, 'oxalis — redirect /login and /register')) {
             $p = config('oxalis.routes.prefix', 'oxalis');
             $content .= PHP_EOL . implode(PHP_EOL, [

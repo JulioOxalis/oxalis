@@ -187,7 +187,6 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
   <div class="sidebar-logo">
     <div>
       <div class="brand">JULIO <span>OXALIS</span></div>
-      <div class="version">v1.0 · Laravel</div>
     </div>
     <button class="theme-toggle" id="theme-btn" title="Toggle theme">
       <i class="bi bi-sun-fill" id="theme-icon"></i>

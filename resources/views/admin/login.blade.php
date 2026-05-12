@@ -85,9 +85,9 @@
     </button>
   </form>
   @endif
-</div>
-<div style="text-align:center;margin-top:1.25rem;font-size:.7rem;color:#3a3f52">
-  Forgot password? Run <code style="color:#5c6ac4">php artisan oxalis:admin reset-password</code> on the server.
+  <p style="text-align:center;margin-top:1.25rem;margin-bottom:0;font-size:.7rem;color:#3a3f52">
+    Forgot password? Run <code style="color:#5c6ac4">php artisan oxalis:admin reset-password</code> on the server.
+  </p>
 </div>
 </body>
 </html>

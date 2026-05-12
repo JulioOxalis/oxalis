@@ -31,12 +31,6 @@
 </head>
 <body>
 <div class="ox-wrap">
-<div class="text-center mb-4">
-    <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}"
-         alt="{{ config('app.name') }}"
-         style="max-height:52px;max-width:220px;width:auto;object-fit:contain"
-         onerror="this.style.display='none'">
-</div>
 @if(session('status'))
 <div class="alert rounded-3 border-0 mb-3" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
 @endif

@@ -3,6 +3,7 @@ namespace Oxalis;
 
 use Oxalis\Auth\LoginHandler;
 use Oxalis\Telemetry\TelemetryService;
+use Oxalis\Console\AdminCommand;
 use Oxalis\Console\InstallCommand;
 use Oxalis\Console\LogCommand;
 use Oxalis\Console\UninstallCommand;
@@ -99,7 +100,7 @@ class OxalisServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oxalis.session-guard', OxalisSessionGuard::class);
 
         if ($this->app->runningInConsole()) {
-            $this->commands([InstallCommand::class, LogCommand::class, UninstallCommand::class, UserCommand::class]);
+            $this->commands([AdminCommand::class, InstallCommand::class, LogCommand::class, UninstallCommand::class, UserCommand::class]);
         }
 
         // Optional anonymous telemetry — fires at most once per 24h, opt-in only

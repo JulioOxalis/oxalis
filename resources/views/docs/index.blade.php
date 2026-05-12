@@ -812,20 +812,20 @@ if (!hash_equals($expected, $signature)) {
     <p>Drop a fully-styled user avatar dropdown into any layout. Shows user initials, name, a link to account settings, and a sign-out button.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-html"><code>&lt;!-- In your app layout's nav --&gt;
-@auth
+&#64;auth
   &lt;x-oxalis-user-menu /&gt;
-@endauth</code></pre></div>
+&#64;endauth</code></pre></div>
     <p style="margin-top:.75rem">Requires Bootstrap 5.3 JS in the layout — uses standard <code>data-bs-toggle="dropdown"</code>.</p>
     <h3>Account settings page</h3>
     <p>Link users here — shows only the auth methods the developer enabled in config.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-html"><code>&lt;a href="{{ route('oxalis.account') }}"&gt;Account settings&lt;/a&gt;</code></pre></div>
-    <h3>@oxalisAdmin directive</h3>
+    <h3>&#64;oxalisAdmin directive</h3>
     <p>Show content only when an admin session is active. Use this to conditionally show admin links in your app's navigation — regular users never see them.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
-    <pre class="language-html"><code>@oxalisAdmin
+    <pre class="language-html"><code>&#64;oxalisAdmin
   &lt;a href="{{ route('oxalis.admin') }}"&gt;Admin panel&lt;/a&gt;
-@endOxalisAdmin</code></pre></div>
+&#64;endOxalisAdmin</code></pre></div>
     <p>The <code>&lt;x-oxalis-user-menu /&gt;</code> component already uses this internally — an <strong>Admin panel</strong> link appears in the dropdown only when you are signed into the admin panel.</p>
     <div class="alert-box alert-warn">
       <i class="bi bi-exclamation-triangle-fill"></i>

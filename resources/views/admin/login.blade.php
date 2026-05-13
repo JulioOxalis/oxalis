@@ -37,7 +37,7 @@
          style="max-height:52px;max-width:200px;width:auto;object-fit:contain"
          onerror="this.style.display='none'">
   </div>
-  <div class="login-icon"><i class="bi bi-shield-fill-lock"></i></div>
+  <div class="login-icon"><i class="bi bi-shield-lock-fill"></i></div>
   <h1>Admin access</h1>
   <p class="sub">{{ config('app.name') }} · Restricted area</p>
 

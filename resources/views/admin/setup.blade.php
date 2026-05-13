@@ -40,7 +40,7 @@
 <body>
 <div class="setup-card">
   <div class="text-center mb-3">
-    <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
+    <img src="{{ asset('vendor/oxalis/schwarzkopf-logo.png') }}" alt="Oxalis"
          style="max-height:52px;max-width:200px;width:auto;object-fit:contain"
          onerror="this.style.display='none'">
   </div>

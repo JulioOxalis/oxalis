@@ -186,10 +186,9 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
 <aside id="sidebar">
   <div class="sidebar-logo">
     <div>
-      <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
-           style="height:32px;width:auto;object-fit:contain;margin-bottom:.4rem;display:block"
+      <img src="{{ asset('vendor/oxalis/schwarzkopf-logo.png') }}" alt="Oxalis"
+           style="height:32px;width:auto;object-fit:contain;display:block"
            onerror="this.style.display='none'">
-      <div class="brand">JULIO <span>OXALIS</span></div>
     </div>
     <button class="theme-toggle" id="theme-btn" title="Toggle theme">
       <i class="bi bi-sun-fill" id="theme-icon"></i>
@@ -266,7 +265,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
       <span class="badge-pill badge-green"><i class="bi bi-shield-check me-1"></i>Rate limited</span>
       <span class="badge-pill badge-gray">PHP 8.2+</span>
       <span class="badge-pill badge-gray">Laravel</span>
-      <span class="badge-pill badge-gray">MongoDB safe</span>
+      <span class="badge-pill badge-gray"><i class="bi bi-database me-1"></i>DB safe</span>
     </div>
     <h1>Julio Oxalis</h1>
     <p class="lead">Advanced, multi-method authentication for Laravel. Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic links, OTP, TOTP, social login, step-up auth, and rate-limited security — with zero boilerplate.</p>

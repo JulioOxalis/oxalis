@@ -99,7 +99,7 @@
 
 <aside id="adm-side">
   <div class="adm-logo">
-    <img src="{{ asset('vendor/oxalis/oxalis-logo.png') }}" alt="Oxalis"
+    <img src="{{ asset('vendor/oxalis/schwarzkopf-logo.png') }}" alt="Oxalis"
          style="max-height:40px;max-width:150px;width:auto;object-fit:contain;display:block;margin-bottom:.35rem"
          onerror="this.style.display='none'"
          onload="var t=document.getElementById('adm-brand-text');if(t)t.style.display='none'">

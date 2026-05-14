@@ -206,7 +206,14 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
 Route::middleware(config('oxalis.routes.middleware', ['web']))->group(function () {
     $p = config('oxalis.routes.prefix', 'oxalis');
     Route::redirect('/login',          "/{$p}/login")->name('login');
-    Route::redirect('/register',       "/{$p}/register");
+    Route::redirect('/register',       "/{$p}/register")->name('register');
     Route::redirect('/password/reset', "/{$p}/forgot-password");
-    Route::redirect('/logout',         "/{$p}/login");
+    // Handles both GET /logout (old bookmarks) and POST /logout (Breeze / Laravel UI forms).
+    // Actually logs the user out so sessions are invalidated, not just redirected away.
+    Route::match(['get', 'post'], '/logout', function () use ($p) {
+        \Illuminate\Support\Facades\Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect("/{$p}/login");
+    })->name('logout');
 });

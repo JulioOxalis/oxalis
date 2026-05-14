@@ -9,7 +9,7 @@
 <div id="rpid-warn" class="alert border-0 rounded-3 small mb-3 d-none" style="background:rgba(255,193,7,.12);color:#997404">
   <i class="bi bi-exclamation-triangle me-1"></i>
   Origin mismatch — server expects <code>{{ config('oxalis.rp_id') }}</code> but your browser is on <code id="actual-host"></code>.<br>
-  Visit <a href="{{ (config('oxalis.origins')[0]??'http://localhost').'/oxalis/passkeys/enroll' }}" class="fw-semibold">the correct URL</a> or update <code>OXALIS_ORIGINS</code> in <code>.env</code>.
+  Visit <a href="{{ route('oxalis.passkeys.enroll') }}" class="fw-semibold">the correct URL</a> or update <code>OXALIS_ORIGINS</code> in <code>.env</code>.
 </div>
 @endif
 
@@ -42,7 +42,7 @@ document.getElementById('btn-enroll').addEventListener('click',async()=>{
     const o=await r1.json();
     if(o.error){showErr(o.error);reset();return;}
     console.log('[oxalis] rp.id=',o.rp?.id,'| hostname=',window.location.hostname);
-    if(o.rp?.id&&o.rp.id!==window.location.hostname){showErr(`RP ID mismatch: server says "${o.rp.id}" but browser is on "${window.location.hostname}". Visit http://${o.rp.id}/oxalis/passkeys/enroll`);reset();return;}
+    if(o.rp?.id&&o.rp.id!==window.location.hostname){showErr(`RP ID mismatch: server says "${o.rp.id}" but browser is on "${window.location.hostname}". Visit {{ route('oxalis.passkeys.enroll') }}`);reset();return;}
     o.challenge=toB(o.challenge);o.user.id=toB(o.user.id);
     if(o.excludeCredentials)o.excludeCredentials=o.excludeCredentials.map(c=>({...c,id:toB(c.id)}));
     const cred=await navigator.credentials.create({publicKey:o});
@@ -61,7 +61,7 @@ function friendlyErr(e){
   if(m.includes('not supported')||m.includes('authenticatorselection'))
     return 'Your browser or device does not support passkeys. Try Chrome, Edge 114+, or Safari 16+.';
   if(m.includes('security')||m.includes('invalid domain'))
-    return 'Security check failed — make sure you are visiting: '+window.location.origin+'/oxalis/passkeys/enroll';
+    return 'Security check failed — make sure you are visiting: {{ route('oxalis.passkeys.enroll') }}';
   return 'Could not create passkey ('+e.name+'). Please try again or use another sign-in method.';
 }
 function showErr(m){const e=document.getElementById('enroll-err');e.textContent=m;e.classList.remove('d-none');}

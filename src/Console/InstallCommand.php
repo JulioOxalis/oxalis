@@ -113,7 +113,7 @@ class InstallCommand extends Command
 
         // ── Replace default auth routes (always automatic) ───────────────────
         $this->addAuthRedirects();
-        $this->line('  <fg=green>✓</> /login and /register now redirect to oxalis');
+        $this->line('  <fg=green>✓</> /login, /register, and /logout now handled by oxalis');
 
         // ── Migrate ───────────────────────────────────────────────────────────
         if ($this->confirm('Run php artisan migrate now?', true)) {
@@ -279,7 +279,25 @@ class InstallCommand extends Command
             $content
         );
 
-        // 3. Append the oxalis redirect shim once
+        // 3. Comment out inline auth route definitions that apps define directly in web.php.
+        //    These conflict with the redirect shim because Laravel picks the first-registered
+        //    route for URL matching — so any old Route::get('/login', ...) before the shim
+        //    keeps serving the old page even after the shim is appended.
+        $inlinePatterns = [
+            // Single-line GET/POST routes for /login, /register, /logout, /forgot-password, /reset-password
+            '/^(\s*Route::(get|post|any)\s*\(\s*[\'"]\/login[\'"](?!.*\/oxalis).*\);?\s*)$/m',
+            '/^(\s*Route::(get|post|any)\s*\(\s*[\'"]\/register[\'"](?!.*\/oxalis).*\);?\s*)$/m',
+            '/^(\s*Route::(get|post|any|delete)\s*\(\s*[\'"]\/logout[\'"](?!.*\/oxalis).*\);?\s*)$/m',
+            '/^(\s*Route::match\s*\(\s*\[.*\]\s*,\s*[\'"]\/logout[\'"](?!.*\/oxalis).*\);?\s*)$/m',
+            '/^(\s*Route::(get|post|any)\s*\(\s*[\'"]\/forgot-password[\'"](?!.*\/oxalis).*\);?\s*)$/m',
+            '/^(\s*Route::(get|post|any)\s*\(\s*[\'"]\/reset-password[\'"](?!.*\/oxalis).*\);?\s*)$/m',
+        ];
+
+        foreach ($inlinePatterns as $pattern) {
+            $content = preg_replace($pattern, '// [oxalis] $1', $content);
+        }
+
+        // 4. Append the oxalis redirect shim once
         if (!str_contains($content, 'oxalis — redirect /login and /register')) {
             $p = config('oxalis.routes.prefix', 'oxalis');
             $content .= PHP_EOL . implode(PHP_EOL, [
@@ -288,6 +306,9 @@ class InstallCommand extends Command
                 "Route::redirect('/login',          '/{$p}/login')->name('login');",
                 "Route::redirect('/register',       '/{$p}/register')->name('register');",
                 "Route::redirect('/password/reset', '/{$p}/forgot-password');",
+                // Handles both GET bookmarks and POST form submissions (Breeze / Laravel UI).
+                // Actually logs the user out so the session is invalidated.
+                "Route::match(['get','post'], '/logout', function() { \\Illuminate\\Support\\Facades\\Auth::logout(); request()->session()->invalidate(); request()->session()->regenerateToken(); return redirect('/{$p}/login'); })->name('logout');",
                 '',
             ]);
         }

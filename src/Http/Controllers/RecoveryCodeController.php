@@ -64,6 +64,7 @@ class RecoveryCodeController extends Controller
         ]);
 
         Auth::login($user, $remember);
+        $request->session()->regenerate();
 
         AuthEvent::create([
             'user_id'    => $user->getAuthIdentifier(),
@@ -74,6 +75,6 @@ class RecoveryCodeController extends Controller
             'status'     => 'success',
         ]);
 
-        return redirect(config('oxalis.routes.home', '/dashboard'));
+        return redirect()->intended(config('oxalis.routes.home', '/dashboard'));
     }
 }

@@ -51,9 +51,11 @@ class TotpService
 
         if (!$row) return false;
 
-        if (!$this->g2fa->verifyKey($row->secret, $code)) return false;
+        // verifyKeyNewer with null old-timestamp on first use — establishes the baseline.
+        $ts = $this->g2fa->verifyKeyNewer($row->secret, $code, null);
+        if ($ts === false) return false;
 
-        $row->update(['confirmed_at' => now()]);
+        $row->update(['confirmed_at' => now(), 'last_totp_ts' => $ts]);
 
         event(new TotpEnabled($user));
 
@@ -69,7 +71,13 @@ class TotpService
 
         if (!$row) return false;
 
-        return (bool) $this->g2fa->verifyKey($row->secret, $code);
+        // verifyKeyNewer refuses codes whose time-step index is <= the last accepted one,
+        // preventing replay of an intercepted code within the same 30-second window.
+        $ts = $this->g2fa->verifyKeyNewer($row->secret, $code, $row->last_totp_ts);
+        if ($ts === false) return false;
+
+        $row->update(['last_totp_ts' => $ts]);
+        return true;
     }
 
     /** Verify a raw secret + code (used during step-up without a user object). */

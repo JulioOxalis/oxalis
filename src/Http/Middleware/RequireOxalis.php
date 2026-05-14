@@ -10,8 +10,9 @@ class RequireOxalis
     public function handle(Request $request, Closure $next, string $level = 'auth')
     {
         if (!Auth::check()) {
-            return redirect()->route('oxalis.login')
-                ->with('intended', $request->url());
+            // redirect()->guest() stores the URL in url.intended so redirect()->intended()
+            // in LoginHandler can send the user back after a successful login.
+            return redirect()->guest(route('oxalis.login'));
         }
 
         if ($level === 'passkey' && !Auth::user()->hasPasskeys()) {

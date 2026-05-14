@@ -64,10 +64,12 @@ class LoginHandler
         login:
 
         Auth::login($user, $remember);
+        // Regenerate session ID on login to prevent session fixation attacks.
+        request()->session()->regenerate();
 
         $this->recordLogin($user, $method, $ip, $userAgent);
 
-        return redirect(config('oxalis.routes.home', '/dashboard'));
+        return redirect()->intended(config('oxalis.routes.home', '/dashboard'));
     }
 
     /**
@@ -82,12 +84,14 @@ class LoginHandler
         bool            $remember = false,
     ): RedirectResponse {
         Auth::login($user, $remember);
+        // Regenerate session ID on login to prevent session fixation attacks.
+        request()->session()->regenerate();
 
         $fullMethod = $method ? "{$method}+totp" : 'totp';
 
         $this->recordLogin($user, $fullMethod, $ip, $userAgent);
 
-        return redirect(config('oxalis.routes.home', '/dashboard'));
+        return redirect()->intended(config('oxalis.routes.home', '/dashboard'));
     }
 
     private function recordLogin(

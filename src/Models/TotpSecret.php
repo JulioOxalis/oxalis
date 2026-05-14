@@ -7,7 +7,7 @@ class TotpSecret extends OxalisModel
 {
     protected $table = 'oxalis_totp_secrets';
 
-    protected $fillable = ['user_id', 'secret', 'confirmed_at', 'recovery_codes'];
+    protected $fillable = ['user_id', 'secret', 'confirmed_at', 'recovery_codes', 'last_totp_ts'];
 
     protected $casts = [
         'confirmed_at'   => 'datetime',

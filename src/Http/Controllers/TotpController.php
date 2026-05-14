@@ -2,6 +2,7 @@
 namespace Oxalis\Http\Controllers;
 
 use Oxalis\Auth\LoginHandler;
+use Oxalis\Models\Lockout;
 use Oxalis\Models\TotpTrustedDevice;
 use Oxalis\Totp\TotpService;
 use Illuminate\Http\Request;
@@ -83,9 +84,33 @@ class TotpController extends Controller
         $userModel = config('oxalis.user_model');
         $user      = $userModel::find($userId);
 
-        if (!$user || !$this->totp->verify($user, $request->code)) {
+        if (!$user) {
+            return redirect()->route('oxalis.login');
+        }
+
+        // Per-user TOTP lockout — IP throttle alone is insufficient because a
+        // distributed attacker can rotate IPs while targeting a single account.
+        $lockKey = 'totp_login:' . hash('sha256', (string) $userId);
+        try {
+            $lockout = Lockout::firstOrCreate(['key' => $lockKey], ['attempts' => 0]);
+            if ($lockout->isLocked()) {
+                return back()->withErrors(['code' => 'Too many failed attempts. Please try again later.']);
+            }
+        } catch (\Throwable) {}
+
+        if (!$this->totp->verify($user, $request->code)) {
+            try {
+                $attempts = ($lockout ?? null)?->attempts + 1 ?? 1;
+                ($lockout ?? null)?->update([
+                    'attempts'     => $attempts,
+                    'locked_until' => $attempts >= 5 ? now()->addMinutes(15) : null,
+                ]);
+            } catch (\Throwable) {}
             return back()->withErrors(['code' => 'Invalid code. Please try again.']);
         }
+
+        // Reset lockout on success
+        try { ($lockout ?? null)?->update(['attempts' => 0, 'locked_until' => null]); } catch (\Throwable) {}
 
         // Retrieve context stored by LoginHandler (original method, remember preference)
         $method    = session('oxalis_totp_pending_method', 'totp');
@@ -120,7 +145,8 @@ class TotpController extends Controller
                     userAgent: $request->userAgent() ?? '',
                 );
                 $days = config('oxalis.totp_trust.days', 30);
-                $response->withCookie(cookie('oxalis_totp_trust', $token, $days * 1440, '/', null, true, true));
+                // SameSite=Strict prevents the cookie being sent on cross-site requests.
+                $response->withCookie(cookie('oxalis_totp_trust', $token, $days * 1440, '/', null, true, true, false, 'strict'));
             } catch (\Throwable) {}
         }
 

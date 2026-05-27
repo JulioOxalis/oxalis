@@ -3,6 +3,46 @@
 @section('content')
 @php $m = config('oxalis.methods', []); @endphp
 
+{{-- Passkey nudge banner (shown when user has no passkeys, dismissible) --}}
+@if(($m['passkey'] ?? true) && $passkeys->count() === 0)
+<div id="ox-nudge" class="d-none alert border-0 rounded-3 mb-4 d-flex align-items-start gap-3" style="background:var(--ox-sf);color:var(--bs-body-color)">
+    <i class="bi bi-fingerprint fs-4 mt-1 flex-shrink-0" style="color:var(--ox)"></i>
+    <div class="flex-grow-1">
+        <div class="fw-semibold mb-1">Go passwordless with a passkey</div>
+        <div class="text-secondary" style="font-size:.82rem">Sign in with your fingerprint, face, or device PIN — no password needed. Phishing-resistant and faster.</div>
+        <a href="{{ route('oxalis.passkeys.enroll') }}" class="btn btn-sm btn-ox mt-2 px-3">Set up passkey →</a>
+    </div>
+    <button id="ox-nudge-dismiss" class="btn-close btn-close-sm ms-auto" title="Dismiss" style="filter:none;opacity:.5"></button>
+</div>
+<script>
+(function(){
+  const max = {{ config('oxalis.passkey_nudge_max', 3) }};
+  if (max === 0) return;
+  const count = parseInt(localStorage.getItem('ox-nudge-dismissed') || '0');
+  if (count < max) {
+    const nudge = document.getElementById('ox-nudge');
+    if (nudge) nudge.classList.remove('d-none');
+    document.getElementById('ox-nudge-dismiss')?.addEventListener('click', function(){
+      localStorage.setItem('ox-nudge-dismissed', count + 1);
+      nudge.style.transition='opacity .3s';nudge.style.opacity='0';
+      setTimeout(()=>nudge.classList.add('d-none'), 300);
+    });
+  }
+})();
+</script>
+@endif
+
+{{-- Passkey health warning (1 passkey = no backup) --}}
+@if(($m['passkey'] ?? true) && $passkeys->count() === 1)
+<div class="alert border-0 rounded-3 mb-4 d-flex align-items-center gap-3" style="background:rgba(255,193,7,.1);color:#997404">
+    <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+    <div style="font-size:.84rem">
+        <strong>Only one passkey enrolled.</strong> If you lose this device you'll be locked out.
+        <a href="{{ route('oxalis.passkeys.enroll') }}" class="fw-semibold ms-1" style="color:#997404">Add a backup →</a>
+    </div>
+</div>
+@endif
+
 {{-- Profile header --}}
 <div class="d-flex align-items-center gap-4 mb-5 pb-4" style="border-bottom:1px solid var(--bs-border-color)">
     <div class="ox-avatar">{{ strtoupper(substr(auth()->user()->name ?? auth()->user()->email ?? '?', 0, 1)) }}</div>

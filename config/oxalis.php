@@ -11,6 +11,34 @@ return [
     'rp_name' => env('OXALIS_RP_NAME', env('APP_NAME', 'App')),
     'origins' => array_filter(explode(',', env('OXALIS_ORIGINS', env('APP_URL', 'http://localhost')))),
 
+    // ── Theme ─────────────────────────────────────────────────────────────────
+    // Built-in presets: indigo | neon | aurora | obsidian | ember | frost
+    // Each has a distinct design language (not just a color swap).
+    //
+    // Use "custom" to load your own stylesheet:
+    //   php artisan oxalis:publish --tag=theme
+    //   Edit: public/vendor/oxalis/theme.css
+    //
+    // To override individual Blade templates:
+    //   php artisan oxalis:publish --tag=views
+    //   Edit files in: resources/views/vendor/oxalis/
+    //   Oxalis auto-detects vendor overrides — no config change needed.
+    'theme' => env('OXALIS_THEME', 'indigo'),
+
+    // Override the primary brand color (indigo and custom themes only). Hex value.
+    // e.g. OXALIS_PRIMARY_COLOR=#e11d48
+    // Oxalis derives hover and soft-fill variants from this automatically.
+    'theme_color' => env('OXALIS_PRIMARY_COLOR', null),
+
+    // ── Passkey-only mode ─────────────────────────────────────────────────────
+    // true = disables ALL other auth methods (password, magic link, OTP, social).
+    // Use for high-security apps where FIDO2 is the only acceptable factor.
+    'passkey_only' => env('OXALIS_PASSKEY_ONLY', false),
+
+    // Maximum times a user can dismiss the "upgrade to passkey" nudge.
+    // 0 = never show the nudge. After this many dismissals it stops appearing.
+    'passkey_nudge_max' => (int) env('OXALIS_PASSKEY_NUDGE_MAX', 3),
+
     // ── Enabled auth methods ──────────────────────────────────────────────────
     'methods' => [
         'passkey'    => env('OXALIS_ENABLE_PASSKEY', true),

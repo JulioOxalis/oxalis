@@ -125,7 +125,9 @@ class InstallCommand extends Command
         $this->line('  <fg=green;options=bold>oxalis installed!</>');
         $this->newLine();
 
-        $p    = config('oxalis.routes.prefix', 'oxalis');
+        // Use the variable captured from the wizard — config() may still be stale
+        // if the PHP process cached the config before appendEnv() wrote .env.
+        $p    = $prefix;
         $home = $smartDispatch ? "{$p}/start" : "{$p}/login";
 
         $this->line('  <fg=cyan;options=bold>User-facing routes:</>');
@@ -211,7 +213,7 @@ class InstallCommand extends Command
                 '', 'OXALIS_GOOGLE_ENABLED=true',
                 "GOOGLE_CLIENT_ID={$googleId}",
                 "GOOGLE_CLIENT_SECRET={$googleSecret}",
-                'GOOGLE_REDIRECT_URI=' . url('oxalis/social/google/callback'),
+                'GOOGLE_REDIRECT_URI=' . url("{$prefix}/social/google/callback"),
             ]);
         }
 
@@ -220,7 +222,7 @@ class InstallCommand extends Command
                 '', 'OXALIS_GITHUB_ENABLED=true',
                 "GITHUB_CLIENT_ID={$githubId}",
                 "GITHUB_CLIENT_SECRET={$githubSecret}",
-                'GITHUB_REDIRECT_URI=' . url('oxalis/social/github/callback'),
+                'GITHUB_REDIRECT_URI=' . url("{$prefix}/social/github/callback"),
             ]);
         }
 

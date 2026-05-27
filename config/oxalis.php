@@ -50,6 +50,17 @@ return [
         'logo_url'      => env('OXALIS_LOGO_URL'),
         'tagline'       => env('OXALIS_TAGLINE'),
         'show_app_name' => env('OXALIS_SHOW_APP_NAME', false),
+
+        // ── Split-layout brand panel customisation ────────────────────────────
+        // split_bg accepts any valid CSS background value:
+        //   solid color   → OXALIS_SPLIT_BG=#e11d48
+        //   gradient      → OXALIS_SPLIT_BG=linear-gradient(135deg,#e11d48,#7c3aed)
+        //   image         → OXALIS_SPLIT_BG=url(/img/auth-bg.jpg) center/cover no-repeat
+        // Defaults to var(--ox) (your primary brand color).
+        'split_bg'   => env('OXALIS_SPLIT_BG'),
+
+        // Text color inside the brand panel. Defaults to var(--ox-btn-fg,#fff).
+        'split_text' => env('OXALIS_SPLIT_TEXT'),
     ],
 
     // ── Passkey-only mode ─────────────────────────────────────────────────────

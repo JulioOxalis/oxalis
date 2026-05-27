@@ -3,8 +3,11 @@
 @section('content')
 
 <style>
-.ox-qr-frame{background:#fff;padding:12px;border-radius:var(--ox-r);display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,.12)}
-#qr-canvas { display:block; }
+.ox-qr-frame{
+  background:#fff;padding:12px;border-radius:var(--ox-r,8px);
+  display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,.12);
+  line-height:0; /* removes extra inline-block gap under canvas */
+}
 .ox-qr-wrap {
   display:flex; flex-direction:column; align-items:center;
   gap:.75rem; padding:1rem 0;
@@ -26,7 +29,9 @@
 <p class="text-secondary small text-center mb-3">Open {{ config('app.name') }} on your phone, sign in, and scan this code.</p>
 
 <div class="ox-qr-wrap">
-  <div class="ox-qr-frame"><canvas id="qr-canvas" width="200" height="200"></canvas></div>
+  <div class="ox-qr-frame">
+    <div id="qr-canvas"></div>
+  </div>
   <div class="ox-qr-status" id="qr-status">
     <div class="ox-pulse"></div>
     <span>Waiting for phone approval…</span>
@@ -43,22 +48,27 @@
 
 @endsection
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+        integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
+        crossorigin="anonymous"></script>
 <script>
 (function(){
-const token    = @json($token);
-const ttl      = @json($ttl);
+const token      = @json($token);
+const ttl        = @json($ttl);
 const approveUrl = @json($approveUrl);
-const pollUrl  = @json(route('oxalis.qr.poll', '__TOKEN__')).replace('__TOKEN__', token);
-const loginUrl = @json(route('oxalis.qr.login', '__TOKEN__')).replace('__TOKEN__', token);
-const csrf     = document.querySelector('meta[name="csrf-token"]').content;
+const pollUrl    = @json(route('oxalis.qr.poll', '__TOKEN__')).replace('__TOKEN__', token);
+const loginUrl   = @json(route('oxalis.qr.login', '__TOKEN__')).replace('__TOKEN__', token);
+const csrf       = document.querySelector('meta[name="csrf-token"]').content;
 
-// Generate QR code pointing to the mobile approval page
-QRCode.toCanvas(document.getElementById('qr-canvas'), approveUrl, {
-  width: 200,
-  margin: 0,
-  color: { dark: '#000000', light: '#ffffff' }
-}, function(err){ if (err) console.error(err); });
+// Render QR code — always black on white so scanners work on any theme
+new QRCode(document.getElementById('qr-canvas'), {
+  text:         approveUrl,
+  width:        200,
+  height:       200,
+  colorDark:    '#000000',
+  colorLight:   '#ffffff',
+  correctLevel: QRCode.CorrectLevel.M
+});
 
 // Countdown timer
 let remaining = ttl;
@@ -86,7 +96,6 @@ async function poll() {
       clearInterval(pollId);
       clearInterval(countdownId);
       document.getElementById('qr-status').innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Approved — signing you in…';
-      // Complete login
       const r2 = await fetch(loginUrl, { method:'POST', headers:{ 'X-CSRF-TOKEN':csrf,'Content-Type':'application/json' }, body:'{}' });
       const d2 = await r2.json();
       if (d2.redirect) window.location.href = d2.redirect;
@@ -95,7 +104,7 @@ async function poll() {
       clearInterval(pollId);
       document.getElementById('qr-status').innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Code expired';
     }
-  } catch(e) { /* ignore transient network errors during poll */ }
+  } catch(e) { /* ignore transient network errors */ }
 }
 
 const pollId = setInterval(poll, 2000);

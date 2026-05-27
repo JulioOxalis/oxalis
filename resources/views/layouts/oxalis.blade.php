@@ -1,15 +1,17 @@
 @php
-  $oxTheme  = config('oxalis.theme', 'indigo');
-  $oxColor  = config('oxalis.theme_color');
-  $oxLayout = config('oxalis.layout', 'card');
-  $oxDark   = in_array($oxTheme, ['neon','aurora','obsidian','ember']);
+  $oxTheme     = config('oxalis.theme', 'indigo');
+  $oxColor     = config('oxalis.theme_color');
+  $oxLayout    = config('oxalis.layout', 'card');
+  $oxDark      = in_array($oxTheme, ['neon','aurora','obsidian','ember']);
+  $oxSplitBg   = config('oxalis.brand.split_bg');
+  $oxSplitText = config('oxalis.brand.split_text');
 
   // Derive all color tokens from OXALIS_PRIMARY_COLOR (any theme)
   $oxDerived = null;
-  if ($oxColor && preg_match('/^#([0-9a-fA-F]{6})$/', $oxColor, $m)) {
-      $r  = hexdec(substr($m[1], 0, 2));
-      $g  = hexdec(substr($m[1], 2, 2));
-      $b  = hexdec(substr($m[1], 4, 2));
+  if ($oxColor && preg_match('/^#([0-9a-fA-F]{6})$/', $oxColor, $oxM)) {
+      $r  = hexdec(substr($oxM[1], 0, 2));
+      $g  = hexdec(substr($oxM[1], 2, 2));
+      $b  = hexdec(substr($oxM[1], 4, 2));
       $oxDerived = [
           'ox'     => $oxColor,
           'ox-dk'  => sprintf('#%02x%02x%02x', max(0,(int)($r*.88)), max(0,(int)($g*.88)), max(0,(int)($b*.88))),
@@ -201,9 +203,12 @@
     body.ox-layout-split{align-items:stretch;justify-content:stretch;padding:0}
     .ox-split-root{display:flex;min-height:100vh;width:100%}
     .ox-split-brand{
-      width:40%;background:var(--ox);color:var(--ox-btn-fg,#fff);
+      width:40%;
+      background:{{ $oxSplitBg ? $oxSplitBg : 'var(--ox)' }};
+      color:{{ $oxSplitText ? $oxSplitText : 'var(--ox-btn-fg,#fff)' }};
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       padding:3rem 2.5rem;text-align:center;position:sticky;top:0;height:100vh;
+      background-size:cover;background-position:center;
     }
     .ox-split-form{
       flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;

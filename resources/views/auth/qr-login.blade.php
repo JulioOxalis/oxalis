@@ -3,7 +3,8 @@
 @section('content')
 
 <style>
-#qr-canvas { display:block; margin:0 auto; border-radius:var(--ox-r); }
+.ox-qr-frame{background:#fff;padding:12px;border-radius:var(--ox-r);display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+#qr-canvas { display:block; }
 .ox-qr-wrap {
   display:flex; flex-direction:column; align-items:center;
   gap:.75rem; padding:1rem 0;
@@ -25,7 +26,7 @@
 <p class="text-secondary small text-center mb-3">Open {{ config('app.name') }} on your phone, sign in, and scan this code.</p>
 
 <div class="ox-qr-wrap">
-  <canvas id="qr-canvas" width="200" height="200"></canvas>
+  <div class="ox-qr-frame"><canvas id="qr-canvas" width="200" height="200"></canvas></div>
   <div class="ox-qr-status" id="qr-status">
     <div class="ox-pulse"></div>
     <span>Waiting for phone approval…</span>
@@ -55,7 +56,8 @@ const csrf     = document.querySelector('meta[name="csrf-token"]').content;
 // Generate QR code pointing to the mobile approval page
 QRCode.toCanvas(document.getElementById('qr-canvas'), approveUrl, {
   width: 200,
-  color: { dark: getComputedStyle(document.documentElement).getPropertyValue('--ox').trim() || '#5c6ac4', light: '#0000' }
+  margin: 0,
+  color: { dark: '#000000', light: '#ffffff' }
 }, function(err){ if (err) console.error(err); });
 
 // Countdown timer

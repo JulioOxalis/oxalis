@@ -7,6 +7,7 @@ use Oxalis\Console\AdminCommand;
 use Oxalis\Console\InstallCommand;
 use Oxalis\Console\LogCommand;
 use Oxalis\Console\PruneLogsCommand;
+use Oxalis\Console\PublishThemeCommand;
 use Oxalis\Console\UninstallCommand;
 use Oxalis\Console\UserCommand;
 use Oxalis\EmailOtp\OtpService;
@@ -75,6 +76,14 @@ class OxalisServiceProvider extends ServiceProvider
             __DIR__.'/../public' => public_path('vendor/oxalis'),
         ], 'oxalis-assets');
 
+        $this->publishes([
+            __DIR__.'/../resources/css/theme-stub.css' => public_path('vendor/oxalis/theme.css'),
+        ], 'oxalis-theme');
+
+        $this->publishes([
+            __DIR__.'/../resources/views/partials' => resource_path('views/vendor/oxalis/partials'),
+        ], 'oxalis-partials');
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'oxalis');
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
@@ -116,6 +125,7 @@ class OxalisServiceProvider extends ServiceProvider
                 InstallCommand::class,
                 LogCommand::class,
                 PruneLogsCommand::class,
+                PublishThemeCommand::class,
                 UninstallCommand::class,
                 UserCommand::class,
             ]);

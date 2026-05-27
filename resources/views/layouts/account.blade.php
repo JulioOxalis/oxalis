@@ -2,6 +2,20 @@
   $oxTheme = config('oxalis.theme', 'indigo');
   $oxColor  = config('oxalis.theme_color');
   $oxDark   = in_array($oxTheme, ['neon','aurora','obsidian','ember']);
+
+  // Derive all color tokens from OXALIS_PRIMARY_COLOR
+  $oxDerived = null;
+  if ($oxColor && preg_match('/^#([0-9a-fA-F]{6})$/', $oxColor, $m)) {
+      $r  = hexdec(substr($m[1], 0, 2));
+      $g  = hexdec(substr($m[1], 2, 2));
+      $b  = hexdec(substr($m[1], 4, 2));
+      $oxDerived = [
+          'ox'     => $oxColor,
+          'ox-dk'  => sprintf('#%02x%02x%02x', max(0,(int)($r*.88)), max(0,(int)($g*.88)), max(0,(int)($b*.88))),
+          'ox-sf'  => "rgba({$r},{$g},{$b},.12)",
+          'btn-fg' => ((0.299*$r + 0.587*$g + 0.114*$b)/255 > 0.5) ? '#000' : '#fff',
+      ];
+  }
 @endphp
 <!DOCTYPE html>
 <html lang="en" data-ox-theme="{{ $oxTheme }}">
@@ -121,9 +135,23 @@
     /* Frost: secondary text contrast on light bg */
     [data-ox-theme=frost] .text-secondary{color:#3a7a9c!important}
     </style>
+    {{-- Primary color override — inlined after theme so it wins specificity --}}
+    @if($oxDerived)
+    <style>
+    [data-ox-theme={{ $oxTheme }}]{
+      --ox:{{ $oxDerived['ox'] }};
+      --ox-dk:{{ $oxDerived['ox-dk'] }};
+      --ox-sf:{{ $oxDerived['ox-sf'] }};
+      --ox-btn-fg:{{ $oxDerived['btn-fg'] }};
+    }
+    </style>
+    @endif
+    @stack('styles')
 </head>
 <body>
 <div class="container-lg py-4 py-md-5 px-4" style="max-width:860px">
+
+    @stack('oxalis:before-card')
 
     @if(session('status'))
     <div class="alert border-0 rounded-3 mb-4" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
@@ -148,9 +176,12 @@
         @endif
     </div>
 
+    @stack('oxalis:card-top')
     @yield('content')
+    @stack('oxalis:card-bottom')
 
 </div>
+@stack('oxalis:after-card')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 @if(!$oxDark)

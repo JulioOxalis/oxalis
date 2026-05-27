@@ -16,19 +16,41 @@ return [
     // Each has a distinct design language (not just a color swap).
     //
     // Use "custom" to load your own stylesheet:
-    //   php artisan oxalis:publish --tag=theme
+    //   php artisan vendor:publish --tag=oxalis-theme
     //   Edit: public/vendor/oxalis/theme.css
     //
     // To override individual Blade templates:
-    //   php artisan oxalis:publish --tag=views
+    //   php artisan vendor:publish --tag=oxalis-views
     //   Edit files in: resources/views/vendor/oxalis/
     //   Oxalis auto-detects vendor overrides — no config change needed.
+    //
+    // To override just the card-header / logo partial:
+    //   php artisan vendor:publish --tag=oxalis-partials
+    //   Edit files in: resources/views/vendor/oxalis/partials/
     'theme' => env('OXALIS_THEME', 'indigo'),
 
-    // Override the primary brand color (indigo and custom themes only). Hex value.
+    // Override the primary brand color for any theme. Hex value.
     // e.g. OXALIS_PRIMARY_COLOR=#e11d48
-    // Oxalis derives hover and soft-fill variants from this automatically.
+    // Oxalis auto-derives hover (--ox-dk), soft-fill (--ox-sf), and
+    // button text contrast (--ox-btn-fg) from this single value.
     'theme_color' => env('OXALIS_PRIMARY_COLOR', null),
+
+    // ── Layout variant ────────────────────────────────────────────────────────
+    // card  — centered card on body bg (default)
+    // split — brand panel on the left, form on the right
+    // bare  — no card wrapper; form content sits directly on the page
+    'layout' => env('OXALIS_LAYOUT', 'card'),
+
+    // ── Branding ─────────────────────────────────────────────────────────────
+    // Displayed in the card header above the form.
+    // set OXALIS_LOGO_URL to a publicly accessible image (PNG / SVG).
+    // set OXALIS_TAGLINE to a short subtitle shown under the app name.
+    // OXALIS_SHOW_APP_NAME=false hides the app name (useful when logo says it all).
+    'brand' => [
+        'logo_url'      => env('OXALIS_LOGO_URL'),
+        'tagline'       => env('OXALIS_TAGLINE'),
+        'show_app_name' => env('OXALIS_SHOW_APP_NAME', false),
+    ],
 
     // ── Passkey-only mode ─────────────────────────────────────────────────────
     // true = disables ALL other auth methods (password, magic link, OTP, social).

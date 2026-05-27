@@ -1,7 +1,22 @@
 @php
-  $oxTheme = config('oxalis.theme', 'indigo');
+  $oxTheme  = config('oxalis.theme', 'indigo');
   $oxColor  = config('oxalis.theme_color');
+  $oxLayout = config('oxalis.layout', 'card');
   $oxDark   = in_array($oxTheme, ['neon','aurora','obsidian','ember']);
+
+  // Derive all color tokens from OXALIS_PRIMARY_COLOR (any theme)
+  $oxDerived = null;
+  if ($oxColor && preg_match('/^#([0-9a-fA-F]{6})$/', $oxColor, $m)) {
+      $r  = hexdec(substr($m[1], 0, 2));
+      $g  = hexdec(substr($m[1], 2, 2));
+      $b  = hexdec(substr($m[1], 4, 2));
+      $oxDerived = [
+          'ox'     => $oxColor,
+          'ox-dk'  => sprintf('#%02x%02x%02x', max(0,(int)($r*.88)), max(0,(int)($g*.88)), max(0,(int)($b*.88))),
+          'ox-sf'  => "rgba({$r},{$g},{$b},.12)",
+          'btn-fg' => ((0.299*$r + 0.587*$g + 0.114*$b)/255 > 0.5) ? '#000' : '#fff',
+      ];
+  }
 @endphp
 <!DOCTYPE html>
 <html lang="en" data-ox-theme="{{ $oxTheme }}" data-bs-theme="{{ $oxDark ? 'dark' : 'auto' }}">
@@ -182,6 +197,31 @@
     .form-control:focus{border-color:var(--ox)!important;box-shadow:0 0 0 .2rem var(--ox-sf)!important;}
     a{color:var(--ox);}a:hover{color:var(--ox-dk);}
 
+    /* ─── SPLIT LAYOUT ──────────────────────────────────────────────────────── */
+    body.ox-layout-split{align-items:stretch;justify-content:stretch;padding:0}
+    .ox-split-root{display:flex;min-height:100vh;width:100%}
+    .ox-split-brand{
+      width:40%;background:var(--ox);color:var(--ox-btn-fg,#fff);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:3rem 2.5rem;text-align:center;position:sticky;top:0;height:100vh;
+    }
+    .ox-split-form{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:2rem 1.5rem;background:var(--ox-body-bg,var(--bs-body-bg,#f4f5fb));
+      min-height:100vh;overflow-y:auto;
+    }
+    .ox-split-form .ox-wrap{max-width:420px;padding:0}
+    @media(max-width:768px){
+      body.ox-layout-split{flex-direction:column}
+      .ox-split-root{flex-direction:column}
+      .ox-split-brand{width:100%;height:auto;min-height:160px;position:static;padding:2rem}
+      .ox-split-form{min-height:auto}
+    }
+
+    /* ─── BARE LAYOUT ───────────────────────────────────────────────────────── */
+    body.ox-layout-bare{align-items:stretch;justify-content:flex-start;padding:2rem}
+    .ox-bare-root{width:100%;max-width:100%}
+
     /* ─── UNIVERSAL: form readability across all themes ────────────────────── */
     .form-control{color:var(--bs-body-color)}
     .form-control::placeholder{color:var(--bs-secondary-color);opacity:.8}
@@ -208,19 +248,88 @@
     [data-ox-theme=frost] .ox-tier-good{background:rgba(13,110,253,.1);color:#0847b5}
     [data-ox-theme=frost] .ox-tier-basic{background:rgba(150,100,0,.1);color:#7a5200}
     </style>
+    {{-- Primary color override — inlined after theme so it wins specificity --}}
+    @if($oxDerived)
+    <style>
+    [data-ox-theme={{ $oxTheme }}]{
+      --ox:{{ $oxDerived['ox'] }};
+      --ox-dk:{{ $oxDerived['ox-dk'] }};
+      --ox-sf:{{ $oxDerived['ox-sf'] }};
+      --ox-btn-fg:{{ $oxDerived['btn-fg'] }};
+    }
+    </style>
+    @endif
+    @stack('styles')
 </head>
-<body>
+<body class="ox-layout-{{ $oxLayout }}">
+
+@if($oxLayout === 'split')
+{{-- ── Split: brand panel left, form right ─────────────────────────────── --}}
+<div class="ox-split-root">
+    <aside class="ox-split-brand">
+        @include('oxalis::partials.split-brand')
+    </aside>
+    <div class="ox-split-form">
+        @if(session('status'))
+        <div class="alert rounded-3 border-0 mb-3 w-100" style="max-width:420px;background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+        @endif
+        @if($errors->any())
+        <div class="alert rounded-3 border-0 mb-3 w-100" style="max-width:420px;background:rgba(220,53,69,.1);color:#dc3545">
+        @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
+        </div>
+        @endif
+        @stack('oxalis:before-card')
+        <div class="ox-wrap">
+            <div class="ox-card">
+                @stack('oxalis:card-top')
+                @include('oxalis::partials.card-header')
+                @yield('content')
+                @stack('oxalis:card-bottom')
+            </div>
+        </div>
+        @stack('oxalis:after-card')
+    </div>
+</div>
+
+@elseif($oxLayout === 'bare')
+{{-- ── Bare: no card, form floats directly on body bg ──────────────────── --}}
+<div class="ox-bare-root">
+    @if(session('status'))
+    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    @endif
+    @if($errors->any())
+    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(220,53,69,.1);color:#dc3545">
+    @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
+    </div>
+    @endif
+    @stack('oxalis:before-card')
+    @include('oxalis::partials.card-header')
+    @yield('content')
+    @stack('oxalis:after-card')
+</div>
+
+@else
+{{-- ── Card (default): centered card on body bg ────────────────────────── --}}
 <div class="ox-wrap">
-@if(session('status'))
-<div class="alert rounded-3 border-0 mb-3" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
-@endif
-@if($errors->any())
-<div class="alert rounded-3 border-0 mb-3" style="background:rgba(220,53,69,.1);color:#dc3545">
-@foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
+    @if(session('status'))
+    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    @endif
+    @if($errors->any())
+    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(220,53,69,.1);color:#dc3545">
+    @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
+    </div>
+    @endif
+    @stack('oxalis:before-card')
+    <div class="ox-card">
+        @stack('oxalis:card-top')
+        @include('oxalis::partials.card-header')
+        @yield('content')
+        @stack('oxalis:card-bottom')
+    </div>
+    @stack('oxalis:after-card')
 </div>
 @endif
-<div class="ox-card">@yield('content')</div>
-</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 @stack('scripts')

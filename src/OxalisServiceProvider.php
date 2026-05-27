@@ -6,13 +6,19 @@ use Oxalis\Telemetry\TelemetryService;
 use Oxalis\Console\AdminCommand;
 use Oxalis\Console\InstallCommand;
 use Oxalis\Console\LogCommand;
+use Oxalis\Console\PruneLogsCommand;
 use Oxalis\Console\UninstallCommand;
 use Oxalis\Console\UserCommand;
 use Oxalis\EmailOtp\OtpService;
 use Oxalis\EmailVerification\EmailVerificationService;
 use Oxalis\Http\Middleware\OxalisAdminAuth;
 use Oxalis\Http\Middleware\OxalisIpThrottle;
+use Oxalis\Http\Middleware\OxalisSecurityHeaders;
 use Oxalis\Http\Middleware\OxalisSessionGuard;
+use Oxalis\QrLogin\QrLoginService;
+use Oxalis\Security\BreachCheckService;
+use Oxalis\Security\RiskService;
+use Oxalis\Ultrasonic\UltrasonicService;
 use Oxalis\Webhooks\WebhookService;
 use Oxalis\Http\Middleware\OxalisThrottle;
 use Oxalis\Http\Middleware\RequireEmailVerified;
@@ -41,6 +47,10 @@ class OxalisServiceProvider extends ServiceProvider
         $this->app->singleton(OxalisManager::class);
         $this->app->singleton(EmailVerificationService::class);
         $this->app->singleton(WebhookService::class);
+        $this->app->singleton(BreachCheckService::class);
+        $this->app->singleton(RiskService::class);
+        $this->app->singleton(QrLoginService::class);
+        $this->app->singleton(UltrasonicService::class);
     }
 
     public function boot(): void
@@ -97,10 +107,18 @@ class OxalisServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oxalis.verified',      RequireEmailVerified::class);
         $router->aliasMiddleware('oxalis.passkey-session', ValidatePasskeySession::class);
         $router->aliasMiddleware('oxalis.admin-auth',    OxalisAdminAuth::class);
-        $router->aliasMiddleware('oxalis.session-guard', OxalisSessionGuard::class);
+        $router->aliasMiddleware('oxalis.session-guard',    OxalisSessionGuard::class);
+        $router->aliasMiddleware('oxalis.security-headers', OxalisSecurityHeaders::class);
 
         if ($this->app->runningInConsole()) {
-            $this->commands([AdminCommand::class, InstallCommand::class, LogCommand::class, UninstallCommand::class, UserCommand::class]);
+            $this->commands([
+                AdminCommand::class,
+                InstallCommand::class,
+                LogCommand::class,
+                PruneLogsCommand::class,
+                UninstallCommand::class,
+                UserCommand::class,
+            ]);
         }
 
         // Optional anonymous telemetry — fires at most once per 24h, opt-in only

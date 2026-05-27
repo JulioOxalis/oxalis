@@ -3,7 +3,9 @@ use Oxalis\Http\Controllers\AccountController;
 use Oxalis\Http\Controllers\AdminAuthController;
 use Oxalis\Http\Controllers\AdminController;
 use Oxalis\Http\Controllers\InviteController;
+use Oxalis\Http\Controllers\QrLoginController;
 use Oxalis\Http\Controllers\SessionController;
+use Oxalis\Http\Controllers\UltrasonicController;
 use Oxalis\Http\Controllers\WebhookController;
 use Oxalis\Http\Controllers\AuthController;
 use Oxalis\Http\Controllers\DocsController;
@@ -27,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 $prefix     = config('oxalis.routes.prefix', 'oxalis');
 $middleware = config('oxalis.routes.middleware', ['web']);
 
-Route::prefix($prefix)->middleware($middleware)->group(function () {
+Route::prefix($prefix)->middleware([...$middleware, 'oxalis.security-headers'])->group(function () {
 
     // ── Documentation (always public) ────────────────────────────────────────
     Route::get('/docs', [DocsController::class, 'index'])->name('oxalis.docs');
@@ -111,6 +113,19 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
             ->middleware('oxalis.ip:30,1')
             ->name('oxalis.password.reset');
 
+        // QR login — desktop side (guest)
+        if (config('oxalis.qr_login.enabled', false)) {
+            Route::get('/qr-login',              [QrLoginController::class, 'show'])     ->name('oxalis.qr.show');
+            Route::get('/qr-login/poll/{token}', [QrLoginController::class, 'poll'])     ->middleware('oxalis.ip:60,1')->name('oxalis.qr.poll');
+            Route::post('/qr-login/{token}',     [QrLoginController::class, 'login'])    ->middleware('oxalis.ip:10,1')->name('oxalis.qr.login');
+        }
+
+        // Ultrasonic auth — desktop side (guest)
+        if (config('oxalis.ultrasonic.enabled', false)) {
+            Route::post('/ultrasonic/begin',        [UltrasonicController::class, 'begin'])  ->middleware('oxalis.ip:30,1')->name('oxalis.ultrasonic.begin');
+            Route::get('/ultrasonic/poll/{token}',  [UltrasonicController::class, 'poll'])   ->middleware('oxalis.ip:60,1')->name('oxalis.ultrasonic.poll');
+        }
+
         // Social login
         Route::get('/social/{provider}',          [SocialController::class, 'redirect'])->name('oxalis.social.redirect');
         Route::get('/social/{provider}/callback', [SocialController::class, 'callback'])->name('oxalis.social.callback');
@@ -150,6 +165,18 @@ Route::prefix($prefix)->middleware($middleware)->group(function () {
 
         // Recovery code management
         Route::post('/recovery-code/regenerate', [RecoveryCodeController::class, 'regenerate'])->name('oxalis.recovery.regenerate');
+
+        // QR login — mobile approval side (authenticated)
+        if (config('oxalis.qr_login.enabled', false)) {
+            Route::get('/qr-login/approve/{token}',  [QrLoginController::class, 'showApprove'])->name('oxalis.qr.approve.show');
+            Route::post('/qr-login/approve/{token}', [QrLoginController::class, 'approve'])    ->name('oxalis.qr.approve');
+        }
+
+        // Ultrasonic auth — mobile listen side (authenticated)
+        if (config('oxalis.ultrasonic.enabled', false)) {
+            Route::get('/ultrasonic/listen',   [UltrasonicController::class, 'showListen'])->name('oxalis.ultrasonic.listen');
+            Route::post('/ultrasonic/approve', [UltrasonicController::class, 'approve'])   ->middleware('oxalis.ip:30,1')->name('oxalis.ultrasonic.approve');
+        }
 
         // Account (unified settings page)
         Route::get('/account',        [AccountController::class, 'index'])->name('oxalis.account');

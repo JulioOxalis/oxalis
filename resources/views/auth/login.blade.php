@@ -8,6 +8,9 @@
   $hasGithub   = ($m['social'] ?? false) && config('oxalis.social.github.enabled');
   $hasSocial   = $hasGoogle || $hasGithub;
 
+  $hasQr          = config('oxalis.qr_login.enabled', false);
+  $hasUltrasonic  = config('oxalis.ultrasonic.enabled', false);
+
   $methods = [];
   if ($m['passkey']    ?? true)  $methods[] = 'passkey';
   if (!$passkeyOnly) {
@@ -15,6 +18,8 @@
       if ($m['magic_link'] ?? true)  $methods[] = 'magic_link';
       if ($m['email_otp']  ?? true)  $methods[] = 'email_otp';
       if ($hasSocial)                $methods[] = 'social';
+      if ($hasQr)                    $methods[] = 'qr';
+      if ($hasUltrasonic)            $methods[] = 'ultrasonic';
   }
   $primaryMethod = $methods[0] ?? 'passkey';
   $showRail      = count($methods) > 1;
@@ -174,6 +179,49 @@
   </div>
   @endif
 
+  @if(!$passkeyOnly && $hasQr)
+  {{-- QR login panel --}}
+  <div class="ox-panel d-none" id="panel-qr">
+    <div class="text-center py-2">
+      <a href="{{ route('oxalis.qr.show') }}" class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-qr-code-scan fs-5"></i>
+        <span>Open QR Login</span>
+      </a>
+    </div>
+    <div class="ox-meta-row">
+      <span class="ox-hint">Approve with your authenticated phone</span>
+      <span class="ox-tier ox-tier-good"><i class="bi bi-phone-fill"></i>Secure</span>
+    </div>
+  </div>
+  @endif
+
+  @if(!$passkeyOnly && $hasUltrasonic)
+  {{-- Ultrasonic panel --}}
+  <div class="ox-panel d-none" id="panel-ultrasonic">
+    <div id="ult-begin-wrap">
+      <button id="btn-ult-play" class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-soundwave fs-5"></i>
+        <span>Play Ultrasonic Token</span>
+      </button>
+      <p class="ox-hint text-center mt-2 mb-0">
+        Open <a href="{{ route('oxalis.ultrasonic.listen') }}" target="_blank">Listen &amp; Approve</a>
+        on your signed-in phone first.
+      </p>
+    </div>
+    <div id="ult-playing" class="d-none text-center py-2">
+      <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+        <span class="spinner-grow spinner-grow-sm" style="color:var(--ox)"></span>
+        <span class="small" id="ult-play-status">Playing token…</span>
+      </div>
+    </div>
+    <div id="ult-err-login" class="alert border-0 rounded-3 small d-none mt-2 py-2 mb-0" style="background:rgba(220,53,69,.1);color:#dc3545"></div>
+    <div class="ox-meta-row">
+      <span class="ox-hint">Inaudible 18–20 kHz audio token</span>
+      <span class="ox-tier ox-tier-best"><i class="bi bi-shield-fill-check"></i>Proximity</span>
+    </div>
+  </div>
+  @endif
+
   @if(!$passkeyOnly && $hasSocial)
   {{-- Social panel --}}
   <div class="ox-panel d-none" id="panel-social">
@@ -232,6 +280,16 @@
       title="{{ $hasGoogle && $hasGithub ? 'Google / GitHub' : ($hasGoogle ? 'Google' : 'GitHub') }}"
       aria-label="Social login">
       <i class="bi bi-{{ $hasGoogle ? 'google' : 'github' }}"></i>
+    </button>
+    @endif
+    @if($hasQr)
+    <button class="ox-rail-btn" data-method="qr" title="QR Login" aria-label="QR Login">
+      <i class="bi bi-qr-code-scan"></i>
+    </button>
+    @endif
+    @if($hasUltrasonic)
+    <button class="ox-rail-btn" data-method="ultrasonic" title="Ultrasonic" aria-label="Ultrasonic proximity">
+      <i class="bi bi-soundwave"></i>
     </button>
     @endif
   @endif
@@ -383,6 +441,133 @@ document.getElementById('btn-pk')?.addEventListener('click', async () => {
     else { showErr('pk-err', d.error||'Authentication failed.'); pkSkeleton(false); }
   } catch(e) { showErr('pk-err', pkFriendlyErr(e)); pkSkeleton(false); }
 });
+
+// ── Breach warning (shown after password login if password is in HIBP) ────────
+@if(session()->pull('oxalis_breach_detected', false))
+(function(){
+  const pw = document.getElementById('panel-password');
+  if (pw) {
+    const warn = document.createElement('div');
+    warn.className = 'alert border-0 rounded-3 small mt-2 mb-0';
+    warn.style.cssText = 'background:rgba(220,53,69,.08);color:#dc3545;';
+    warn.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i><strong>Password found in data breaches.</strong> We strongly recommend changing it now — use a passkey or change your password.';
+    pw.appendChild(warn);
+  }
+})();
+@endif
+
+// ── Ultrasonic transmitter ─────────────────────────────────────────────────
+@if($hasUltrasonic ?? false)
+(function(){
+const FREQS     = [18000, 18500, 19000, 19500];
+const SYMBOL_MS = 65;
+const PREAMBLE  = [0, 0, 0];
+const GAIN      = 0.28;
+const CSRF      = document.querySelector('meta[name="csrf-token"]').content;
+const BEGIN_URL = @json(route('oxalis.ultrasonic.begin'));
+const POLL_URL_TPL = @json(route('oxalis.ultrasonic.poll', '__OXT__'));
+
+function hexToSymbols(hex) {
+  const syms = [];
+  for (const c of hex.toUpperCase()) {
+    const n = parseInt(c, 16);
+    syms.push((n >> 2) & 3);
+    syms.push(n & 3);
+  }
+  return syms;
+}
+
+async function playToken(token) {
+  const ctx    = new (window.AudioContext || window.webkitAudioContext)();
+  const symSec = SYMBOL_MS / 1000;
+  const all    = [...PREAMBLE, ...hexToSymbols(token)];
+  let t        = ctx.currentTime + 0.05;
+
+  for (const sym of all) {
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    osc.connect(env); env.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = FREQS[sym];
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(GAIN, t + 0.005);
+    env.gain.setValueAtTime(GAIN, t + symSec - 0.005);
+    env.gain.linearRampToValueAtTime(0, t + symSec);
+    osc.start(t); osc.stop(t + symSec);
+    t += symSec;
+  }
+  // Total duration: (preamble + 16 data) × 65ms ≈ 1.24s
+  await new Promise(r => setTimeout(r, all.length * SYMBOL_MS + 150));
+  ctx.close().catch(() => {});
+}
+
+const btn = document.getElementById('btn-ult-play');
+const beginWrap = document.getElementById('ult-begin-wrap');
+const playingEl = document.getElementById('ult-playing');
+const playStatus = document.getElementById('ult-play-status');
+const errEl = document.getElementById('ult-err-login');
+
+if (btn) btn.addEventListener('click', async function() {
+  btn.disabled = true;
+  errEl.classList.add('d-none');
+  beginWrap.classList.add('d-none');
+  playingEl.classList.remove('d-none');
+  playStatus.textContent = 'Requesting token…';
+
+  let token, pollUrl, pollId;
+
+  try {
+    const r = await fetch(BEGIN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+      body: '{}',
+    });
+    const d = await r.json();
+    if (d.error) { ultErr(d.error); return; }
+    token   = d.token;
+    pollUrl = POLL_URL_TPL.replace('__OXT__', token);
+  } catch(e) { ultErr('Could not start ultrasonic auth. ' + e.message); return; }
+
+  // Play the token 3× with 400ms gap for reliability
+  for (let i = 0; i < 3; i++) {
+    playStatus.textContent = 'Playing token (' + (i+1) + '/3)…';
+    await playToken(token);
+    if (i < 2) await new Promise(r => setTimeout(r, 400));
+  }
+  playStatus.textContent = 'Waiting for phone approval…';
+
+  // Poll until approved or TTL expires
+  let attempts = 0;
+  const maxAttempts = Math.ceil((@json(config('oxalis.ultrasonic.ttl',30)) * 1000) / 1500);
+  pollId = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) {
+      clearInterval(pollId);
+      ultErr('Token expired. Please try again.');
+      return;
+    }
+    try {
+      const r = await fetch(pollUrl, { headers: { 'X-CSRF-TOKEN': CSRF } });
+      const d = await r.json();
+      if (d.status === 'approved' && d.redirect) {
+        clearInterval(pollId);
+        playStatus.textContent = '✓ Approved — signing in…';
+        window.location.href = d.redirect;
+      } else if (d.status === 'expired') {
+        clearInterval(pollId);
+        ultErr('Token expired. Please try again.');
+      }
+    } catch(e) { /* transient */ }
+  }, 1500);
+});
+
+function ultErr(msg) {
+  playingEl.classList.add('d-none');
+  beginWrap.classList.remove('d-none');
+  btn.disabled = false;
+  errEl.textContent = msg; errEl.classList.remove('d-none');
+}
+})();
+@endif
 
 // ── Conditional UI (passkey autofill dropdown) ─────────────────────────────
 (async () => {

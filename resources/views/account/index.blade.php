@@ -3,6 +3,23 @@
 @section('content')
 @php $m = config('oxalis.methods', []); @endphp
 
+{{-- Credential breach warning (shown once after password login, if HIBP match) --}}
+@if(session()->pull('oxalis_breach_detected', false))
+<div class="alert border-0 rounded-3 mb-4 d-flex align-items-start gap-3" style="background:rgba(220,53,69,.08);color:#dc3545">
+    <i class="bi bi-exclamation-triangle-fill fs-5 mt-1 flex-shrink-0"></i>
+    <div>
+        <div class="fw-semibold mb-1">Your password has appeared in a data breach</div>
+        <div style="font-size:.83rem">This password was found in a public breach database. It is strongly recommended that you change it immediately or switch to a passkey.</div>
+        <div class="d-flex gap-2 mt-2 flex-wrap">
+            @if(config('oxalis.methods.passkey',true))
+            <a href="{{ route('oxalis.passkeys.enroll') }}" class="btn btn-sm rounded-pill px-3 fw-semibold" style="background:#dc3545;color:#fff;border:none">Set up passkey →</a>
+            @endif
+            <a href="{{ route('oxalis.password.forgot') }}" class="btn btn-sm rounded-pill px-3" style="border:1.5px solid #dc3545;color:#dc3545">Change password</a>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Passkey nudge banner (shown when user has no passkeys, dismissible) --}}
 @if(($m['passkey'] ?? true) && $passkeys->count() === 0)
 <div id="ox-nudge" class="d-none alert border-0 rounded-3 mb-4 d-flex align-items-start gap-3" style="background:var(--ox-sf);color:var(--bs-body-color)">

@@ -165,4 +165,62 @@ return [
     'telemetry'          => env('OXALIS_TELEMETRY', false),
     'telemetry_endpoint' => env('OXALIS_TELEMETRY_ENDPOINT', null),
 
+    // ── Security headers ──────────────────────────────────────────────────────
+    // Adds X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+    // X-XSS-Protection, and Permissions-Policy to all Oxalis responses.
+    'security_headers' => env('OXALIS_SECURITY_HEADERS', true),
+
+    // ── IP privacy ────────────────────────────────────────────────────────────
+    // ip_anonymize: zero last IPv4 octet / truncate IPv6 to /64 before storage
+    // store_ip:     false = never write IP to auth_events at all
+    'ip_anonymize' => env('OXALIS_IP_ANONYMIZE', false),
+    'store_ip'     => env('OXALIS_STORE_IP', true),
+
+    // Days to keep auth_event records (0 = keep forever).
+    // Run `php artisan oxalis:prune-logs` on a schedule to enforce this.
+    'log_retention_days' => (int) env('OXALIS_LOG_RETENTION_DAYS', 365),
+
+    // ── Credential breach check (HaveIBeenPwned k-anonymity API) ─────────────
+    // When enabled, password logins are checked against HIBP after success.
+    // A warning is shown — the user is NOT blocked unless you customise this.
+    'breach_check' => env('OXALIS_BREACH_CHECK', false),
+
+    // ── Risk engine ───────────────────────────────────────────────────────────
+    // Scores each login 0–100.  At or above threshold, login context email fires.
+    // geo:  use ip-api.com (free) to detect impossible travel
+    // vpn:  use ip-api.com proxy/hosting fields (free tier, 45 req/min)
+    'risk' => [
+        'enabled'   => env('OXALIS_RISK_ENGINE', false),
+        'threshold' => (int) env('OXALIS_RISK_THRESHOLD', 40),
+        'geo'       => env('OXALIS_RISK_GEO', true),
+        'vpn'       => env('OXALIS_RISK_VPN', false),
+    ],
+
+    // ── Concurrent session limit ──────────────────────────────────────────────
+    // 0 = unlimited. When exceeded, oldest sessions are revoked automatically.
+    'max_sessions' => (int) env('OXALIS_MAX_SESSIONS', 0),
+
+    // ── Login context email ───────────────────────────────────────────────────
+    // Sends a "new device / unusual location" email when risk score > threshold.
+    // Requires OXALIS_RISK_ENGINE=true.
+    'login_context_email' => env('OXALIS_LOGIN_CONTEXT_EMAIL', false),
+
+    // ── QR Login ─────────────────────────────────────────────────────────────
+    // Scan a QR code with an authenticated phone to approve a desktop login.
+    // ttl: seconds the QR code stays valid (default 90)
+    'qr_login' => [
+        'enabled' => env('OXALIS_QR_LOGIN', false),
+        'ttl'     => (int) env('OXALIS_QR_TTL', 90),
+    ],
+
+    // ── Ultrasonic proximity authentication ───────────────────────────────────
+    // Desktop plays an inaudible (17–20 kHz) token; an authenticated phone
+    // running in the browser hears it, decodes it, and approves the login.
+    // Requires: Chrome/Edge on both devices (Web Audio API + getUserMedia).
+    // ttl: seconds the ultrasonic token stays valid (default 30)
+    'ultrasonic' => [
+        'enabled' => env('OXALIS_ULTRASONIC', false),
+        'ttl'     => (int) env('OXALIS_ULTRASONIC_TTL', 30),
+    ],
+
 ];

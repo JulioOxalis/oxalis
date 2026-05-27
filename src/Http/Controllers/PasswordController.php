@@ -3,6 +3,7 @@ namespace Oxalis\Http\Controllers;
 
 use Oxalis\Auth\LoginHandler;
 use Oxalis\Events\LoginFailed;
+use Oxalis\Security\BreachCheckService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -41,6 +42,15 @@ class PasswordController extends Controller
         }
 
         session(['oxalis_login_success' => true]);
+
+        // Warn (never block) if the password appears in breach databases
+        if (config('oxalis.breach_check', false)) {
+            try {
+                if (app(BreachCheckService::class)->isPwned($data['password'])) {
+                    session(['oxalis_breach_detected' => true]);
+                }
+            } catch (\Throwable) {}
+        }
 
         return $this->login->attempt(
             user:      $user,

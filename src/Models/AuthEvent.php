@@ -9,6 +9,7 @@ class AuthEvent extends OxalisModel
     public const UPDATED_AT = null;
 
     protected $fillable = [
-        'user_id', 'event', 'method', 'ip_address', 'user_agent', 'status',
+        'user_id', 'event', 'method', 'ip_address', 'user_agent',
+        'status', 'risk_score', 'device_fingerprint',
     ];
 }

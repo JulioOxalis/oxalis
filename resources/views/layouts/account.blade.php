@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-          integrity="sha384-tViUnnbplR7Re/4Wy/4ULR7ACzGxbUJTXzC7SaCiXQbJhvSiXatDKPmMxMLX1RNb" crossorigin="anonymous">
+          integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
     @if($oxTheme === 'custom' && file_exists(public_path('vendor/oxalis/theme.css')))
     <link rel="stylesheet" href="{{ asset('vendor/oxalis/theme.css') }}">
     @endif
@@ -44,7 +44,7 @@
       --ox-btn-fg:#07090e;--ox-btn-radius:3px;
       --ox-font:'Courier New',Courier,monospace;
       --bs-body-bg:#07090e;--bs-card-bg:#0e1117;--bs-border-color:#00f5ff28;
-      --bs-body-color:#c8f0f2;--bs-secondary-color:#4a8a8f;
+      --bs-body-color:#c8f0f2;--bs-secondary-color:#7ac8ce;
     }
     [data-ox-theme=aurora]{
       --ox:#a78bfa;--ox-dk:#7c3aed;--ox-sf:rgba(167,139,250,.1);--ox-r:22px;
@@ -52,7 +52,7 @@
       --ox-font:system-ui,-apple-system,sans-serif;
       --bs-body-bg:#08001a;--bs-card-bg:rgba(255,255,255,.05);
       --bs-border-color:rgba(255,255,255,.09);
-      --bs-body-color:#e4dbff;--bs-secondary-color:#8b7fc0;
+      --bs-body-color:#e4dbff;--bs-secondary-color:#b0a4e0;
     }
     [data-ox-theme=aurora] body{
       background:linear-gradient(135deg,#08001a 0%,#0d1b32 50%,#001a10 100%)!important;
@@ -63,14 +63,14 @@
       --ox-btn-fg:#000;--ox-btn-radius:0px;
       --ox-font:'Courier New',Courier,monospace;
       --bs-body-bg:#000;--bs-card-bg:#000;--bs-border-color:#2a2a2a;
-      --bs-body-color:#fff;--bs-secondary-color:#777;
+      --bs-body-color:#fff;--bs-secondary-color:#999;
     }
     [data-ox-theme=ember]{
       --ox:#f59e0b;--ox-dk:#d97706;--ox-sf:rgba(245,158,11,.1);--ox-r:10px;
       --ox-btn-fg:#1a0e00;--ox-btn-radius:8px;
       --ox-font:system-ui,-apple-system,sans-serif;
       --bs-body-bg:#100a02;--bs-card-bg:#1c1206;--bs-border-color:#3a2810;
-      --bs-body-color:#f5deb3;--bs-secondary-color:#8a6a3a;
+      --bs-body-color:#f5deb3;--bs-secondary-color:#c08850;
     }
     [data-ox-theme=frost]{
       --ox:#38bdf8;--ox-dk:#0ea5e9;--ox-sf:rgba(56,189,248,.12);--ox-r:20px;
@@ -99,6 +99,27 @@
     .btn-ox-out:hover{background:var(--ox);color:var(--ox-btn-fg,#fff)}
     .form-control:focus{border-color:var(--ox)!important;box-shadow:0 0 0 .2rem var(--ox-sf)!important}
     a{color:var(--ox)}a:hover{color:var(--ox-dk)}
+
+    /* ─── UNIVERSAL: form readability across all themes ────────────────────── */
+    .form-control{color:var(--bs-body-color)}
+    .form-control::placeholder{color:var(--bs-secondary-color);opacity:.8}
+    .form-floating>label{color:var(--bs-secondary-color);background:transparent}
+    .form-floating>.form-control:focus~label,
+    .form-floating>.form-control:not(:placeholder-shown)~label{opacity:1}
+    .form-check-label{color:var(--bs-secondary-color)}
+    .form-check-input:not(:checked){
+      background-color:var(--bs-tertiary-bg,rgba(0,0,0,.06));
+      border-color:var(--bs-border-color)
+    }
+    /* Dark-theme status pills and badges */
+    [data-bs-theme=dark] .ox-status-pill{filter:brightness(1.2)}
+    [data-bs-theme=dark] .badge{filter:none}
+    [data-bs-theme=dark] .alert{color:inherit}
+    /* Neon: table, badges */
+    [data-ox-theme=neon] table{--bs-table-color:var(--bs-body-color)}
+    [data-ox-theme=neon] .badge{background:rgba(0,245,255,.08)!important;color:#7ac8ce!important}
+    /* Frost: secondary text contrast on light bg */
+    [data-ox-theme=frost] .text-secondary{color:#3a7a9c!important}
     </style>
 </head>
 <body>
@@ -131,7 +152,7 @@
 
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmBiMh9+WkUBrBaFIKmhUcK93BF+" crossorigin="anonymous"></script>
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 @if(!$oxDark)
 <script>
 (function(){

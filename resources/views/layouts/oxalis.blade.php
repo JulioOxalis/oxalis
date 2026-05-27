@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-          integrity="sha384-tViUnnbplR7Re/4Wy/4ULR7ACzGxbUJTXzC7SaCiXQbJhvSiXatDKPmMxMLX1RNb" crossorigin="anonymous">
+          integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
     @if($oxTheme === 'custom' && file_exists(public_path('vendor/oxalis/theme.css')))
     <link rel="stylesheet" href="{{ asset('vendor/oxalis/theme.css') }}">
     @endif
@@ -41,7 +41,7 @@
       --ox-btn-fg:#07090e;--ox-btn-radius:3px;
       --ox-font:'Courier New',Courier,monospace;--ox-body-bg:#07090e;
       --bs-body-bg:#07090e;--bs-card-bg:#0e1117;--bs-border-color:#00f5ff28;
-      --bs-body-color:#c8f0f2;--bs-secondary-color:#4a8a8f;
+      --bs-body-color:#c8f0f2;--bs-secondary-color:#7ac8ce;
     }
     [data-ox-theme=neon] .ox-card{
       border-color:#00f5ff30;
@@ -72,7 +72,7 @@
       --ox-font:system-ui,-apple-system,sans-serif;--ox-body-bg:#08001a;
       --bs-body-bg:#08001a;--bs-card-bg:rgba(255,255,255,.05);
       --bs-border-color:rgba(255,255,255,.09);
-      --bs-body-color:#e4dbff;--bs-secondary-color:#8b7fc0;
+      --bs-body-color:#e4dbff;--bs-secondary-color:#b0a4e0;
     }
     [data-ox-theme=aurora] body{
       background:linear-gradient(135deg,#08001a 0%,#0d1b32 50%,#001a10 100%)!important;
@@ -92,7 +92,7 @@
       --ox-btn-fg:#000;--ox-btn-radius:0px;
       --ox-font:'Courier New',Courier,monospace;--ox-body-bg:#000;
       --bs-body-bg:#000;--bs-card-bg:#000;--bs-border-color:#2a2a2a;
-      --bs-body-color:#fff;--bs-secondary-color:#777;
+      --bs-body-color:#fff;--bs-secondary-color:#999;
     }
     [data-ox-theme=obsidian] .ox-card{
       border:1px solid #2a2a2a;box-shadow:none;
@@ -122,7 +122,7 @@
       --ox-btn-fg:#1a0e00;--ox-btn-radius:8px;
       --ox-font:system-ui,-apple-system,sans-serif;--ox-body-bg:#100a02;
       --bs-body-bg:#100a02;--bs-card-bg:#1c1206;--bs-border-color:#3a2810;
-      --bs-body-color:#f5deb3;--bs-secondary-color:#8a6a3a;
+      --bs-body-color:#f5deb3;--bs-secondary-color:#c08850;
     }
     [data-ox-theme=ember] .ox-card{box-shadow:0 4px 24px rgba(0,0,0,.6);}
     [data-ox-theme=ember] .btn-ox:hover{box-shadow:0 0 22px rgba(245,158,11,.3);}
@@ -181,6 +181,32 @@
     .ox-div::before,.ox-div::after{content:'';flex:1;border-top:1px solid var(--bs-border-color);}
     .form-control:focus{border-color:var(--ox)!important;box-shadow:0 0 0 .2rem var(--ox-sf)!important;}
     a{color:var(--ox);}a:hover{color:var(--ox-dk);}
+
+    /* ─── UNIVERSAL: form readability across all themes ────────────────────── */
+    .form-control{color:var(--bs-body-color)}
+    .form-control::placeholder{color:var(--bs-secondary-color);opacity:.8}
+    .form-floating>label{color:var(--bs-secondary-color);background:transparent}
+    .form-floating>.form-control:focus~label,
+    .form-floating>.form-control:not(:placeholder-shown)~label{opacity:1}
+    .form-check-label{color:var(--bs-secondary-color)}
+    .form-check-input:not(:checked){
+      background-color:var(--bs-tertiary-bg,rgba(0,0,0,.06));
+      border-color:var(--bs-border-color)
+    }
+    /* Dark-theme tier badges */
+    [data-bs-theme=dark] .ox-tier-best{background:rgba(25,135,84,.22);color:#5fd194}
+    [data-bs-theme=dark] .ox-tier-good{background:rgba(13,110,253,.22);color:#7eb4ff}
+    [data-bs-theme=dark] .ox-tier-basic{background:rgba(255,193,7,.18);color:#ffd060}
+    /* Alert text on dark themes */
+    [data-bs-theme=dark] .alert{color:inherit}
+    /* Neon: form control text + checkbox */
+    [data-ox-theme=neon] .form-check-input:not(:checked){
+      background-color:rgba(0,245,255,.04);border-color:rgba(0,245,255,.2)
+    }
+    /* Frost: badges need darker text on light background */
+    [data-ox-theme=frost] .ox-tier-best{background:rgba(25,135,84,.1);color:#146435}
+    [data-ox-theme=frost] .ox-tier-good{background:rgba(13,110,253,.1);color:#0847b5}
+    [data-ox-theme=frost] .ox-tier-basic{background:rgba(150,100,0,.1);color:#7a5200}
     </style>
 </head>
 <body>
@@ -196,7 +222,7 @@
 <div class="ox-card">@yield('content')</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmBiMh9+WkUBrBaFIKmhUcK93BF+" crossorigin="anonymous"></script>
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 @stack('scripts')
 </body>
 </html>

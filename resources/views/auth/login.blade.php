@@ -42,6 +42,9 @@
   border-color:var(--ox);color:var(--ox);background:var(--ox-sf);transform:translateY(-2px);
 }
 .ox-rail-btn:active{transform:translateY(0);}
+[data-bs-theme=dark] .ox-rail-btn{color:var(--bs-secondary-color);border-color:var(--bs-border-color)}
+[data-bs-theme=dark] .ox-rail-btn:hover,
+[data-bs-theme=dark] .ox-rail-btn.active{color:var(--ox);border-color:var(--ox);background:var(--ox-sf)}
 [data-ox-theme=neon] .ox-rail-btn.active{box-shadow:0 0 14px rgba(0,245,255,.3);}
 [data-ox-theme=obsidian] .ox-rail-btn{border-radius:0;}
 
@@ -59,7 +62,17 @@
 .ox-tier-best{background:rgba(25,135,84,.1);color:#198754;}
 .ox-tier-good{background:rgba(13,110,253,.1);color:#0d6efd;}
 .ox-tier-basic{background:rgba(255,193,7,.14);color:#997404;}
-.ox-hint{font-size:.73rem;color:var(--bs-secondary-color);}
+.ox-hint{font-size:.73rem;color:var(--bs-secondary-color)}
+/* Dark-theme tier badge contrast */
+[data-bs-theme=dark] .ox-tier-best{background:rgba(25,135,84,.22)!important;color:#5fd194!important}
+[data-bs-theme=dark] .ox-tier-good{background:rgba(13,110,253,.22)!important;color:#7eb4ff!important}
+[data-bs-theme=dark] .ox-tier-basic{background:rgba(255,193,7,.18)!important;color:#ffd060!important}
+/* Frost: darker tier text on light background */
+[data-ox-theme=frost] .ox-tier-best{background:rgba(25,135,84,.1)!important;color:#146435!important}
+[data-ox-theme=frost] .ox-tier-good{background:rgba(13,110,253,.1)!important;color:#0847b5!important}
+[data-ox-theme=frost] .ox-tier-basic{background:rgba(150,100,0,.1)!important;color:#7a5200!important}
+/* Divider text */
+.ox-div{color:var(--bs-secondary-color)}
 
 /* skeleton loader */
 .ox-skel{display:flex;flex-direction:column;gap:.4rem;}

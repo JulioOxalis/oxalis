@@ -38,7 +38,9 @@ return [
     // ── Layout variant ────────────────────────────────────────────────────────
     // card  — centered card on body bg (default)
     // split — brand panel on the left, form on the right
-    // bare  — no card wrapper; form content sits directly on the page
+    // bare  — holographic: dark space bg, animated orbs, spinning rainbow border
+    // glass — frosted glassmorphism card over animated pastel bokeh blobs
+    // float — elevated card with brand/logo displayed above it; hover-lift effect
     'layout' => env('OXALIS_LAYOUT', 'card'),
 
     // ── Branding ─────────────────────────────────────────────────────────────
@@ -52,14 +54,22 @@ return [
         'show_app_name' => env('OXALIS_SHOW_APP_NAME', false),
 
         // ── Split-layout brand panel customisation ────────────────────────────
-        // split_bg accepts any valid CSS background value:
-        //   solid color   → OXALIS_SPLIT_BG=#e11d48
-        //   gradient      → OXALIS_SPLIT_BG=linear-gradient(135deg,#e11d48,#7c3aed)
-        //   image         → OXALIS_SPLIT_BG=url(/img/auth-bg.jpg) center/cover no-repeat
+        // split_bg accepts any valid CSS background value. IMPORTANT: values
+        // containing # or spaces MUST be quoted in .env or the parser will
+        // strip everything from the first unquoted # onward.
+        //
+        //   Solid color  → OXALIS_SPLIT_BG="#e11d48"
+        //   Gradient     → OXALIS_SPLIT_BG="linear-gradient(135deg,#e11d48 0%,#7c3aed 60%,#3b82f6 100%)"
+        //   Image        → OXALIS_SPLIT_BG="url(/img/auth-bg.jpg) center/cover no-repeat"
+        //   Image+overlay→ OXALIS_SPLIT_BG="linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url(/img/auth-bg.jpg) center/cover no-repeat"
+        //
         // Defaults to var(--ox) (your primary brand color).
         'split_bg'   => env('OXALIS_SPLIT_BG'),
 
-        // Text color inside the brand panel. Defaults to var(--ox-btn-fg,#fff).
+        // Text color inside the brand panel. Quote the value in .env:
+        //   OXALIS_SPLIT_TEXT="#ffffff"   (light text for dark backgrounds)
+        //   OXALIS_SPLIT_TEXT="#1a1f36"   (dark text for light backgrounds)
+        // Defaults to var(--ox-btn-fg,#fff).
         'split_text' => env('OXALIS_SPLIT_TEXT'),
     ],
 

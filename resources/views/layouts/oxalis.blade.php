@@ -2,16 +2,19 @@
   $oxTheme     = config('oxalis.theme', 'indigo');
   $oxColor     = config('oxalis.theme_color');
   $oxLayout    = config('oxalis.layout', 'card');
-  $oxDark      = in_array($oxTheme, ['neon','aurora','obsidian','ember']);
   $oxSplitBg   = config('oxalis.brand.split_bg');
   $oxSplitText = config('oxalis.brand.split_text');
+
+  // bare + glass are always dark regardless of theme
+  $oxForceDark = in_array($oxLayout, ['bare', 'glass']);
+  $oxDark      = in_array($oxTheme, ['neon','aurora','obsidian','ember']) || $oxForceDark;
 
   // Derive all color tokens from OXALIS_PRIMARY_COLOR (any theme)
   $oxDerived = null;
   if ($oxColor && preg_match('/^#([0-9a-fA-F]{6})$/', $oxColor, $oxM)) {
-      $r  = hexdec(substr($oxM[1], 0, 2));
-      $g  = hexdec(substr($oxM[1], 2, 2));
-      $b  = hexdec(substr($oxM[1], 4, 2));
+      $r = hexdec(substr($oxM[1], 0, 2));
+      $g = hexdec(substr($oxM[1], 2, 2));
+      $b = hexdec(substr($oxM[1], 4, 2));
       $oxDerived = [
           'ox'     => $oxColor,
           'ox-dk'  => sprintf('#%02x%02x%02x', max(0,(int)($r*.88)), max(0,(int)($g*.88)), max(0,(int)($b*.88))),
@@ -27,7 +30,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }}@hasSection('title') &middot; @yield('title')@endif</title>
-    {{-- Force dark/light before Bootstrap paints to avoid flash --}}
     @if($oxDark)
     <script>document.documentElement.setAttribute('data-bs-theme','dark');</script>
     @else
@@ -60,25 +62,12 @@
       --bs-body-bg:#07090e;--bs-card-bg:#0e1117;--bs-border-color:#00f5ff28;
       --bs-body-color:#c8f0f2;--bs-secondary-color:#7ac8ce;
     }
-    [data-ox-theme=neon] .ox-card{
-      border-color:#00f5ff30;
-      box-shadow:0 0 0 1px #00f5ff18,0 4px 40px rgba(0,245,255,.06);
-    }
-    [data-ox-theme=neon] .btn-ox{
-      box-shadow:0 0 18px rgba(0,245,255,.2);letter-spacing:.07em;
-      text-transform:uppercase;font-size:.82rem;
-    }
+    [data-ox-theme=neon] .ox-card{border-color:#00f5ff30;box-shadow:0 0 0 1px #00f5ff18,0 4px 40px rgba(0,245,255,.06);}
+    [data-ox-theme=neon] .btn-ox{box-shadow:0 0 18px rgba(0,245,255,.2);letter-spacing:.07em;text-transform:uppercase;font-size:.82rem;}
     [data-ox-theme=neon] .btn-ox:hover{box-shadow:0 0 30px rgba(0,245,255,.45);}
-    [data-ox-theme=neon] .form-control{
-      background:rgba(0,245,255,.03);border-color:#00f5ff28;color:#c8f0f2;
-    }
-    [data-ox-theme=neon] .form-control:focus{
-      background:rgba(0,245,255,.05)!important;border-color:#00f5ff!important;
-      box-shadow:0 0 0 2px rgba(0,245,255,.12)!important;
-    }
-    [data-ox-theme=neon] h5,[data-ox-theme=neon] h4{
-      letter-spacing:.1em;text-transform:uppercase;font-size:.88rem;
-    }
+    [data-ox-theme=neon] .form-control{background:rgba(0,245,255,.03);border-color:#00f5ff28;color:#c8f0f2;}
+    [data-ox-theme=neon] .form-control:focus{background:rgba(0,245,255,.05)!important;border-color:#00f5ff!important;box-shadow:0 0 0 2px rgba(0,245,255,.12)!important;}
+    [data-ox-theme=neon] h5,[data-ox-theme=neon] h4{letter-spacing:.1em;text-transform:uppercase;font-size:.88rem;}
     [data-ox-theme=neon] .btn-ox-out{color:#00f5ff;border-color:#00f5ff40;}
     [data-ox-theme=neon] .btn-ox-out:hover{background:#00f5ff;color:#07090e;}
 
@@ -91,17 +80,9 @@
       --bs-border-color:rgba(255,255,255,.09);
       --bs-body-color:#e4dbff;--bs-secondary-color:#b0a4e0;
     }
-    [data-ox-theme=aurora] body{
-      background:linear-gradient(135deg,#08001a 0%,#0d1b32 50%,#001a10 100%)!important;
-      background-attachment:fixed!important;
-    }
-    [data-ox-theme=aurora] .ox-card{
-      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-      box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
-    }
-    [data-ox-theme=aurora] .form-control{
-      background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#e4dbff;
-    }
+    [data-ox-theme=aurora] body{background:linear-gradient(135deg,#08001a 0%,#0d1b32 50%,#001a10 100%)!important;background-attachment:fixed!important;}
+    [data-ox-theme=aurora] .ox-card{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);}
+    [data-ox-theme=aurora] .form-control{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#e4dbff;}
 
     /* ─── THEME: obsidian (brutalist minimal) ──────────────────────────────── */
     [data-ox-theme=obsidian]{
@@ -111,27 +92,14 @@
       --bs-body-bg:#000;--bs-card-bg:#000;--bs-border-color:#2a2a2a;
       --bs-body-color:#fff;--bs-secondary-color:#999;
     }
-    [data-ox-theme=obsidian] .ox-card{
-      border:1px solid #2a2a2a;box-shadow:none;
-    }
-    [data-ox-theme=obsidian] .form-control{
-      background:transparent;border:none;border-bottom:2px solid #2a2a2a;
-      border-radius:0;color:#fff;padding-left:0;
-    }
-    [data-ox-theme=obsidian] .form-control:focus{
-      border-bottom-color:#fff!important;box-shadow:none!important;
-    }
+    [data-ox-theme=obsidian] .ox-card{border:1px solid #2a2a2a;box-shadow:none;}
+    [data-ox-theme=obsidian] .form-control{background:transparent;border:none;border-bottom:2px solid #2a2a2a;border-radius:0;color:#fff;padding-left:0;}
+    [data-ox-theme=obsidian] .form-control:focus{border-bottom-color:#fff!important;box-shadow:none!important;}
     [data-ox-theme=obsidian] .form-floating>label{left:0;}
-    [data-ox-theme=obsidian] .btn-ox{
-      border:2px solid #fff;letter-spacing:.1em;text-transform:uppercase;
-    }
-    [data-ox-theme=obsidian] .btn-ox-out{
-      border-color:#fff;color:#fff;
-    }
+    [data-ox-theme=obsidian] .btn-ox{border:2px solid #fff;letter-spacing:.1em;text-transform:uppercase;}
+    [data-ox-theme=obsidian] .btn-ox-out{border-color:#fff;color:#fff;}
     [data-ox-theme=obsidian] .btn-ox-out:hover{background:#fff;color:#000;}
-    [data-ox-theme=obsidian] h5,[data-ox-theme=obsidian] h4{
-      text-transform:uppercase;letter-spacing:.14em;font-size:.88rem;
-    }
+    [data-ox-theme=obsidian] h5,[data-ox-theme=obsidian] h4{text-transform:uppercase;letter-spacing:.14em;font-size:.88rem;}
 
     /* ─── THEME: ember (warm dark) ──────────────────────────────────────────── */
     [data-ox-theme=ember]{
@@ -143,12 +111,8 @@
     }
     [data-ox-theme=ember] .ox-card{box-shadow:0 4px 24px rgba(0,0,0,.6);}
     [data-ox-theme=ember] .btn-ox:hover{box-shadow:0 0 22px rgba(245,158,11,.3);}
-    [data-ox-theme=ember] .form-control{
-      background:rgba(245,158,11,.04);border-color:#3a2810;color:#f5deb3;
-    }
-    [data-ox-theme=ember] .form-control:focus{
-      border-color:#f59e0b!important;box-shadow:0 0 0 2px rgba(245,158,11,.15)!important;
-    }
+    [data-ox-theme=ember] .form-control{background:rgba(245,158,11,.04);border-color:#3a2810;color:#f5deb3;}
+    [data-ox-theme=ember] .form-control:focus{border-color:#f59e0b!important;box-shadow:0 0 0 2px rgba(245,158,11,.15)!important;}
 
     /* ─── THEME: frost (light glassmorphism) ────────────────────────────────── */
     [data-ox-theme=frost]{
@@ -158,11 +122,7 @@
       --bs-body-bg:#dbeafe;--bs-border-color:rgba(56,189,248,.25);
       --bs-body-color:#0c3c5c;--bs-secondary-color:#4d8aa8;
     }
-    [data-ox-theme=frost] .ox-card{
-      background:rgba(255,255,255,.72)!important;
-      backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-      box-shadow:0 8px 32px rgba(56,189,248,.15),0 1px 3px rgba(0,0,0,.06);
-    }
+    [data-ox-theme=frost] .ox-card{background:rgba(255,255,255,.72)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 32px rgba(56,189,248,.15),0 1px 3px rgba(0,0,0,.06);}
     [data-ox-theme=frost] .form-control{background:rgba(255,255,255,.6);}
 
     /* ─── BASE ──────────────────────────────────────────────────────────────── */
@@ -191,15 +151,13 @@
       font-family:var(--ox-font);transition:all .15s;
     }
     .btn-ox-out:hover{background:var(--ox);color:var(--ox-btn-fg,#fff);}
-    .ox-div{
-      display:flex;align-items:center;gap:.6rem;
-      color:var(--bs-secondary-color);font-size:.78rem;margin:1rem 0;
-    }
+    .ox-div{display:flex;align-items:center;gap:.6rem;color:var(--bs-secondary-color);font-size:.78rem;margin:1rem 0;}
     .ox-div::before,.ox-div::after{content:'';flex:1;border-top:1px solid var(--bs-border-color);}
     .form-control:focus{border-color:var(--ox)!important;box-shadow:0 0 0 .2rem var(--ox-sf)!important;}
     a{color:var(--ox);}a:hover{color:var(--ox-dk);}
 
     /* ─── SPLIT LAYOUT ──────────────────────────────────────────────────────── */
+    /* App name / tagline live in the brand panel — card-header is NOT shown in the card */
     body.ox-layout-split{align-items:stretch;justify-content:stretch;padding:0}
     .ox-split-root{display:flex;min-height:100vh;width:100%}
     .ox-split-brand{
@@ -223,32 +181,148 @@
       .ox-split-form{min-height:auto}
     }
 
-    /* ─── BARE LAYOUT ───────────────────────────────────────────────────────── */
-    body.ox-layout-bare{align-items:stretch;justify-content:flex-start;padding:2rem}
-    .ox-bare-root{width:100%;max-width:100%}
+    /* ─── BARE / HOLOGRAPHIC LAYOUT ─────────────────────────────────────────── */
+    body.ox-layout-bare{background:#02030a}
+    /* Animated deep-space atmosphere layer (fixed so it covers full viewport) */
+    .ox-bare-bg{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 70% 50% at 15% 25%,rgba(120,40,220,.42) 0%,transparent 62%),
+        radial-gradient(ellipse 55% 60% at 85% 75%,rgba(0,180,255,.26) 0%,transparent 65%),
+        radial-gradient(ellipse 45% 55% at 60% 10%,rgba(255,30,100,.2) 0%,transparent 55%);
+      animation:ox-holo-orbs 16s ease-in-out infinite alternate;
+    }
+    /* Grid overlay */
+    .ox-bare-bg::after{
+      content:'';position:absolute;inset:0;
+      background-image:
+        linear-gradient(rgba(100,60,255,.05) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(100,60,255,.05) 1px,transparent 1px);
+      background-size:48px 48px;
+    }
+    @keyframes ox-holo-orbs{
+      0%  {opacity:1;transform:scale(1)}
+      50% {opacity:.78;transform:scale(1.07) translate(1.5%,-1.5%)}
+      100%{opacity:1;transform:scale(.96) translate(-1%,1%)}
+    }
+    .ox-bare-root{
+      position:relative;z-index:1;width:100%;
+      display:flex;flex-direction:column;align-items:center;
+      padding:2rem 1rem;
+    }
+    /* Outer wrapper: overflow:hidden + large rotating conic = spinning rainbow border */
+    .ox-holo-outer{
+      position:relative;border-radius:var(--ox-r,18px);
+      overflow:hidden;padding:2px;width:100%;max-width:440px;
+    }
+    .ox-holo-outer::before{
+      content:'';position:absolute;left:50%;top:50%;
+      width:260%;aspect-ratio:1;
+      transform:translate(-50%,-50%) rotate(0deg);
+      background:conic-gradient(from 0deg,#ff0080 0deg,#ff8c00 60deg,#ffef00 120deg,#00f5ff 180deg,#7b2fff 240deg,#ff0080 360deg);
+      animation:ox-holo-spin 4s linear infinite;
+      z-index:0;
+    }
+    @keyframes ox-holo-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    /* Glassmorphism inner card */
+    .ox-holo-inner{
+      position:relative;z-index:1;
+      border-radius:calc(var(--ox-r,18px) - 1px);
+      background:rgba(8,10,28,.86);
+      backdrop-filter:blur(28px) saturate(150%);
+      -webkit-backdrop-filter:blur(28px) saturate(150%);
+      padding:2rem 2rem 1.75rem;overflow:hidden;
+      --bs-body-color:#e2e8ff;--bs-secondary-color:#8a92bc;
+      --bs-border-color:rgba(255,255,255,.1);
+    }
+    /* Shimmer sweep */
+    .ox-holo-inner::after{
+      content:'';position:absolute;top:0;left:-100%;
+      width:50%;height:100%;
+      background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.042) 50%,transparent 100%);
+      animation:ox-holo-shimmer 8s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes ox-holo-shimmer{0%,15%{left:-100%}55%,100%{left:160%}}
+    .ox-holo-inner .form-control{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13);color:#e2e8ff}
+    .ox-holo-inner .form-control:focus{background:rgba(255,255,255,.1)!important;border-color:var(--ox)!important;box-shadow:0 0 0 .2rem rgba(120,40,220,.3)!important}
+    .ox-holo-inner .form-floating>label{color:#8a92bc}
+    .ox-holo-inner a{color:#c4b5fd}
+    .ox-holo-inner a:hover{color:#a78bfa}
+    .ox-holo-inner .form-check-input:not(:checked){background-color:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
 
-    /* ─── UNIVERSAL: form readability across all themes ────────────────────── */
+    /* ─── GLASS LAYOUT ──────────────────────────────────────────────────────── */
+    body.ox-layout-glass{background:#120d28;position:relative}
+    /* Animated pastel bokeh blobs */
+    .ox-glass-bg{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 55% 50% at 22% 38%,rgba(167,139,250,.55) 0%,transparent 62%),
+        radial-gradient(ellipse 50% 55% at 78% 62%,rgba(96,165,250,.45) 0%,transparent 60%),
+        radial-gradient(ellipse 45% 42% at 55% 12%,rgba(244,114,182,.35) 0%,transparent 56%);
+      animation:ox-glass-blobs 14s ease-in-out infinite alternate;
+    }
+    @keyframes ox-glass-blobs{
+      0%  {transform:scale(1) rotate(0deg);opacity:.85}
+      100%{transform:scale(1.12) rotate(7deg);opacity:1}
+    }
+    .ox-glass-root{
+      position:relative;z-index:1;width:100%;
+      display:flex;flex-direction:column;align-items:center;
+      padding:2rem 1rem;
+    }
+    .ox-glass-card{
+      width:100%;max-width:440px;
+      background:rgba(255,255,255,.11);
+      backdrop-filter:blur(32px) saturate(170%);
+      -webkit-backdrop-filter:blur(32px) saturate(170%);
+      border:1px solid rgba(255,255,255,.22);
+      border-radius:var(--ox-r,22px);
+      padding:2rem 2rem 1.75rem;
+      box-shadow:0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18);
+      --bs-body-color:#f0eeff;--bs-secondary-color:rgba(240,238,255,.65);
+      --bs-border-color:rgba(255,255,255,.16);
+    }
+    .ox-glass-card .form-control{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);color:#f0eeff}
+    .ox-glass-card .form-control:focus{background:rgba(255,255,255,.14)!important;border-color:rgba(255,255,255,.5)!important;box-shadow:0 0 0 .2rem rgba(255,255,255,.1)!important}
+    .ox-glass-card .form-floating>label{color:rgba(240,238,255,.6)}
+    .ox-glass-card a{color:#e0d9ff}
+    .ox-glass-card a:hover{color:#c4b5fd}
+    .ox-glass-card .form-check-input:not(:checked){background-color:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2)}
+
+    /* ─── FLOAT LAYOUT ──────────────────────────────────────────────────────── */
+    /* Brand shown above the card; card itself has no card-header */
+    .ox-float-root{
+      width:100%;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem
+    }
+    .ox-float-brand-above{text-align:center;margin-bottom:1.5rem;width:100%;max-width:440px}
+    .ox-float-card{
+      width:100%;max-width:440px;
+      border-radius:var(--ox-r);border:1px solid var(--bs-border-color);
+      background:var(--bs-card-bg,#fff);
+      padding:2rem 2rem 1.75rem;
+      box-shadow:0 20px 64px rgba(0,0,0,.14),0 6px 20px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.05);
+      transition:box-shadow .35s,transform .35s;
+    }
+    .ox-float-card:hover{
+      box-shadow:0 28px 80px rgba(0,0,0,.18),0 10px 28px rgba(0,0,0,.11),0 4px 10px rgba(0,0,0,.07);
+      transform:translateY(-3px)
+    }
+    @media(prefers-reduced-motion:reduce){.ox-float-card{transition:none;transform:none!important}}
+
+    /* ─── UNIVERSAL form readability across all themes ──────────────────────── */
     .form-control{color:var(--bs-body-color)}
     .form-control::placeholder{color:var(--bs-secondary-color);opacity:.8}
     .form-floating>label{color:var(--bs-secondary-color);background:transparent}
     .form-floating>.form-control:focus~label,
     .form-floating>.form-control:not(:placeholder-shown)~label{opacity:1}
     .form-check-label{color:var(--bs-secondary-color)}
-    .form-check-input:not(:checked){
-      background-color:var(--bs-tertiary-bg,rgba(0,0,0,.06));
-      border-color:var(--bs-border-color)
-    }
-    /* Dark-theme tier badges */
+    .form-check-input:not(:checked){background-color:var(--bs-tertiary-bg,rgba(0,0,0,.06));border-color:var(--bs-border-color)}
     [data-bs-theme=dark] .ox-tier-best{background:rgba(25,135,84,.22);color:#5fd194}
     [data-bs-theme=dark] .ox-tier-good{background:rgba(13,110,253,.22);color:#7eb4ff}
     [data-bs-theme=dark] .ox-tier-basic{background:rgba(255,193,7,.18);color:#ffd060}
-    /* Alert text on dark themes */
     [data-bs-theme=dark] .alert{color:inherit}
-    /* Neon: form control text + checkbox */
-    [data-ox-theme=neon] .form-check-input:not(:checked){
-      background-color:rgba(0,245,255,.04);border-color:rgba(0,245,255,.2)
-    }
-    /* Frost: badges need darker text on light background */
+    [data-ox-theme=neon] .form-check-input:not(:checked){background-color:rgba(0,245,255,.04);border-color:rgba(0,245,255,.2)}
     [data-ox-theme=frost] .ox-tier-best{background:rgba(25,135,84,.1);color:#146435}
     [data-ox-theme=frost] .ox-tier-good{background:rgba(13,110,253,.1);color:#0847b5}
     [data-ox-theme=frost] .ox-tier-basic{background:rgba(150,100,0,.1);color:#7a5200}
@@ -257,10 +331,8 @@
     @if($oxDerived)
     <style>
     [data-ox-theme={{ $oxTheme }}]{
-      --ox:{{ $oxDerived['ox'] }};
-      --ox-dk:{{ $oxDerived['ox-dk'] }};
-      --ox-sf:{{ $oxDerived['ox-sf'] }};
-      --ox-btn-fg:{{ $oxDerived['btn-fg'] }};
+      --ox:{{ $oxDerived['ox'] }};--ox-dk:{{ $oxDerived['ox-dk'] }};
+      --ox-sf:{{ $oxDerived['ox-sf'] }};--ox-btn-fg:{{ $oxDerived['btn-fg'] }};
     }
     </style>
     @endif
@@ -269,17 +341,17 @@
 <body class="ox-layout-{{ $oxLayout }}">
 
 @if($oxLayout === 'split')
-{{-- ── Split: brand panel left, form right ─────────────────────────────── --}}
+{{-- ── Split: brand panel left (shows app name/tagline), form right ────── --}}
 <div class="ox-split-root">
     <aside class="ox-split-brand">
         @include('oxalis::partials.split-brand')
     </aside>
     <div class="ox-split-form">
         @if(session('status'))
-        <div class="alert rounded-3 border-0 mb-3 w-100" style="max-width:420px;background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+        <div class="alert rounded-3 border-0 mb-3" style="max-width:420px;width:100%;background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
         @endif
         @if($errors->any())
-        <div class="alert rounded-3 border-0 mb-3 w-100" style="max-width:420px;background:rgba(220,53,69,.1);color:#dc3545">
+        <div class="alert rounded-3 border-0 mb-3" style="max-width:420px;width:100%;background:rgba(220,53,69,.1);color:#dc3545">
         @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
         </div>
         @endif
@@ -287,7 +359,6 @@
         <div class="ox-wrap">
             <div class="ox-card">
                 @stack('oxalis:card-top')
-                @include('oxalis::partials.card-header')
                 @yield('content')
                 @stack('oxalis:card-bottom')
             </div>
@@ -297,19 +368,71 @@
 </div>
 
 @elseif($oxLayout === 'bare')
-{{-- ── Bare: no card, form floats directly on body bg ──────────────────── --}}
+{{-- ── Bare / Holographic: dark space bg + spinning rainbow border card ── --}}
+<div class="ox-bare-bg" aria-hidden="true"></div>
 <div class="ox-bare-root">
     @if(session('status'))
-    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(25,135,84,.18);color:#5fd194;border:1px solid rgba(25,135,84,.3)!important"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
     @endif
     @if($errors->any())
-    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(220,53,69,.1);color:#dc3545">
+    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(220,53,69,.18);color:#ff8a9a;border:1px solid rgba(220,53,69,.3)!important">
     @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
     </div>
     @endif
     @stack('oxalis:before-card')
-    @include('oxalis::partials.card-header')
-    @yield('content')
+    <div class="ox-holo-outer">
+        <div class="ox-holo-inner">
+            @stack('oxalis:card-top')
+            @include('oxalis::partials.card-header')
+            @yield('content')
+            @stack('oxalis:card-bottom')
+        </div>
+    </div>
+    @stack('oxalis:after-card')
+</div>
+
+@elseif($oxLayout === 'glass')
+{{-- ── Glass: frosted card floating over animated pastel bokeh blobs ───── --}}
+<div class="ox-glass-bg" aria-hidden="true"></div>
+<div class="ox-glass-root">
+    @if(session('status'))
+    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(255,255,255,.14);color:#d4f0e8;border:1px solid rgba(255,255,255,.22)!important"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    @endif
+    @if($errors->any())
+    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(220,53,69,.2);color:#ffb3be;border:1px solid rgba(220,53,69,.3)!important">
+    @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
+    </div>
+    @endif
+    @stack('oxalis:before-card')
+    <div class="ox-glass-card">
+        @stack('oxalis:card-top')
+        @include('oxalis::partials.card-header')
+        @yield('content')
+        @stack('oxalis:card-bottom')
+    </div>
+    @stack('oxalis:after-card')
+</div>
+
+@elseif($oxLayout === 'float')
+{{-- ── Float: brand above card, elevated shadow with hover lift ────────── --}}
+<div class="ox-float-root">
+    <div class="ox-float-brand-above">
+        @include('oxalis::partials.card-header')
+    </div>
+    @if(session('status'))
+    <div class="alert rounded-3 border-0 mb-3" style="max-width:440px;width:100%;background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    @endif
+    @if($errors->any())
+    <div class="alert rounded-3 border-0 mb-3" style="max-width:440px;width:100%;background:rgba(220,53,69,.1);color:#dc3545">
+    @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
+    </div>
+    @endif
+    @stack('oxalis:before-card')
+    <div class="ox-float-card">
+        @stack('oxalis:card-top')
+        @yield('content')
+        @stack('oxalis:card-bottom')
+    </div>
     @stack('oxalis:after-card')
 </div>
 

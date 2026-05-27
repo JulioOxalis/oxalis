@@ -18,7 +18,7 @@ class OxalisThrottle
 
     public function handle(Request $request, Closure $next)
     {
-        $email = $request->input('email', '');
+        $email = (string) ($request->input('email') ?? '');
         $key   = Lockout::keyFor($email, $request->ip());
 
         try {

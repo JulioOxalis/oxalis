@@ -51,10 +51,22 @@ class SmartDispatchController extends Controller
             ]);
         }
 
+        $userId = (string) $user->getAuthIdentifier();
+
         // ── Has passkeys → passkey ceremony ───────────────────────────────────
-        if (Passkey::where('user_id', $user->getAuthIdentifier())->exists()
+        if (Passkey::where('user_id', $userId)->exists()
             && config('oxalis.methods.passkey', true)) {
-            $options = $this->webAuthn->beginAuthentication($user);
+            try {
+                $options = $this->webAuthn->beginAuthentication($user);
+            } catch (\Throwable $e) {
+                $message = app()->isLocal()
+                    ? $e->getMessage()
+                    : 'Passkey sign-in unavailable. Try another method or check /oxalis/health/passkeys.';
+
+                return response()->json(['error' => $message], 422);
+            }
+
+            session(['oxalis_pending_user_id' => $userId]);
 
             return response()->json([
                 'method'  => 'passkey',
@@ -63,9 +75,9 @@ class SmartDispatchController extends Controller
         }
 
         // ── Has TOTP → TOTP form ──────────────────────────────────────────────
-        if (TotpSecret::where('user_id', $user->getAuthIdentifier())->whereNotNull('confirmed_at')->exists()
+        if (TotpSecret::where('user_id', $userId)->whereNotNull('confirmed_at')->exists()
             && config('oxalis.methods.totp', true)) {
-            session(['oxalis_totp_pending_user_id' => $user->getAuthIdentifier()]);
+            session(['oxalis_totp_pending_user_id' => $userId]);
 
             return response()->json([
                 'method'   => 'totp',

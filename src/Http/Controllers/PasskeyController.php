@@ -18,9 +18,21 @@ class PasskeyController extends Controller
         $request->validate(['email' => 'required|email']);
 
         $userModel = config('oxalis.user_model');
-        $user = $userModel::where('email', $request->email)->first();
+        $user      = $userModel::where('email', $request->email)->first();
 
-        $options = oxalis::beginAuthentication($user ?: null);
+        if ($user && ! oxalis::hasPasskeys($user)) {
+            return response()->json([
+                'error'      => 'No passkey registered for this account. Sign in with another method, then add a passkey from your account settings.',
+                'enroll_url' => route('oxalis.passkeys.enroll'),
+                'code'       => 'no_passkey',
+            ], 422);
+        }
+
+        try {
+            $options = oxalis::beginAuthentication($user ?: null);
+        } catch (\Throwable $e) {
+            return $this->passkeyError($e, 422);
+        }
 
         if ($user) {
             session(['oxalis_pending_user_id' => $user->getAuthIdentifier()]);
@@ -31,21 +43,22 @@ class PasskeyController extends Controller
 
     public function finishAuthentication(Request $request)
     {
-        // Per-account passkey lockout — track by credential_id
         $credentialId = $request->input('id', '');
-        $lockKey      = 'passkey_auth:' . hash('sha256', $credentialId);
+        $lockKey      = 'passkey_auth:'.hash('sha256', $credentialId);
 
         try {
             $lockout = \Oxalis\Models\Lockout::firstOrCreate(['key' => $lockKey], ['attempts' => 0]);
             if ($lockout->isLocked()) {
                 return response()->json(['error' => 'Too many failed attempts. Try again later.'], 429);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
 
         try {
-            $user = oxalis::finishAuthentication($request->all());
-        } catch (\Throwable) {
-            // Increment per-credential lockout on failure
+            $result = oxalis::finishAuthentication($request->all(), $request->getHost());
+            $user   = $result['user'];
+            $passkey = $result['passkey'];
+        } catch (\Throwable $e) {
             try {
                 $lockout = \Oxalis\Models\Lockout::firstOrCreate(['key' => $lockKey], ['attempts' => 0]);
                 $attempts = $lockout->attempts + 1;
@@ -53,27 +66,23 @@ class PasskeyController extends Controller
                     'attempts'     => $attempts,
                     'locked_until' => $attempts >= 5 ? now()->addMinutes(15) : null,
                 ]);
-            } catch (\Throwable) {}
-            return response()->json(['error' => 'Authentication failed'], 422);
+            } catch (\Throwable) {
+            }
+
+            return $this->passkeyError($e, 422);
         }
 
-        if (!$user) {
-            return response()->json(['error' => 'Credential not recognised'], 422);
-        }
-
-        // Reset lockout on success
         try {
             \Oxalis\Models\Lockout::where('key', $lockKey)->update(['attempts' => 0, 'locked_until' => null]);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
 
         Auth::login($user, true);
 
-        // Stamp the credential ID into the session so ValidatePasskeySession
-        // middleware can detect if the passkey is later revoked.
-        session(['oxalis_session_credential_id' => base64_encode(base64_decode($request->input('rawId', '')))]);
+        session(['oxalis_session_credential_id' => $passkey->credential_id]);
 
         AuthEvent::create([
-            'user_id'    => $user->getAuthIdentifier(),
+            'user_id'    => (string) $user->getAuthIdentifier(),
             'event'      => 'login',
             'method'     => 'passkey',
             'ip_address' => $request->ip(),
@@ -84,13 +93,14 @@ class PasskeyController extends Controller
         return response()->json(['redirect' => config('oxalis.routes.home', '/dashboard')]);
     }
 
-    // ── Guest: conditional (autofill) begin ─────────────────────────────────
-    // No email required — browser shows passkeys in the autofill dropdown.
-    // Uses WebAuthn discoverable credentials (empty allowCredentials).
-
     public function beginAutofill()
     {
-        $options = oxalis::beginAuthentication(null);
+        try {
+            $options = oxalis::beginAuthentication(null);
+        } catch (\Throwable $e) {
+            return $this->passkeyError($e, 422);
+        }
+
         return response()->json($options);
     }
 
@@ -104,6 +114,7 @@ class PasskeyController extends Controller
     public function showManage()
     {
         $passkeys = Passkey::where('user_id', Auth::id())->latest()->get();
+
         return view('oxalis::passkeys.manage', compact('passkeys'));
     }
 
@@ -122,9 +133,9 @@ class PasskeyController extends Controller
     public function finishRegistration(Request $request)
     {
         try {
-            $passkey = oxalis::finishRegistration(Auth::user(), $request->all());
+            $passkey = oxalis::finishRegistration(Auth::user(), $request->all(), $request->getHost());
         } catch (\Throwable $e) {
-            return response()->json(['error' => 'Registration failed: '.$e->getMessage()], 422);
+            return $this->passkeyError($e, 422, 'Registration failed');
         }
 
         event(new PasskeyRegistered(Auth::user(), $passkey));
@@ -147,7 +158,7 @@ class PasskeyController extends Controller
     {
         $request->validate(['id' => 'required']);
 
-        $user = Auth::user();
+        $user  = Auth::user();
         $count = Passkey::where('user_id', $user->getAuthIdentifier())->count();
 
         if ($count <= 1) {
@@ -159,5 +170,18 @@ class PasskeyController extends Controller
             ->delete();
 
         return back()->with('status', 'Passkey removed.');
+    }
+
+    private function passkeyError(\Throwable $e, int $status, ?string $prefix = null): \Illuminate\Http\JsonResponse
+    {
+        $message = $prefix ? $prefix.': '.$e->getMessage() : $e->getMessage();
+
+        if (! app()->isLocal()) {
+            $message = $prefix
+                ? ($prefix.'. Please check OXALIS_RP_ID and OXALIS_ORIGINS match your URL.')
+                : 'Authentication failed. Please check OXALIS_RP_ID and OXALIS_ORIGINS match your URL.';
+        }
+
+        return response()->json(['error' => $message], $status);
     }
 }

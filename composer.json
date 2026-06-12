@@ -11,12 +11,24 @@
         "laravel/socialite": "^5.0"
     },
     "require-dev": {
+        "orchestra/testbench": "^10.0",
         "pestphp/pest": "^3.0"
     },
     "autoload": {
         "psr-4": {
             "Oxalis\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Oxalis\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@php -r \"if (PHP_SAPI === 'cli' && !getenv('COMPOSER_NO_OXALIS_HINT')) { fwrite(STDERR, PHP_EOL.'  julio/oxalis: run php artisan oxalis:install && php artisan migrate before using passkeys.'.PHP_EOL.PHP_EOL); }\""
+        ],
+        "test": "pest"
     },
     "extra": {
         "laravel": {
@@ -26,5 +38,10 @@
             }
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
 }

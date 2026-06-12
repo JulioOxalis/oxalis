@@ -8,7 +8,7 @@ return new class extends Migration {
     {
         Schema::create('oxalis_passkeys', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->index();
+            $table->string('user_id')->index();
             $table->string('label')->default('My Passkey');
             $table->string('credential_id')->unique();
             $table->longText('public_key_json');

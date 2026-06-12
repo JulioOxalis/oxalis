@@ -1,4 +1,7 @@
 <?php
+
+use Oxalis\Support\WebAuthnConfig;
+
 return [
 
     // ── Database connection ───────────────────────────────────────────────────
@@ -9,7 +12,10 @@ return [
     // ── Relying Party (WebAuthn / Passkeys) ───────────────────────────────────
     'rp_id'   => env('OXALIS_RP_ID', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost'),
     'rp_name' => env('OXALIS_RP_NAME', env('APP_NAME', 'App')),
-    'origins' => array_filter(explode(',', env('OXALIS_ORIGINS', env('APP_URL', 'http://localhost')))),
+    // When OXALIS_ORIGINS is unset, include common localhost variants (not just APP_URL).
+    'origins' => env('OXALIS_ORIGINS')
+        ? array_filter(explode(',', env('OXALIS_ORIGINS')))
+        : WebAuthnConfig::suggestedOrigins(env('APP_URL', 'http://localhost')),
 
     // ── Theme ─────────────────────────────────────────────────────────────────
     // Built-in presets: indigo | neon | aurora | obsidian | ember | frost

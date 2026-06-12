@@ -3,6 +3,7 @@ namespace Oxalis\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Oxalis\Support\WebAuthnConfig;
 
 class InstallCommand extends Command
 {
@@ -86,7 +87,7 @@ class InstallCommand extends Command
         // ── 6. User model stub ────────────────────────────────────────────────
         $publishUser = $this->confirm(
             'Publish User model stub (adds HasPasskeys trait to app/Models/User.php)?',
-            false,
+            true,
         );
 
         // ── Publish assets ────────────────────────────────────────────────────
@@ -156,6 +157,11 @@ class InstallCommand extends Command
         );
 
         $this->newLine();
+        $this->line('  <fg=cyan;options=bold>Passkeys:</>');
+        $this->line('  1. Register at '.url("{$p}/register"));
+        $this->line('  2. Enroll a passkey at '.url("{$p}/passkeys/enroll").' (required before passkey login works)');
+        $this->line('  3. Diagnose config: '.url("{$p}/health/passkeys"));
+        $this->newLine();
         $this->line('  <fg=yellow>Admin routes require a separate admin password set on first visit.</>');
         $this->line('  <fg=yellow>Regular users are blocked from /admin/* even if they know the URL.</>');
         $this->newLine();
@@ -184,9 +190,10 @@ class InstallCommand extends Command
         string  $prefix = 'oxalis',
         string  $home   = '/dashboard',
     ): void {
-        $host = parse_url(config('app.url', 'http://localhost'), PHP_URL_HOST) ?: 'localhost';
-        $name = config('app.name', 'App');
-        $url  = config('app.url', 'http://localhost');
+        $appUrl = config('app.url', 'http://localhost');
+        $host   = parse_url($appUrl, PHP_URL_HOST) ?: 'localhost';
+        $name   = config('app.name', 'App');
+        $origins = WebAuthnConfig::originsCsv($appUrl, $this->laravel->make('request'));
 
         $flag = fn(string $key) => in_array($key, $enabled) ? 'true' : 'false';
 
@@ -197,7 +204,7 @@ class InstallCommand extends Command
             "OXALIS_HOME={$home}",
             "OXALIS_RP_ID={$host}",
             "OXALIS_RP_NAME=\"{$name}\"",
-            "OXALIS_ORIGINS={$url}",
+            "OXALIS_ORIGINS={$origins}",
             '',
             'OXALIS_ENABLE_PASSKEY='    . $flag('passkey'),
             'OXALIS_ENABLE_MAGIC_LINK=' . $flag('magic_link'),

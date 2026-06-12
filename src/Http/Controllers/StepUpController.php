@@ -23,9 +23,9 @@ class StepUpController extends Controller
         $hasTotp     = $this->totp->isEnabled($user);
         $hasPasskey  = $this->webAuthn->hasPasskeys($user);
 
-        if (!$hasTotp && !$hasPasskey) {
-            // No strong factor available — grant step-up with OTP or fall through
+        if (! $hasTotp && ! $hasPasskey) {
             $this->stepUp->markVerified();
+
             return redirect($this->stepUp->intendedUrl(config('oxalis.routes.home', '/dashboard')));
         }
 
@@ -38,7 +38,7 @@ class StepUpController extends Controller
     {
         $request->validate(['code' => 'required|digits:6']);
 
-        if (!$this->totp->verify(Auth::user(), $request->code)) {
+        if (! $this->totp->verify(Auth::user(), $request->code)) {
             return back()->withErrors(['code' => 'Incorrect code. Please try again.']);
         }
 
@@ -51,12 +51,17 @@ class StepUpController extends Controller
     public function verifyPasskey(Request $request)
     {
         try {
-            $user = $this->webAuthn->finishAuthentication($request->all());
+            $result = $this->webAuthn->finishAuthentication($request->all(), $request->getHost());
+            $user   = $result['user'];
         } catch (\Throwable $e) {
-            return response()->json(['error' => 'Passkey verification failed.'], 422);
+            $message = app()->isLocal()
+                ? 'Passkey verification failed: '.$e->getMessage()
+                : 'Passkey verification failed.';
+
+            return response()->json(['error' => $message], 422);
         }
 
-        if (!$user || $user->getAuthIdentifier() !== Auth::id()) {
+        if ($user->getAuthIdentifier() !== Auth::id()) {
             return response()->json(['error' => 'Passkey does not belong to this account.'], 422);
         }
 

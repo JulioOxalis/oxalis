@@ -2,7 +2,10 @@
 @section('title','Sign in')
 @section('content')
 @php
+  use Oxalis\Support\WebAuthnConfig;
   $m           = config('oxalis.methods', []);
+  $originOk    = WebAuthnConfig::originMatchesRequest((array) config('oxalis.origins', []), request());
+  $browserOrigin = request()->getSchemeAndHttpHost();
   $passkeyOnly = config('oxalis.passkey_only', false);
   $hasGoogle   = ($m['social'] ?? false) && config('oxalis.social.google.enabled');
   $hasGithub   = ($m['social'] ?? false) && config('oxalis.social.github.enabled');
@@ -94,12 +97,20 @@
 <h5 class="fw-bold mb-1 text-center">Welcome back</h5>
 <p class="text-secondary small text-center mb-4">Sign in to {{ config('app.name') }}</p>
 
-{{-- RP-ID mismatch warning --}}
+{{-- Passkey config warnings --}}
 @if($m['passkey'] ?? true)
+@if(!$originOk)
+<div class="alert border-0 rounded-3 small mb-3" style="background:rgba(255,193,7,.1);color:#997404">
+  <i class="bi bi-exclamation-triangle me-1"></i>
+  <strong>Origin mismatch</strong> — you are on <code>{{ $browserOrigin }}</code> but <code>OXALIS_ORIGINS</code> does not include it. Passkeys will fail.
+  <br><a href="{{ route('oxalis.health.passkeys') }}" class="fw-semibold">Check configuration</a>
+  or add <code>{{ $browserOrigin }}</code> to <code>OXALIS_ORIGINS</code> in <code>.env</code>.
+</div>
+@endif
 <div id="rpid-warn" class="alert border-0 rounded-3 small mb-3 d-none" style="background:rgba(255,193,7,.1);color:#997404">
   <i class="bi bi-exclamation-triangle me-1"></i>
-  Origin mismatch — server expects <code>{{ config('oxalis.rp_id') }}</code> but you are on <code id="actual-host"></code>.
-  <br>Visit <a href="{{ (config('oxalis.origins')[0]??'http://localhost').'/'.config('oxalis.routes.prefix','oxalis').'/login' }}" class="fw-semibold">the correct URL</a> or set <code>OXALIS_ORIGINS</code>.
+  RP ID mismatch — server expects hostname <code>{{ config('oxalis.rp_id') }}</code> but you are on <code id="actual-host"></code>.
+  <br>Set <code>OXALIS_RP_ID</code> to your browser hostname (no port).
 </div>
 @endif
 
@@ -122,7 +133,7 @@
     <div id="pk-skel" class="ox-skel d-none mb-2">
       <div class="ox-skel-bar"></div><div class="ox-skel-bar sm"></div>
     </div>
-    <button id="btn-pk" class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2" style="min-height:44px">
+    <button id="btn-pk" class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2" style="min-height:44px" @if(!$originOk) disabled @endif>
       <i id="pk-icon" class="bi bi-fingerprint fs-5"></i>
       <span>Sign in with Passkey</span>
     </button>
@@ -430,7 +441,15 @@ document.getElementById('btn-pk')?.addEventListener('click', async () => {
       body:JSON.stringify({email})
     });
     const o = await r1.json();
-    if (o.error) { showErr('pk-err',o.error); pkSkeleton(false); return; }
+    if (o.error) {
+      let msg = o.error;
+      if (o.code === 'no_passkey' && o.enroll_url) {
+        msg += ' After signing in another way, add one at: ' + o.enroll_url;
+      }
+      showErr('pk-err', msg);
+      pkSkeleton(false);
+      return;
+    }
     o.challenge = toB(o.challenge);
     if (o.allowCredentials) o.allowCredentials = o.allowCredentials.map(c=>({...c,id:toB(c.id)}));
 
@@ -451,7 +470,12 @@ document.getElementById('btn-pk')?.addEventListener('click', async () => {
     });
     const d = await r2.json();
     if (d.redirect) { localStorage.setItem(LAST_METHOD_KEY,'passkey'); window.location.href=d.redirect; }
-    else { showErr('pk-err', d.error||'Authentication failed.'); pkSkeleton(false); }
+    else {
+      let msg = d.error || 'Authentication failed.';
+      if (!d.error) msg += ' Check {{ route('oxalis.health.passkeys') }} for configuration issues.';
+      showErr('pk-err', msg);
+      pkSkeleton(false);
+    }
   } catch(e) { showErr('pk-err', pkFriendlyErr(e)); pkSkeleton(false); }
 });
 

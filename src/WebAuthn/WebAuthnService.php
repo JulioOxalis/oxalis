@@ -1,13 +1,15 @@
 <?php
 namespace Oxalis\WebAuthn;
 
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Session;
 use Oxalis\Models\Passkey;
 use Cose\Algorithm\Manager as CoseManager;
 use Cose\Algorithm\Signature\ECDSA\ES256;
 use Cose\Algorithm\Signature\RSA\RS256;
 use Cose\Algorithms;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Session;
+use Webauthn\AttestationStatement\AndroidKeyAttestationStatementSupport;
+use Webauthn\AttestationStatement\AppleAttestationStatementSupport;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\FidoU2FAttestationStatementSupport;
 use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
@@ -39,6 +41,8 @@ class WebAuthnService
 
     public function beginRegistration(Authenticatable $user, string $label = 'My Passkey'): array
     {
+        $passkeyOnly = (bool) config('oxalis.passkey_only', false);
+
         $userEntity = PublicKeyCredentialUserEntity::create(
             name: $user->email,
             id: $this->userHandle($user),
@@ -57,7 +61,9 @@ class WebAuthnService
                 PublicKeyCredentialParameters::create('public-key', Algorithms::COSE_ALGORITHM_RS256),
             ],
             authenticatorSelection: AuthenticatorSelectionCriteria::create(
-                residentKey: AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED,
+                residentKey: $passkeyOnly
+                    ? AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED
+                    : AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED,
                 userVerification: AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_PREFERRED,
             ),
             excludeCredentials: $this->existingDescriptors($user),
@@ -69,14 +75,14 @@ class WebAuthnService
         Session::put(self::SESSION_REGISTER, [
             'options' => $json,
             'label'   => $label,
-            'user_id' => $user->getAuthIdentifier(),
+            'user_id' => (string) $user->getAuthIdentifier(),
             'at'      => now()->timestamp,
         ]);
 
         return json_decode($json, true);
     }
 
-    public function finishRegistration(Authenticatable $user, array $response): Passkey
+    public function finishRegistration(Authenticatable $user, array $response, ?string $host = null): Passkey
     {
         $stored = Session::get(self::SESSION_REGISTER);
         abort_if(!$stored || now()->timestamp - $stored['at'] > 300, 422, 'Registration session expired.');
@@ -87,21 +93,13 @@ class WebAuthnService
         $credential = $serializer->deserialize(json_encode($response), PublicKeyCredential::class, 'json');
         abort_unless($credential->response instanceof AuthenticatorAttestationResponse, 422, 'Invalid response type.');
 
-        $factory = new CeremonyStepManagerFactory();
-        $factory->setAllowedOrigins($this->origins());
-        $factory->setAttestationStatementSupportManager($this->attestationManager());
-
+        $factory   = $this->ceremonyFactory();
         $validator = AuthenticatorAttestationResponseValidator::create($factory->creationCeremony());
 
-        $source = $validator->check($credential->response, $options, $this->origin());
+        $source = $validator->check($credential->response, $options, $this->ceremonyHost($host));
 
-        // Enterprise attestation enforcement:
-        // When OXALIS_REQUIRE_ATTESTATION=true, reject 'none' attestation.
-        // 'none' means the device didn't prove its origin — acceptable for consumer
-        // apps but insufficient for enterprise/high-assurance scenarios.
         if (config('oxalis.require_attestation', false)) {
-            $stmt = $credential->response->attestationObject->attStmt ?? null;
-            $fmt  = $credential->response->attestationObject->fmt ?? 'none';
+            $fmt = $credential->response->attestationObject->fmt ?? 'none';
             abort_if(
                 $fmt === 'none',
                 422,
@@ -113,7 +111,7 @@ class WebAuthnService
         Session::forget(self::SESSION_REGISTER);
 
         return Passkey::create([
-            'user_id'         => $user->getAuthIdentifier(),
+            'user_id'         => (string) $user->getAuthIdentifier(),
             'label'           => $stored['label'],
             'credential_id'   => base64_encode($source->publicKeyCredentialId),
             'public_key_json' => $serializer->serialize($source, 'json'),
@@ -126,6 +124,10 @@ class WebAuthnService
 
     public function beginAuthentication(?Authenticatable $user = null): array
     {
+        if ($user && ! $this->hasPasskeys($user)) {
+            abort(422, 'No passkeys registered for this account.');
+        }
+
         $options = PublicKeyCredentialRequestOptions::create(
             challenge: random_bytes(32),
             rpId: config('oxalis.rp_id', 'localhost'),
@@ -144,7 +146,10 @@ class WebAuthnService
         return json_decode($json, true);
     }
 
-    public function finishAuthentication(array $response): ?Authenticatable
+    /**
+     * @return array{user: Authenticatable, passkey: Passkey}
+     */
+    public function finishAuthentication(array $response, ?string $host = null): array
     {
         $stored = Session::get(self::SESSION_ASSERT);
         abort_if(!$stored || now()->timestamp - $stored['at'] > 300, 422, 'Authentication session expired.');
@@ -161,12 +166,16 @@ class WebAuthnService
 
         $pkSource = $serializer->deserialize($passkey->public_key_json, PublicKeyCredentialSource::class, 'json');
 
-        $factory = new CeremonyStepManagerFactory();
-        $factory->setAllowedOrigins($this->origins());
-
+        $factory   = $this->ceremonyFactory();
         $validator = AuthenticatorAssertionResponseValidator::create($factory->requestCeremony());
 
-        $updatedSource = $validator->check($pkSource, $credential->response, $options, $this->origin(), null);
+        $updatedSource = $validator->check(
+            $pkSource,
+            $credential->response,
+            $options,
+            $this->ceremonyHost($host),
+            $credential->response->userHandle
+        );
 
         $passkey->update([
             'public_key_json' => $serializer->serialize($updatedSource, 'json'),
@@ -176,7 +185,10 @@ class WebAuthnService
         Session::forget(self::SESSION_ASSERT);
 
         $userModel = config('oxalis.user_model');
-        return $userModel::find($passkey->user_id);
+        $user      = $userModel::find($passkey->user_id);
+        abort_if(!$user, 422, 'Account not found for this passkey.');
+
+        return ['user' => $user, 'passkey' => $passkey];
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -185,27 +197,54 @@ class WebAuthnService
 
     public function hasPasskeys(Authenticatable $user): bool
     {
-        return Passkey::where('user_id', $user->getAuthIdentifier())->exists();
+        return Passkey::where('user_id', (string) $user->getAuthIdentifier())->exists();
     }
 
     private function userHandle(Authenticatable $user): string
     {
-        // Raw binary bytes — hex2bin converts the 64-char hex HMAC to 32 bytes.
-        // The serializer base64url-encodes these for the browser.
-        return hex2bin(hash_hmac('sha256', $user->getAuthIdentifier().'|oxalis', config('app.key')));
+        return hex2bin(hash_hmac('sha256', (string) $user->getAuthIdentifier().'|oxalis', config('app.key')));
     }
 
-    /** All configured origins as an array. */
+    /** @return string[] */
     private function origins(): array
     {
         $raw = config('oxalis.origins', [env('APP_URL', 'http://localhost')]);
-        return is_array($raw) ? array_values(array_filter($raw)) : [$raw];
+
+        return is_array($raw) ? array_values(array_filter($raw)) : array_filter([(string) $raw]);
     }
 
-    /** The first configured origin — used as the default host for check(). */
-    private function origin(): string
+    /** RP ID / hostname passed to WebAuthn ceremony validators (not a full origin URL). */
+    private function ceremonyHost(?string $override = null): string
     {
-        return $this->origins()[0] ?? 'http://localhost';
+        if ($override !== null && $override !== '') {
+            return $override;
+        }
+
+        if (! app()->runningInConsole() && request()) {
+            return request()->getHost();
+        }
+
+        $first = $this->origins()[0] ?? 'http://localhost';
+        $host  = parse_url($first, PHP_URL_HOST);
+
+        return $host ?: (string) config('oxalis.rp_id', 'localhost');
+    }
+
+    private function ceremonyFactory(): CeremonyStepManagerFactory
+    {
+        $factory = new CeremonyStepManagerFactory();
+        $origins = $this->origins();
+
+        if ($origins !== []) {
+            $factory->setAllowedOrigins($origins, false);
+        } else {
+            $factory->setSecuredRelyingPartyId([(string) config('oxalis.rp_id', 'localhost')]);
+        }
+
+        $factory->setAttestationStatementSupportManager($this->attestationManager());
+        $factory->setAlgorithmManager($this->coseManager());
+
+        return $factory;
     }
 
     private function serializer(): \Symfony\Component\Serializer\SerializerInterface
@@ -216,9 +255,9 @@ class WebAuthnService
     /** @return PublicKeyCredentialDescriptor[] */
     private function existingDescriptors(Authenticatable $user): array
     {
-        return Passkey::where('user_id', $user->getAuthIdentifier())
+        return Passkey::where('user_id', (string) $user->getAuthIdentifier())
             ->get()
-            ->map(fn($p) => PublicKeyCredentialDescriptor::create(
+            ->map(fn ($p) => PublicKeyCredentialDescriptor::create(
                 type: 'public-key',
                 id: base64_decode($p->credential_id),
             ))
@@ -238,6 +277,9 @@ class WebAuthnService
         $manager->add(NoneAttestationStatementSupport::create());
         $manager->add(PackedAttestationStatementSupport::create($this->coseManager()));
         $manager->add(FidoU2FAttestationStatementSupport::create());
+        $manager->add(AppleAttestationStatementSupport::create());
+        $manager->add(AndroidKeyAttestationStatementSupport::create());
+
         return $manager;
     }
 }

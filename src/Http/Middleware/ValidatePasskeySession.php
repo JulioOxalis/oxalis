@@ -21,7 +21,7 @@ class ValidatePasskeySession
 
         if ($credentialId && Auth::check()) {
             $exists = Passkey::where('credential_id', $credentialId)
-                ->where('user_id', Auth::id())
+                ->where('user_id', (string) Auth::id())
                 ->exists();
 
             if (!$exists) {

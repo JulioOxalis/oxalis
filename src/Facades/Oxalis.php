@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static bool hasPasskeys(\Illuminate\Contracts\Auth\Authenticatable $user)
  * @method static array beginRegistration(\Illuminate\Contracts\Auth\Authenticatable $user, string $label = 'My Passkey')
- * @method static \Oxalis\Models\Passkey finishRegistration(\Illuminate\Contracts\Auth\Authenticatable $user, array $response)
- * @method static array beginAuthentication(?\ Illuminate\Contracts\Auth\Authenticatable $user = null)
- * @method static \Illuminate\Contracts\Auth\Authenticatable|null finishAuthentication(array $response)
+ * @method static \Oxalis\Models\Passkey finishRegistration(\Illuminate\Contracts\Auth\Authenticatable $user, array $response, ?string $host = null)
+ * @method static array beginAuthentication(?\Illuminate\Contracts\Auth\Authenticatable $user = null)
+ * @method static array{user: \Illuminate\Contracts\Auth\Authenticatable, passkey: \Oxalis\Models\Passkey} finishAuthentication(array $response, ?string $host = null)
  */
 class Oxalis extends Facade
 {

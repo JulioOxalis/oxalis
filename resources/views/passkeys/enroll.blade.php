@@ -49,7 +49,7 @@ document.getElementById('btn-enroll').addEventListener('click',async()=>{
     const r2=await fetch('{{ route('oxalis.passkeys.register.finish') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({id:cred.id,rawId:toS(cred.rawId),type:cred.type,response:{clientDataJSON:toS(cred.response.clientDataJSON),attestationObject:toS(cred.response.attestationObject)}})});
     const d=await r2.json();
     if(d.message)window.location.href='{{ config('oxalis.routes.home','/dashboard') }}';
-    else{showErr(d.error||'Server rejected the passkey. Ensure OXALIS_RP_ID and OXALIS_ORIGINS match your URL.');reset();}
+    else{showErr((d.error||'Server rejected the passkey.')+' Check {{ route('oxalis.health.passkeys') }} for configuration issues.');reset();}
   }catch(e){showErr(friendlyErr(e));reset();}
 });
 function friendlyErr(e){

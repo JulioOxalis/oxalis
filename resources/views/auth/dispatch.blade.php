@@ -57,10 +57,11 @@ async function go(){
   const btn=document.getElementById('btn-d');btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm"></span>';
   document.getElementById('d-err').classList.add('d-none');
   const d=await post('{{ route('oxalis.dispatch.check') }}',{email});
+  if(d.error){showErr(d.error);resetBtn();return;}
   if(d.method==='magic_link'){showStep('magic');document.getElementById('magic-msg').textContent=d.message||'Sign-in link sent.';if(d.dev_link){document.getElementById('d-devlink').classList.remove('d-none');const a=document.getElementById('d-devurl');a.href=d.dev_link;a.textContent=d.dev_link;}return;}
   if(d.method==='totp'){window.location.href=d.redirect;return;}
   if(d.method==='passkey'){showStep('passkey');await doPasskey(d.options);return;}
-  showErr(d.error||'Something went wrong.');resetBtn();
+  showErr('Something went wrong.');resetBtn();
 }
 async function doPasskey(opts){
   opts.challenge=toB(opts.challenge);

@@ -43,10 +43,13 @@ Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic 
 
 ```bash
 composer require julio/oxalis
-php artisan oxalis:install
+php artisan oxalis:install    # required — composer does not run this automatically
+php artisan migrate
 ```
 
 The interactive wizard configures everything — auth methods, social credentials, redirects, and runs migrations automatically.
+
+> **Passkeys:** After install, users must **register** and then **enroll a passkey** at `/oxalis/passkeys/enroll` before passkey login works. Diagnose configuration at `/oxalis/health/passkeys` (JSON).
 
 ---
 
@@ -540,7 +543,29 @@ use Oxalis\Events\StepUpVerified;    // step-up auth passed — $user, $method
 
 ---
 
+## Passkey diagnostics
+
+```bash
+GET /oxalis/health/passkeys
+```
+
+Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxalis_passkeys` table are correctly configured for the current browser origin. Safe to expose in production (no secrets).
+
+---
+
 ## Changelog
+
+### v1.8.1
+- Passkeys: Apple + Android attestation support (iOS / Android enrollment)
+- Passkeys: install wizard writes multi-origin `OXALIS_ORIGINS` (localhost variants)
+- Passkeys: WebAuthn ceremony uses request hostname (not full origin URL)
+- Passkeys: fix session credential stamp (base64url → DB format)
+- Passkeys: `user_id` column is `string` (MongoDB / UUID compatible)
+- Passkeys: clearer errors in local env; `no_passkey` response with enroll URL
+- Passkeys: discoverable credentials required when `OXALIS_PASSKEY_ONLY=true`
+- `GET /oxalis/health/passkeys` configuration diagnostics endpoint
+- Install: `HasPasskeys` User stub published by default
+- Composer post-autoload hint to run `oxalis:install`
 
 ### v1.8.0
 - `bare` layout redesigned as holographic: animated deep-space orbs + grid overlay, spinning conic-gradient rainbow border, glassmorphism inner card with shimmer sweep

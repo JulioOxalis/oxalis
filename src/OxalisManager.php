@@ -1,13 +1,13 @@
 <?php
 namespace Oxalis;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Oxalis\EmailOtp\OtpService;
 use Oxalis\MagicLink\MagicLinkService;
 use Oxalis\Models\Passkey;
 use Oxalis\StepUp\StepUpService;
 use Oxalis\Totp\TotpService;
 use Oxalis\WebAuthn\WebAuthnService;
-use Illuminate\Contracts\Auth\Authenticatable;
 
 class OxalisManager
 {
@@ -31,9 +31,9 @@ class OxalisManager
         return $this->webAuthn->beginRegistration($user, $label);
     }
 
-    public function finishRegistration(Authenticatable $user, array $response): Passkey
+    public function finishRegistration(Authenticatable $user, array $response, ?string $host = null): Passkey
     {
-        return $this->webAuthn->finishRegistration($user, $response);
+        return $this->webAuthn->finishRegistration($user, $response, $host);
     }
 
     public function beginAuthentication(?Authenticatable $user = null): array
@@ -41,9 +41,12 @@ class OxalisManager
         return $this->webAuthn->beginAuthentication($user);
     }
 
-    public function finishAuthentication(array $response): ?Authenticatable
+    /**
+     * @return array{user: Authenticatable, passkey: Passkey}
+     */
+    public function finishAuthentication(array $response, ?string $host = null): array
     {
-        return $this->webAuthn->finishAuthentication($response);
+        return $this->webAuthn->finishAuthentication($response, $host);
     }
 
     // ── Service accessors ─────────────────────────────────────────────────────

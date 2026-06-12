@@ -40,18 +40,17 @@
                 <div class="card-header"><i class="bi bi-gear me-2"></i>Config health</div>
                 <div class="card-body">
                     <div class="env-box mb-3">
-                        <div><span class="check">✓</span> OXALIS_RP_ID = <strong>{{ $rpId }}</strong></div>
-                        <div><span class="check">✓</span> OXALIS_ORIGINS = <strong>{{ $origin }}</strong></div>
-                        <div><span class="{{ request()->getSchemeAndHttpHost() === $origin ? 'check' : 'fail' }}">
-                            {{ request()->getSchemeAndHttpHost() === $origin ? '✓' : '✗' }}
-                        </span> Browser origin = <strong>{{ request()->getSchemeAndHttpHost() }}</strong>
-                        @if(request()->getSchemeAndHttpHost() !== $origin)
-                            <br><span class="fail">⚠ MISMATCH — passkeys will fail! Set OXALIS_ORIGINS={{ request()->getSchemeAndHttpHost() }}</span>
+                        <div><span class="{{ $rpOk ? 'check' : 'fail' }}">{{ $rpOk ? '✓' : '✗' }}</span> OXALIS_RP_ID = <strong>{{ $rpId }}</strong></div>
+                        <div><span class="check">✓</span> OXALIS_ORIGINS ({{ count($origins) }} configured)</div>
+                        @foreach($origins as $o)
+                        <div class="ms-3 text-muted">· {{ $o }}</div>
+                        @endforeach
+                        <div class="mt-2"><span class="{{ $originOk ? 'check' : 'fail' }}">{{ $originOk ? '✓' : '✗' }}</span> Browser origin = <strong>{{ $browser }}</strong></div>
+                        @if(!$originOk)
+                            <div class="fail mt-1">⚠ MISMATCH — passkeys will fail! Add to <code>.env</code>:</div>
+                            <div class="ms-2"><code>OXALIS_ORIGINS={{ implode(',', array_unique(array_merge($origins, $suggested))) }}</code></div>
                         @endif
-                        </div>
-                        <div><span class="{{ parse_url($origin, PHP_URL_HOST) === $rpId ? 'check' : 'fail' }}">
-                            {{ parse_url($origin, PHP_URL_HOST) === $rpId ? '✓' : '✗' }}
-                        </span> RP_ID matches origin host</div>
+                        <div class="mt-2"><a href="{{ route('oxalis.health.passkeys') }}" class="text-info small" target="_blank">JSON health check →</a></div>
                     </div>
 
                     @php $methods = config('oxalis.methods', []); @endphp

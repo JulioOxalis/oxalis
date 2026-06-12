@@ -9,6 +9,7 @@ use Oxalis\Http\Controllers\UltrasonicController;
 use Oxalis\Http\Controllers\WebhookController;
 use Oxalis\Http\Controllers\AuthController;
 use Oxalis\Http\Controllers\DocsController;
+use Oxalis\Http\Controllers\HealthController;
 use Oxalis\Http\Controllers\EmailChangeController;
 use Oxalis\Http\Controllers\StatsController;
 use Oxalis\Http\Controllers\TestHubController;
@@ -33,6 +34,9 @@ Route::prefix($prefix)->middleware([...$middleware, 'oxalis.security-headers'])-
 
     // ── Documentation (always public) ────────────────────────────────────────
     Route::get('/docs', [DocsController::class, 'index'])->name('oxalis.docs');
+
+    // ── Passkey diagnostics (public JSON, no secrets) ───────────────────────
+    Route::get('/health/passkeys', [HealthController::class, 'passkeys'])->name('oxalis.health.passkeys');
 
     // ── Dev test hub (local only) ─────────────────────────────────────────────
     Route::get('/test', [TestHubController::class, 'index'])->name('oxalis.test');

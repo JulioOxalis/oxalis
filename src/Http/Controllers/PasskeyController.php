@@ -2,7 +2,7 @@
 namespace Oxalis\Http\Controllers;
 
 use Oxalis\Events\PasskeyRegistered;
-use Oxalis\Facades\oxalis;
+use Oxalis\Facades\Oxalis;
 use Oxalis\Models\AuthEvent;
 use Oxalis\Models\Passkey;
 use Oxalis\Passkeys\PasskeyRecoveryService;
@@ -23,7 +23,7 @@ class PasskeyController extends Controller
         $userModel = config('oxalis.user_model');
         $user      = $userModel::where('email', $request->email)->first();
 
-        if ($user && ! oxalis::hasPasskeys($user)) {
+        if ($user && ! Oxalis::hasPasskeys($user)) {
             return response()->json([
                 'error'      => 'No passkey registered for this account. Sign in with another method, then add a passkey from your account settings.',
                 'enroll_url' => route('oxalis.passkeys.enroll'),
@@ -32,7 +32,7 @@ class PasskeyController extends Controller
         }
 
         try {
-            $options = oxalis::beginAuthentication($user ?: null);
+            $options = Oxalis::beginAuthentication($user ?: null);
         } catch (\Throwable $e) {
             return $this->passkeyError($e, 422);
         }
@@ -58,7 +58,7 @@ class PasskeyController extends Controller
         }
 
         try {
-            $result = oxalis::finishAuthentication($request->all(), $request->getHost());
+            $result = Oxalis::finishAuthentication($request->all(), $request->getHost());
             $user   = $result['user'];
             $passkey = $result['passkey'];
         } catch (\Throwable $e) {
@@ -99,7 +99,7 @@ class PasskeyController extends Controller
     public function beginAutofill()
     {
         try {
-            $options = oxalis::beginAuthentication(null);
+            $options = Oxalis::beginAuthentication(null);
         } catch (\Throwable $e) {
             return $this->passkeyError($e, 422);
         }
@@ -126,7 +126,7 @@ class PasskeyController extends Controller
         $request->validate(['label' => 'nullable|string|max:100']);
 
         try {
-            $options = oxalis::beginRegistration(
+            $options = Oxalis::beginRegistration(
                 Auth::user(),
                 $request->input('label', 'My Passkey'),
             );
@@ -140,7 +140,7 @@ class PasskeyController extends Controller
     public function finishRegistration(Request $request)
     {
         try {
-            $passkey = oxalis::finishRegistration(Auth::user(), $request->all(), $request->getHost());
+            $passkey = Oxalis::finishRegistration(Auth::user(), $request->all(), $request->getHost());
         } catch (\Throwable $e) {
             return $this->passkeyError($e, 422, 'Registration failed');
         }

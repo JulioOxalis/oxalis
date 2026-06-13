@@ -76,6 +76,12 @@
   <input type="text" id="new-label" class="form-control rounded-3" placeholder="e.g. My MacBook, YubiKey 5">
   <button id="btn-add" class="btn btn-ox text-nowrap rounded-pill px-3"><i class="bi bi-plus-lg me-1"></i>Add</button>
 </div>
+<div class="d-flex flex-wrap gap-2 my-2">
+  <input class="btn-check" type="radio" name="new_authenticator_attachment" id="new-pk-platform" value="platform" checked>
+  <label class="btn btn-sm btn-ox-out rounded-pill px-3" for="new-pk-platform"><i class="bi bi-laptop me-1"></i>This device</label>
+  <input class="btn-check" type="radio" name="new_authenticator_attachment" id="new-pk-cross-platform" value="cross-platform">
+  <label class="btn btn-sm btn-ox-out rounded-pill px-3" for="new-pk-cross-platform"><i class="bi bi-usb-drive me-1"></i>Phone/security key</label>
+</div>
 <p class="text-secondary" style="font-size:.72rem">Give it a name that helps you identify the device later.</p>
 <div id="add-err" class="alert border-0 rounded-3 small d-none mt-2" style="background:rgba(220,53,69,.1);color:#dc3545"></div>
 
@@ -87,6 +93,7 @@ document.getElementById('btn-add').addEventListener('click', async () => {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
   const label = document.getElementById('new-label').value.trim() || 'My Passkey';
+  const authenticator_attachment = document.querySelector('input[name="new_authenticator_attachment"]:checked')?.value || 'platform';
   try {
     if (!window.PublicKeyCredential || !navigator.credentials?.create) {
       showAddErr('Your browser does not support passkeys. Try a current version of Chrome, Edge, Safari, or Firefox.');
@@ -96,7 +103,7 @@ document.getElementById('btn-add').addEventListener('click', async () => {
     const r1 = await fetch('{{ route('oxalis.passkeys.register.begin') }}',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-      body:JSON.stringify({label})
+      body:JSON.stringify({label,authenticator_attachment})
     });
     const o = await jsonResponse(r1);
     if (o.error) { showAddErr(o.error); reset(); return; }

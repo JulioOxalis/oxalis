@@ -16,12 +16,28 @@
 <div class="mb-3">
   <input type="text" id="pk-label" class="form-control rounded-3" placeholder="Passkey name (e.g. My iPhone)" value="My Passkey">
 </div>
+<div class="mb-3">
+  <div class="small fw-semibold mb-2">Create it with</div>
+  <div class="d-grid gap-2">
+    <input class="btn-check" type="radio" name="authenticator_attachment" id="pk-platform" value="platform" checked>
+    <label class="btn btn-ox-out rounded-3 text-start p-3" for="pk-platform">
+      <span class="d-flex align-items-center gap-2 fw-semibold"><i class="bi bi-laptop"></i>This device or password manager</span>
+      <span class="d-block text-secondary small mt-1">Windows Hello, Touch ID, Face ID, iCloud Keychain, or Google Password Manager.</span>
+    </label>
+
+    <input class="btn-check" type="radio" name="authenticator_attachment" id="pk-cross-platform" value="cross-platform">
+    <label class="btn btn-ox-out rounded-3 text-start p-3" for="pk-cross-platform">
+      <span class="d-flex align-items-center gap-2 fw-semibold"><i class="bi bi-usb-drive"></i>Phone or security key</span>
+      <span class="d-block text-secondary small mt-1">Use a QR-code phone flow, USB key, NFC key, or another external authenticator.</span>
+    </label>
+  </div>
+</div>
 <button id="btn-enroll" class="btn btn-ox w-100 d-flex align-items-center justify-content-center gap-2">
   <i class="bi bi-shield-check fs-5"></i> Create passkey
 </button>
 <div id="enroll-err" class="alert border-0 rounded-3 small d-none mt-3" style="background:rgba(220,53,69,.1);color:#dc3545"></div>
 <p class="text-secondary small text-center mt-3 mb-0">
-  <i class="bi bi-phone me-1"></i>No passkey on this device? Your browser will offer to use your phone via QR code.
+  <i class="bi bi-info-circle me-1"></i>The exact prompt text comes from your browser and operating system.
 </p>
 @endsection
 @push('scripts')
@@ -35,13 +51,14 @@ document.getElementById('btn-enroll').addEventListener('click',async()=>{
   btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Waiting for biometrics…';
   document.getElementById('enroll-err').classList.add('d-none');
   const label=document.getElementById('pk-label').value||'My Passkey';
+  const authenticator_attachment=document.querySelector('input[name="authenticator_attachment"]:checked')?.value||'platform';
   try{
     if(!window.PublicKeyCredential||!navigator.credentials?.create){
       showErr('Your browser does not support passkeys. Try a current version of Chrome, Edge, Safari, or Firefox.');
       reset();
       return;
     }
-    const r1=await fetch('{{ route('oxalis.passkeys.register.begin') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({label})});
+    const r1=await fetch('{{ route('oxalis.passkeys.register.begin') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({label,authenticator_attachment})});
     const o=await jsonResponse(r1);
     if(o.error){showErr(o.error);reset();return;}
     console.log('[oxalis] rp.id=',o.rp?.id,'| hostname=',window.location.hostname);

@@ -205,6 +205,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="nav-section">Getting Started</div>
     <a class="nav-link" href="#installation">Installation</a>
     <a class="nav-link" href="#configuration">Configuration</a>
+    <a class="nav-link" href="#themes-layouts">Themes &amp; layouts</a>
     <a class="nav-link" href="#custom-prefix">Custom route prefix</a>
     <a class="nav-link" href="#reconfiguring">Reconfiguring</a>
     <a class="nav-link" href="#dev-mode">Dev mode</a>
@@ -328,6 +329,63 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>php artisan vendor:publish --tag=oxalis-config</code></pre></div>
     <p>This creates <code>config/oxalis.php</code> in your application.</p>
+  </section>
+
+  <!-- THEMES AND LAYOUTS -->
+  <section id="themes-layouts">
+    <h2>Themes &amp; layouts</h2>
+    <p>Oxalis ships with six built-in themes and five auth-page layouts. Set them in <code>.env</code>; no view publishing is required.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_THEME=neon
+OXALIS_LAYOUT=split
+OXALIS_PRIMARY_COLOR=#e11d48</code></pre></div>
+
+    <h3>Built-in themes</h3>
+    <table>
+      <thead><tr><th>Value</th><th>Style</th></tr></thead>
+      <tbody>
+        <tr><td><code>indigo</code></td><td>Default soft indigo UI with pill buttons and a light body background.</td></tr>
+        <tr><td><code>neon</code></td><td>Cyberpunk cyan glow, monospace details, sharp corners, dark mode.</td></tr>
+        <tr><td><code>aurora</code></td><td>Dark glassmorphism with purple/green aurora gradients and blurred cards.</td></tr>
+        <tr><td><code>obsidian</code></td><td>Minimal black-and-white brutalist style with reduced radius.</td></tr>
+        <tr><td><code>ember</code></td><td>Warm dark interface with amber accents.</td></tr>
+        <tr><td><code>frost</code></td><td>Light frosted-glass UI with sky-blue accents.</td></tr>
+        <tr><td><code>custom</code></td><td>Loads your published <code>public/vendor/oxalis/theme.css</code>.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Layout variants</h3>
+    <table>
+      <thead><tr><th>Value</th><th>Layout</th></tr></thead>
+      <tbody>
+        <tr><td><code>card</code></td><td>Centered auth card on the body background. This is the default.</td></tr>
+        <tr><td><code>split</code></td><td>Brand panel on the left, auth form on the right.</td></tr>
+        <tr><td><code>bare</code></td><td>Holographic dark background with animated border treatment.</td></tr>
+        <tr><td><code>glass</code></td><td>Frosted glass card over animated pastel bokeh.</td></tr>
+        <tr><td><code>float</code></td><td>Elevated card with brand/logo displayed above it.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div><code>bare</code> and <code>glass</code> intentionally force dark mode because their backgrounds and contrast are designed around it.</div>
+    </div>
+
+    <h3>Custom theme CSS</h3>
+    <p>Publish the theme stub when you want to own the CSS variables directly:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>php artisan oxalis:theme:publish
+OXALIS_THEME=custom</code></pre></div>
+    <p>The command writes <code>public/vendor/oxalis/theme.css</code>. Edit that file to define brand colors, surfaces, borders, button states, and focus rings.</p>
+
+    <h3>Split layout branding</h3>
+    <p>The split panel accepts any valid CSS background. Quote values containing <code>#</code>, spaces, commas, or gradients in <code>.env</code>.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_SPLIT_BG="linear-gradient(135deg,#e11d48 0%,#7c3aed 60%,#3b82f6 100%)"
+OXALIS_SPLIT_TEXT="#ffffff"
+OXALIS_LOGO_URL=https://myapp.com/img/logo.svg
+OXALIS_TAGLINE="Welcome back"
+OXALIS_SHOW_APP_NAME=true</code></pre></div>
   </section>
 
   <!-- CUSTOM PREFIX -->
@@ -463,6 +521,14 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_PREFIX</div><div class="config-desc">URL prefix for all Oxalis routes. Change to <code>auth</code> for <code>/auth/login</code> instead of <code>/oxalis/login</code>.</div><div class="config-default">oxalis</div></div>
     <div class="config-row"><div class="config-key">OXALIS_HOME</div><div class="config-desc">Where to redirect users after a successful login.</div><div class="config-default">/dashboard</div></div>
     <div class="config-row"><div class="config-key">OXALIS_DB_CONNECTION</div><div class="config-desc">SQL DB connection for Oxalis tables. Leave blank to use app default.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_THEME</div><div class="config-desc">Auth UI theme: <code>indigo</code>, <code>neon</code>, <code>aurora</code>, <code>obsidian</code>, <code>ember</code>, <code>frost</code>, or <code>custom</code>.</div><div class="config-default">indigo</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_LAYOUT</div><div class="config-desc">Auth page layout: <code>card</code>, <code>split</code>, <code>bare</code>, <code>glass</code>, or <code>float</code>.</div><div class="config-default">card</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_PRIMARY_COLOR</div><div class="config-desc">Optional primary brand color override. Oxalis derives hover, soft-fill, and button text contrast from this value.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_SPLIT_BG</div><div class="config-desc">Custom background for the split layout brand panel. Quote gradients and hex colors in <code>.env</code>.</div><div class="config-default">var(--ox)</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_SPLIT_TEXT</div><div class="config-desc">Text color for the split layout brand panel.</div><div class="config-default">auto</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_LOGO_URL</div><div class="config-desc">Public logo URL shown in Oxalis auth pages.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_TAGLINE</div><div class="config-desc">Short brand subtitle shown with the logo/app name.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_SHOW_APP_NAME</div><div class="config-desc">Show or hide the app name in Oxalis auth branding.</div><div class="config-default">false</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSKEY</div><div class="config-desc">Show the passkey sign-in button on the login page.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY</div><div class="config-desc">Enable one-time recovery codes for users who lose all passkey devices.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY_CODES</div><div class="config-desc">How many passkey recovery codes to generate.</div><div class="config-default">8</div></div>
@@ -487,6 +553,10 @@ php artisan migrate</code></pre></div>
   <section id="passkeys">
     <h2>Passkeys (WebAuthn / FIDO2)</h2>
     <p>No passwords. Users authenticate with biometrics (Touch ID, Face ID, Windows Hello) or hardware keys (YubiKey). Works cross-device via QR scan.</p>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div><strong>Browser UI is browser controlled.</strong> Oxalis can request a platform passkey or an external authenticator, but Chrome, Safari, Edge, Firefox, Windows, macOS, iOS, and Android choose the final dialog text. Some dialogs still mention "security key" as a generic WebAuthn label.</div>
+    </div>
     <h3>How It Works</h3>
     <ol style="padding-left:1.25rem">
       <li>User registers a passkey at <code>/oxalis/passkeys/enroll</code> — browser generates a key pair, public key stored in DB.</li>
@@ -507,6 +577,7 @@ OXALIS_REQUIRE_ATTESTATION=false   # true = enterprise devices only</code></pre>
       <i class="bi bi-info-circle-fill"></i>
       <div><strong>Browser prompts:</strong> Some browsers say "security key" even when they can create a normal synced passkey. Use <code>platform</code> when you want Oxalis to prefer Windows Hello, Touch ID, iCloud Keychain, or Google Password Manager over external USB/NFC keys.</div>
     </div>
+    <p>On Oxalis enrollment screens, users can now choose <strong>This device or password manager</strong> or <strong>Phone/security key</strong>. That choice is sent as <code>authenticatorAttachment</code> and Oxalis adjusts browser <code>hints</code> to avoid nudging the dialog toward the wrong option.</p>
     <h3>Conditional UI autofill</h3>
     <p>On the login page, the email field has <code>autocomplete="username webauthn"</code>. When the page loads, Oxalis silently starts a discoverable credential request in the background. When the user clicks the email field, their browser shows registered passkeys in the autofill dropdown — no button click, no email required.</p>
     <p>Works on Chrome 108+, Edge 108+, Safari 16+. Falls back gracefully to the regular button flow on older browsers.</p>

@@ -39,9 +39,10 @@ class WebAuthnService
     // Registration
     // ────────────────────────────────────────────────────────────────────────
 
-    public function beginRegistration(Authenticatable $user, string $label = 'My Passkey'): array
+    public function beginRegistration(Authenticatable $user, string $label = 'My Passkey', ?string $authenticatorAttachment = null): array
     {
         $passkeyOnly = (bool) config('oxalis.passkey_only', false);
+        $attachment = $this->authenticatorAttachment($authenticatorAttachment);
 
         $userEntity = PublicKeyCredentialUserEntity::create(
             name: $user->email,
@@ -61,7 +62,7 @@ class WebAuthnService
                 PublicKeyCredentialParameters::create('public-key', Algorithms::COSE_ALGORITHM_RS256),
             ],
             authenticatorSelection: AuthenticatorSelectionCriteria::create(
-                authenticatorAttachment: $this->authenticatorAttachment(),
+                authenticatorAttachment: $attachment,
                 residentKey: $passkeyOnly
                     ? AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED
                     : AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED,
@@ -81,7 +82,7 @@ class WebAuthnService
         ]);
 
         $publicOptions = json_decode($json, true);
-        $hints = $this->passkeyHints();
+        $hints = $this->passkeyHints($attachment);
 
         if ($hints !== []) {
             $publicOptions['hints'] = $hints;
@@ -291,9 +292,9 @@ class WebAuthnService
         return $manager;
     }
 
-    private function authenticatorAttachment(): ?string
+    private function authenticatorAttachment(?string $override = null): ?string
     {
-        $attachment = config('oxalis.passkey_authenticator_attachment');
+        $attachment = $override ?: config('oxalis.passkey_authenticator_attachment');
 
         return in_array($attachment, [
             AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_PLATFORM,
@@ -302,7 +303,7 @@ class WebAuthnService
     }
 
     /** @return string[] */
-    private function passkeyHints(): array
+    private function passkeyHints(?string $attachment = null): array
     {
         $hints = config('oxalis.passkey_hints', []);
 
@@ -310,6 +311,16 @@ class WebAuthnService
             return [];
         }
 
-        return array_values(array_filter(array_map('strval', $hints)));
+        $hints = array_values(array_filter(array_map('strval', $hints)));
+
+        if ($attachment === AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_PLATFORM) {
+            return ['client-device'];
+        }
+
+        if ($attachment === AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM) {
+            return array_values(array_intersect($hints, ['hybrid', 'security-key'])) ?: ['hybrid', 'security-key'];
+        }
+
+        return $hints;
     }
 }

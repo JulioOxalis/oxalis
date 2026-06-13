@@ -123,12 +123,16 @@ class PasskeyController extends Controller
 
     public function beginRegistration(Request $request)
     {
-        $request->validate(['label' => 'nullable|string|max:100']);
+        $request->validate([
+            'label' => 'nullable|string|max:100',
+            'authenticator_attachment' => 'nullable|in:platform,cross-platform',
+        ]);
 
         try {
             $options = Oxalis::beginRegistration(
                 Auth::user(),
                 $request->input('label', 'My Passkey'),
+                $request->input('authenticator_attachment'),
             );
         } catch (\Throwable $e) {
             return $this->passkeyError($e, 422, 'Registration failed');

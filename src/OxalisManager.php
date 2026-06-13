@@ -26,9 +26,9 @@ class OxalisManager
         return $this->webAuthn->hasPasskeys($user);
     }
 
-    public function beginRegistration(Authenticatable $user, string $label = 'My Passkey'): array
+    public function beginRegistration(Authenticatable $user, string $label = 'My Passkey', ?string $authenticatorAttachment = null): array
     {
-        return $this->webAuthn->beginRegistration($user, $label);
+        return $this->webAuthn->beginRegistration($user, $label, $authenticatorAttachment);
     }
 
     public function finishRegistration(Authenticatable $user, array $response, ?string $host = null): Passkey

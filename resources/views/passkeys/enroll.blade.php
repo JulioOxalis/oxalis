@@ -58,6 +58,11 @@ document.getElementById('btn-enroll').addEventListener('click',async()=>{
       reset();
       return;
     }
+    if(!await selectedAuthenticatorAvailable(authenticator_attachment)){
+      showErr('This browser does not report a built-in passkey authenticator on this device. Choose "Phone or security key" to use a QR-code phone flow or external key.');
+      reset();
+      return;
+    }
     const r1=await fetch('{{ route('oxalis.passkeys.register.begin') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({label,authenticator_attachment})});
     const o=await jsonResponse(r1);
     if(o.error){showErr(o.error);reset();return;}
@@ -95,6 +100,11 @@ async function jsonResponse(response){
   }
   if(!response.ok&&!data.error)data.error='Passkey setup failed. Check {{ route('oxalis.health.passkeys') }} for configuration issues.';
   return data;
+}
+async function selectedAuthenticatorAvailable(attachment){
+  if(attachment!=='platform'||typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable!=='function')return true;
+  try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}
+  catch(e){return true;}
 }
 function friendlyErr(e){
   const m=(e.message||'').toLowerCase();

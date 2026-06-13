@@ -559,6 +559,12 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 
 ## Changelog
 
+### v1.8.4
+- Passkeys: enrollment now checks whether the browser reports a built-in platform authenticator before launching the "This device" registration flow.
+- Passkeys: users can choose "This device/password manager" or "Phone/security key"; Oxalis sends the matching WebAuthn `authenticatorAttachment`.
+- Passkeys: platform registrations now emit only the `client-device` hint, avoiding `security-key` hints when the user selected a built-in passkey.
+- Docs: `/oxalis/docs` now includes theme/layout configuration and clearer browser prompt guidance.
+
 ### v1.8.1
 - Passkeys: Apple + Android attestation support (iOS / Android enrollment)
 - Passkeys: install wizard writes multi-origin `OXALIS_ORIGINS` (localhost variants)

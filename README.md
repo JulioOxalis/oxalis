@@ -49,6 +49,8 @@ php artisan migrate
 
 The interactive wizard configures everything — auth methods, social credentials, redirects, and runs migrations automatically.
 
+By default, Oxalis uses package Blade views so future theme/layout/branding fixes arrive with `composer update`. Use `php artisan oxalis:install --publish-views` only when you need to deeply customize the templates in `resources/views/vendor/oxalis`.
+
 > **Passkeys:** After install, users must **register** and then **enroll a passkey** at `/oxalis/passkeys/enroll` before passkey login works. Diagnose configuration at `/oxalis/health/passkeys` (JSON).
 
 ---
@@ -588,6 +590,11 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 ---
 
 ## Changelog
+
+### v1.8.7
+- Install: full Oxalis views are no longer published by default, so package auth UI fixes keep applying after upgrades.
+- Install: added `--publish-views` for apps that intentionally want to override every Blade template.
+- Config: package defaults now merge recursively with older published `config/oxalis.php` files, preserving new nested branding/layout keys.
 
 ### v1.8.6
 - Branding: logo URLs now accept full URLs, `/public-paths`, public-relative paths, and `public/...` paths.

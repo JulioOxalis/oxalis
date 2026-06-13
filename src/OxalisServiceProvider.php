@@ -38,7 +38,7 @@ class OxalisServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/oxalis.php', 'oxalis');
+        $this->mergeOxalisConfig();
 
         $this->app->singleton(LoginHandler::class);
         $this->app->singleton(WebAuthnService::class);
@@ -54,6 +54,14 @@ class OxalisServiceProvider extends ServiceProvider
         $this->app->singleton(RiskService::class);
         $this->app->singleton(QrLoginService::class);
         $this->app->singleton(UltrasonicService::class);
+    }
+
+    private function mergeOxalisConfig(): void
+    {
+        $defaults = require __DIR__.'/../config/oxalis.php';
+        $current = $this->app['config']->get('oxalis', []);
+
+        $this->app['config']->set('oxalis', array_replace_recursive($defaults, $current));
     }
 
     public function boot(): void

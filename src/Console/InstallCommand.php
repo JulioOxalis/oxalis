@@ -7,7 +7,9 @@ use Oxalis\Support\WebAuthnConfig;
 
 class InstallCommand extends Command
 {
-    protected $signature   = 'oxalis:install {--force : Overwrite existing published files}';
+    protected $signature   = 'oxalis:install
+        {--force : Overwrite existing published files}
+        {--publish-views : Publish full Oxalis views for deep customization}';
     protected $description = 'Install oxalis — interactive setup wizard';
 
     public function handle(): int
@@ -100,8 +102,14 @@ class InstallCommand extends Command
         $this->callSilent('vendor:publish', ['--tag' => 'oxalis-migrations', '--force' => $this->option('force')]);
         $this->line('  <fg=green>✓</> Migrations published');
 
-        $this->callSilent('vendor:publish', ['--tag' => 'oxalis-views', '--force' => $this->option('force')]);
-        $this->line('  <fg=green>✓</> Views published → resources/views/vendor/oxalis/');
+        if ($this->option('publish-views')) {
+            $this->callSilent('vendor:publish', ['--tag' => 'oxalis-views', '--force' => $this->option('force')]);
+            $this->line('  <fg=green>✓</> Views published → resources/views/vendor/oxalis/');
+            $this->warn('  Published views override package updates. Re-publish them after upgrading Oxalis.');
+        } else {
+            $this->line('  <fg=green>✓</> Using package views so theme/layout/branding updates apply automatically');
+            $this->comment('  Use --publish-views only when you need to deeply customize Blade templates.');
+        }
 
         if ($publishUser) {
             $this->callSilent('vendor:publish', ['--tag' => 'oxalis-user', '--force' => true]);

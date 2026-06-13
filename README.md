@@ -459,6 +459,8 @@ php artisan vendor:publish --tag=oxalis-config
 | `OXALIS_SMART_DISPATCH` | `false` | One-field Smart Dispatch |
 | `OXALIS_PASSKEY_ONLY` | `false` | Disable all methods except passkeys |
 | `OXALIS_PASSKEY_NUDGE_MAX` | `3` | Max nudge dismissals (0 = never show) |
+| `OXALIS_PASSKEY_AUTHENTICATOR_ATTACHMENT` | _(browser chooses)_ | Set `platform` to prefer this device/password manager, or `cross-platform` for USB/NFC keys |
+| `OXALIS_PASSKEY_HINTS` | `client-device,hybrid,security-key` | Browser UI preference order for passkey creation |
 
 ### Appearance
 
@@ -495,6 +497,8 @@ php artisan vendor:publish --tag=oxalis-config
 | `OXALIS_SECURITY_HEADERS` | `true` | Add security headers to all responses |
 | `OXALIS_REQUIRE_ATTESTATION` | `false` | Require attestation for passkey registration |
 | `OXALIS_BREACH_CHECK` | `false` | Check passwords against HaveIBeenPwned |
+
+For most public apps, leave `OXALIS_REQUIRE_ATTESTATION=false`. If browsers show "touch your security key" too aggressively during enrollment, set `OXALIS_PASSKEY_AUTHENTICATOR_ATTACHMENT=platform` to prefer built-in device passkeys such as Windows Hello, Touch ID, iCloud Keychain, or Google Password Manager.
 
 ### Risk & privacy
 

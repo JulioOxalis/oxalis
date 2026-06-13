@@ -61,6 +61,7 @@ class WebAuthnService
                 PublicKeyCredentialParameters::create('public-key', Algorithms::COSE_ALGORITHM_RS256),
             ],
             authenticatorSelection: AuthenticatorSelectionCriteria::create(
+                authenticatorAttachment: $this->authenticatorAttachment(),
                 residentKey: $passkeyOnly
                     ? AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED
                     : AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED,
@@ -79,7 +80,14 @@ class WebAuthnService
             'at'      => now()->timestamp,
         ]);
 
-        return json_decode($json, true);
+        $publicOptions = json_decode($json, true);
+        $hints = $this->passkeyHints();
+
+        if ($hints !== []) {
+            $publicOptions['hints'] = $hints;
+        }
+
+        return $publicOptions;
     }
 
     public function finishRegistration(Authenticatable $user, array $response, ?string $host = null): Passkey
@@ -281,5 +289,27 @@ class WebAuthnService
         $manager->add(AndroidKeyAttestationStatementSupport::create());
 
         return $manager;
+    }
+
+    private function authenticatorAttachment(): ?string
+    {
+        $attachment = config('oxalis.passkey_authenticator_attachment');
+
+        return in_array($attachment, [
+            AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_PLATFORM,
+            AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM,
+        ], true) ? $attachment : null;
+    }
+
+    /** @return string[] */
+    private function passkeyHints(): array
+    {
+        $hints = config('oxalis.passkey_hints', []);
+
+        if (! is_array($hints)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('strval', $hints)));
     }
 }

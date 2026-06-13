@@ -93,6 +93,18 @@ return [
         'codes'   => (int) env('OXALIS_PASSKEY_RECOVERY_CODES', 8),
     ],
 
+    // Passkey creation preference:
+    // null             = let the browser choose (platform, phone, or security key)
+    // "platform"       = prefer this device/password manager (Windows Hello, Touch ID, iCloud, Google Password Manager)
+    // "cross-platform" = prefer external authenticators such as USB/NFC security keys
+    'passkey_authenticator_attachment' => env('OXALIS_PASSKEY_AUTHENTICATOR_ATTACHMENT'),
+
+    // Browser UI hints for passkey creation. These are advisory only.
+    'passkey_hints' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', env('OXALIS_PASSKEY_HINTS', 'client-device,hybrid,security-key'))
+    ))),
+
     // ── Enabled auth methods ──────────────────────────────────────────────────
     'methods' => [
         'passkey'    => env('OXALIS_ENABLE_PASSKEY', true),

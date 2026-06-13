@@ -466,6 +466,8 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSKEY</div><div class="config-desc">Show the passkey sign-in button on the login page.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY</div><div class="config-desc">Enable one-time recovery codes for users who lose all passkey devices.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY_CODES</div><div class="config-desc">How many passkey recovery codes to generate.</div><div class="config-default">8</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_PASSKEY_AUTHENTICATOR_ATTACHMENT</div><div class="config-desc">Set to <code>platform</code> to prefer this device/password manager, or <code>cross-platform</code> for USB/NFC security keys.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_PASSKEY_HINTS</div><div class="config-desc">Browser UI preference order for passkey creation.</div><div class="config-default">client-device,hybrid,security-key</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_MAGIC_LINK</div><div class="config-desc">Show the magic-link send form.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_EMAIL_OTP</div><div class="config-desc">Show the one-time code send form.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_TOTP</div><div class="config-desc">Allow users to set up authenticator app 2FA.</div><div class="config-default">true</div></div>
@@ -495,10 +497,15 @@ php artisan migrate</code></pre></div>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_RP_ID=myapp.com
 OXALIS_ORIGINS=https://myapp.com
+OXALIS_PASSKEY_AUTHENTICATOR_ATTACHMENT=platform  # prefer this device/password manager
 OXALIS_REQUIRE_ATTESTATION=false   # true = enterprise devices only</code></pre></div>
     <div class="alert-box alert-info">
       <i class="bi bi-info-circle-fill"></i>
       <div><strong>Local dev:</strong> <code>OXALIS_RP_ID=localhost</code> and <code>OXALIS_ORIGINS=http://localhost:8000</code>. The RP ID must exactly match the browser hostname — no port, no scheme.</div>
+    </div>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div><strong>Browser prompts:</strong> Some browsers say "security key" even when they can create a normal synced passkey. Use <code>platform</code> when you want Oxalis to prefer Windows Hello, Touch ID, iCloud Keychain, or Google Password Manager over external USB/NFC keys.</div>
     </div>
     <h3>Conditional UI autofill</h3>
     <p>On the login page, the email field has <code>autocomplete="username webauthn"</code>. When the page loads, Oxalis silently starts a discoverable credential request in the background. When the user clicks the email field, their browser shows registered passkeys in the autofill dropdown — no button click, no email required.</p>

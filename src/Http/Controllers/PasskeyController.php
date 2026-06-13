@@ -5,12 +5,15 @@ use Oxalis\Events\PasskeyRegistered;
 use Oxalis\Facades\oxalis;
 use Oxalis\Models\AuthEvent;
 use Oxalis\Models\Passkey;
+use Oxalis\Passkeys\PasskeyRecoveryService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class PasskeyController extends Controller
 {
+    public function __construct(private PasskeyRecoveryService $passkeyRecovery) {}
+
     // ── Guest: begin authentication ──────────────────────────────────────────
 
     public function beginAuthentication(Request $request)
@@ -122,10 +125,14 @@ class PasskeyController extends Controller
     {
         $request->validate(['label' => 'nullable|string|max:100']);
 
-        $options = oxalis::beginRegistration(
-            Auth::user(),
-            $request->input('label', 'My Passkey'),
-        );
+        try {
+            $options = oxalis::beginRegistration(
+                Auth::user(),
+                $request->input('label', 'My Passkey'),
+            );
+        } catch (\Throwable $e) {
+            return $this->passkeyError($e, 422, 'Registration failed');
+        }
 
         return response()->json($options);
     }
@@ -140,7 +147,21 @@ class PasskeyController extends Controller
 
         event(new PasskeyRegistered(Auth::user(), $passkey));
 
-        return response()->json(['message' => 'Passkey registered', 'passkey' => $passkey]);
+        $response = ['message' => 'Passkey registered', 'passkey' => $passkey];
+
+        if (config('oxalis.passkey_recovery.enabled', true)) {
+            $codes = $this->passkeyRecovery->ensureGenerated(
+                Auth::user(),
+                (int) config('oxalis.passkey_recovery.codes', 8),
+            );
+
+            if ($codes !== null) {
+                session(['oxalis_passkey_recovery_codes' => $codes]);
+                $response['recovery_url'] = route('oxalis.passkeys.recovery');
+            }
+        }
+
+        return response()->json($response);
     }
 
     public function rename(Request $request)

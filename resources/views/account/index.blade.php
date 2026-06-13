@@ -219,6 +219,20 @@
 @endif
 
 {{-- Recovery codes --}}
+@if(($m['passkey'] ?? true) && config('oxalis.passkey_recovery.enabled', true))
+<div class="ox-section-label">Passkey recovery</div>
+<div class="ox-card mb-5 d-flex align-items-center gap-3 flex-wrap" style="gap:1rem!important">
+    <div class="d-flex align-items-center justify-content-center rounded-3" style="width:42px;height:42px;background:rgba(255,193,7,.1);color:#997404;font-size:1.1rem;flex-shrink:0">
+        <i class="bi bi-life-preserver"></i>
+    </div>
+    <div class="flex-grow-1">
+        <div class="fw-semibold">Passkey recovery codes</div>
+        <div class="text-secondary" style="font-size:.78rem">{{ $passkeyRecoveryCount ?? 0 }} active one-time code{{ ($passkeyRecoveryCount ?? 0) === 1 ? '' : 's' }} if you lose every passkey</div>
+    </div>
+    <a href="{{ route('oxalis.passkeys.recovery') }}" class="btn btn-sm btn-ox-out text-nowrap">Manage codes →</a>
+</div>
+@endif
+
 @if(($m['totp'] ?? true) && $totpEnabled)
 <div class="ox-section-label">Recovery</div>
 <div class="ox-card mb-5 d-flex align-items-center gap-3 flex-wrap" style="gap:1rem!important">

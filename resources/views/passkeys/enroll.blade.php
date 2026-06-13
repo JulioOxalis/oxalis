@@ -28,40 +28,73 @@
 <script>
 (function(){
   const rp='{!! config('oxalis.rp_id','localhost') !!}',h=window.location.hostname;
-  if(h!==rp){const w=document.getElementById('rpid-warn');if(w){document.getElementById('actual-host').textContent=h;w.classList.remove('d-none');document.getElementById('btn-enroll').disabled=true;}}
+  if(!rpMatchesHost(rp,h)){const w=document.getElementById('rpid-warn');if(w){document.getElementById('actual-host').textContent=h;w.classList.remove('d-none');document.getElementById('btn-enroll').disabled=true;}}
 })();
 document.getElementById('btn-enroll').addEventListener('click',async()=>{
   const btn=document.getElementById('btn-enroll');
   btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Waiting for biometrics…';
   document.getElementById('enroll-err').classList.add('d-none');
-  const toB=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
-  const toS=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
   const label=document.getElementById('pk-label').value||'My Passkey';
   try{
+    if(!window.PublicKeyCredential||!navigator.credentials?.create){
+      showErr('Your browser does not support passkeys. Try a current version of Chrome, Edge, Safari, or Firefox.');
+      reset();
+      return;
+    }
     const r1=await fetch('{{ route('oxalis.passkeys.register.begin') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({label})});
-    const o=await r1.json();
+    const o=await jsonResponse(r1);
     if(o.error){showErr(o.error);reset();return;}
     console.log('[oxalis] rp.id=',o.rp?.id,'| hostname=',window.location.hostname);
-    if(o.rp?.id&&o.rp.id!==window.location.hostname){showErr(`RP ID mismatch: server says "${o.rp.id}" but browser is on "${window.location.hostname}". Visit {{ route('oxalis.passkeys.enroll') }}`);reset();return;}
+    if(o.rp?.id&&!rpMatchesHost(o.rp.id,window.location.hostname)){showErr(`RP ID mismatch: server says "${o.rp.id}" but browser is on "${window.location.hostname}". Check {{ route('oxalis.health.passkeys') }}`);reset();return;}
     o.challenge=toB(o.challenge);o.user.id=toB(o.user.id);
     if(o.excludeCredentials)o.excludeCredentials=o.excludeCredentials.map(c=>({...c,id:toB(c.id)}));
     const cred=await navigator.credentials.create({publicKey:o});
     const r2=await fetch('{{ route('oxalis.passkeys.register.finish') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({id:cred.id,rawId:toS(cred.rawId),type:cred.type,response:{clientDataJSON:toS(cred.response.clientDataJSON),attestationObject:toS(cred.response.attestationObject)}})});
-    const d=await r2.json();
-    if(d.message)window.location.href='{{ config('oxalis.routes.home','/dashboard') }}';
+    const d=await jsonResponse(r2);
+    if(d.message)window.location.href=d.recovery_url||'{{ config('oxalis.routes.home','/dashboard') }}';
     else{showErr((d.error||'Server rejected the passkey.')+' Check {{ route('oxalis.health.passkeys') }} for configuration issues.');reset();}
   }catch(e){showErr(friendlyErr(e));reset();}
 });
+function rpMatchesHost(rp,host){
+  return !!rp&&!!host&&(host===rp||host.endsWith('.'+rp));
+}
+function toB(s){
+  const b64=String(s).replace(/-/g,'+').replace(/_/g,'/');
+  const padded=b64+'='.repeat((4-b64.length%4)%4);
+  return Uint8Array.from(atob(padded),c=>c.charCodeAt(0));
+}
+function toS(b){
+  const bytes=new Uint8Array(b);
+  let bin='';
+  for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+async function jsonResponse(response){
+  const text=await response.text();
+  let data=null;
+  try{data=text?JSON.parse(text):{};}catch(e){
+    if(response.redirected||response.status===401||response.status===419)return {error:'Your session expired. Refresh the page, sign in again, and retry passkey setup.'};
+    throw new Error('Unexpected server response while setting up the passkey.');
+  }
+  if(!response.ok&&!data.error)data.error='Passkey setup failed. Check {{ route('oxalis.health.passkeys') }} for configuration issues.';
+  return data;
+}
 function friendlyErr(e){
   const m=(e.message||'').toLowerCase();
+  if(e.name==='AbortError')
+    return 'Passkey creation was cancelled. Please click "Create passkey" and approve the browser prompt.';
+  if(e.name==='InvalidCharacterError')
+    return 'The passkey challenge from the server could not be read. Refresh the page and try again.';
   if(e.name==='InvalidStateError'||m.includes('excludecredentials'))
     return 'A passkey for this account already exists on this device. Use it to sign in, or add a passkey from a different device.';
-  if(m.includes('timed out')||m.includes('not allowed')||m.includes('operation either'))
+  if(e.name==='NotAllowedError'||m.includes('timed out')||m.includes('not allowed')||m.includes('operation either'))
     return 'Passkey creation was cancelled or timed out. Please click "Create passkey" and complete the browser prompt without waiting.';
-  if(m.includes('not supported')||m.includes('authenticatorselection'))
+  if(e.name==='NotSupportedError'||m.includes('not supported')||m.includes('authenticatorselection'))
     return 'Your browser or device does not support passkeys. Try Chrome, Edge 114+, or Safari 16+.';
-  if(m.includes('security')||m.includes('invalid domain'))
-    return 'Security check failed — make sure you are visiting: {{ route('oxalis.passkeys.enroll') }}';
+  if(e.name==='SecurityError'||m.includes('security')||m.includes('invalid domain'))
+    return 'Security check failed. Make sure the site uses HTTPS, and check {{ route('oxalis.health.passkeys') }}.';
+  if(m.includes('session expired')||m.includes('unexpected server response'))
+    return e.message;
   return 'Could not create passkey ('+e.name+'). Please try again or use another sign-in method.';
 }
 function showErr(m){const e=document.getElementById('enroll-err');e.textContent=m;e.classList.remove('d-none');}

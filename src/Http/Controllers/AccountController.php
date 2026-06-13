@@ -6,6 +6,7 @@ use Oxalis\Models\Lockout;
 use Oxalis\Models\MagicLink;
 use Oxalis\Models\OtpChallenge;
 use Oxalis\Models\Passkey;
+use Oxalis\Models\PasskeyRecoveryCode;
 use Oxalis\Models\SocialLogin;
 use Oxalis\Models\TotpSecret;
 use Oxalis\Models\TotpTrustedDevice;
@@ -21,6 +22,9 @@ class AccountController extends Controller
         $uid  = $user->getAuthIdentifier();
 
         $passkeys = Passkey::where('user_id', $uid)->latest()->get();
+        $passkeyRecoveryCount = PasskeyRecoveryCode::where('user_id', $uid)
+            ->whereNull('used_at')
+            ->count();
 
         $totpEnabled = TotpSecret::where('user_id', $uid)
             ->whereNotNull('confirmed_at')
@@ -41,6 +45,7 @@ class AccountController extends Controller
 
         return view('oxalis::account.index', compact(
             'passkeys',
+            'passkeyRecoveryCount',
             'totpEnabled',
             'hasRecoveryCodes',
             'socialLogins',
@@ -64,6 +69,7 @@ class AccountController extends Controller
 
         // Delete all oxalis data for this user
         Passkey::where('user_id', $uid)->delete();
+        PasskeyRecoveryCode::where('user_id', $uid)->delete();
         TotpSecret::where('user_id', $uid)->delete();
         OtpChallenge::where('user_id', $uid)->delete();
         MagicLink::where('user_id', $uid)->delete();

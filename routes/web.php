@@ -19,6 +19,7 @@ use Oxalis\Http\Controllers\OtpController;
 use Oxalis\Http\Controllers\PasswordController;
 use Oxalis\Http\Controllers\PasswordResetController;
 use Oxalis\Http\Controllers\PasskeyController;
+use Oxalis\Http\Controllers\PasskeyRecoveryController;
 use Oxalis\Http\Controllers\RecoveryCodeController;
 use Oxalis\Http\Controllers\SecurityController;
 use Oxalis\Http\Controllers\SmartDispatchController;
@@ -73,6 +74,12 @@ Route::prefix($prefix)->middleware([...$middleware, 'oxalis.security-headers'])-
         Route::post('/passkeys/login/autofill-begin', [PasskeyController::class, 'beginAutofill'])
             ->middleware('oxalis.ip:30,1')
             ->name('oxalis.passkeys.login.autofill');
+
+        Route::get('/passkeys/recover', [PasskeyRecoveryController::class, 'showRecover'])
+            ->name('oxalis.passkeys.recover');
+        Route::post('/passkeys/recover', [PasskeyRecoveryController::class, 'recover'])
+            ->middleware('oxalis.ip:10,5')
+            ->name('oxalis.passkeys.recover.verify');
 
         // Email OTP — send is strictly limited to prevent email spam
         Route::post('/otp/send',   [OtpController::class, 'send'])
@@ -155,6 +162,8 @@ Route::prefix($prefix)->middleware([...$middleware, 'oxalis.security-headers'])-
         Route::post('/passkeys/register/finish', [PasskeyController::class, 'finishRegistration'])->name('oxalis.passkeys.register.finish');
         Route::post('/passkeys/rename',          [PasskeyController::class, 'rename'])->name('oxalis.passkeys.rename');
         Route::post('/passkeys/delete',          [PasskeyController::class, 'delete'])->name('oxalis.passkeys.delete');
+        Route::get('/passkeys/recovery-codes',   [PasskeyRecoveryController::class, 'showManage'])->name('oxalis.passkeys.recovery');
+        Route::post('/passkeys/recovery-codes',  [PasskeyRecoveryController::class, 'regenerate'])->name('oxalis.passkeys.recovery.regenerate');
 
         // TOTP management
         Route::get('/totp/setup',    [TotpController::class, 'showSetup'])->name('oxalis.totp.setup');

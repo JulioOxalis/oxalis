@@ -27,6 +27,7 @@ use Oxalis\Http\Middleware\RequireOxalis;
 use Oxalis\Http\Middleware\RequireStepUp;
 use Oxalis\Http\Middleware\ValidatePasskeySession;
 use Oxalis\MagicLink\MagicLinkService;
+use Oxalis\Passkeys\PasskeyRecoveryService;
 use Oxalis\StepUp\StepUpService;
 use Oxalis\Totp\TotpService;
 use Oxalis\WebAuthn\WebAuthnService;
@@ -43,6 +44,7 @@ class OxalisServiceProvider extends ServiceProvider
         $this->app->singleton(WebAuthnService::class);
         $this->app->singleton(OtpService::class);
         $this->app->singleton(MagicLinkService::class);
+        $this->app->singleton(PasskeyRecoveryService::class);
         $this->app->singleton(TotpService::class);
         $this->app->singleton(StepUpService::class);
         $this->app->singleton(OxalisManager::class);

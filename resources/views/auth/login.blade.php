@@ -332,6 +332,9 @@
 
 <hr class="my-3">
 <p class="text-center small mb-0 text-secondary">No account? <a href="{{ route('oxalis.register') }}" class="fw-semibold">Create one</a></p>
+@if(($m['passkey'] ?? true) && config('oxalis.passkey_recovery.enabled', true))
+<p class="text-center small mt-2 mb-0 text-secondary">Lost your passkey? <a href="{{ route('oxalis.passkeys.recover') }}" class="fw-semibold">Use a recovery code</a></p>
+@endif
 
 @endsection
 

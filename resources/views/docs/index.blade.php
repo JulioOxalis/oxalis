@@ -464,6 +464,8 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_HOME</div><div class="config-desc">Where to redirect users after a successful login.</div><div class="config-default">/dashboard</div></div>
     <div class="config-row"><div class="config-key">OXALIS_DB_CONNECTION</div><div class="config-desc">SQL DB connection for Oxalis tables. Leave blank to use app default.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSKEY</div><div class="config-desc">Show the passkey sign-in button on the login page.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY</div><div class="config-desc">Enable one-time recovery codes for users who lose all passkey devices.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY_CODES</div><div class="config-desc">How many passkey recovery codes to generate.</div><div class="config-default">8</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_MAGIC_LINK</div><div class="config-desc">Show the magic-link send form.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_EMAIL_OTP</div><div class="config-desc">Show the one-time code send form.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_TOTP</div><div class="config-desc">Allow users to set up authenticator app 2FA.</div><div class="config-default">true</div></div>
@@ -501,6 +503,16 @@ OXALIS_REQUIRE_ATTESTATION=false   # true = enterprise devices only</code></pre>
     <h3>Conditional UI autofill</h3>
     <p>On the login page, the email field has <code>autocomplete="username webauthn"</code>. When the page loads, Oxalis silently starts a discoverable credential request in the background. When the user clicks the email field, their browser shows registered passkeys in the autofill dropdown — no button click, no email required.</p>
     <p>Works on Chrome 108+, Edge 108+, Safari 16+. Falls back gracefully to the regular button flow on older browsers.</p>
+    <h3>Passkey recovery codes</h3>
+    <p>After a user's first successful passkey enrollment, Oxalis can generate one-time recovery codes and send the user to <code>/oxalis/passkeys/recovery-codes</code> to save them. The server stores only password hashes of those codes in <code>oxalis_passkey_recovery_codes</code>; the plain codes are shown once.</p>
+    <p>If the user loses every passkey device, they can visit <code>/oxalis/passkeys/recover</code>, enter their email and one recovery code, then immediately add a new passkey. The recovery code is consumed on use.</p>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div>Oxalis never stores or recreates a passkey private key. Recovery codes restore account access so the user can register a new passkey.</div>
+    </div>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_PASSKEY_RECOVERY=true
+OXALIS_PASSKEY_RECOVERY_CODES=8</code></pre></div>
   </section>
 
   <!-- EMAIL OTP -->
@@ -777,11 +789,15 @@ if (!hash_equals($expected, $signature)) {
         <tr><td>GET /oxalis/magic-link/verify/{token}</td><td><code>oxalis.magic-link.verify</code></td><td>Magic link target</td></tr>
         <tr><td>POST /oxalis/passkeys/login/begin</td><td><code>oxalis.passkeys.login.begin</code></td><td>WebAuthn assertion start</td></tr>
         <tr><td>POST /oxalis/passkeys/login/finish</td><td><code>oxalis.passkeys.login.finish</code></td><td>WebAuthn assertion verify</td></tr>
+        <tr><td>GET /oxalis/passkeys/recover</td><td><code>oxalis.passkeys.recover</code></td><td>Use recovery code after losing passkeys</td></tr>
+        <tr><td>POST /oxalis/passkeys/recover</td><td><code>oxalis.passkeys.recover.verify</code></td><td>Consume recovery code and sign in</td></tr>
         <tr><td>GET /oxalis/password</td><td><code>oxalis.password.login.show</code></td><td>Password login form</td></tr>
         <tr><td>GET /oxalis/forgot-password</td><td><code>oxalis.password.forgot</code></td><td>Request reset link</td></tr>
         <tr><td>GET /oxalis/totp/verify</td><td><code>oxalis.totp.verify.show</code></td><td>TOTP 2FA step</td></tr>
         <tr><td>GET /oxalis/totp/setup</td><td><code>oxalis.totp.setup</code></td><td>QR setup <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>GET /oxalis/passkeys/enroll</td><td><code>oxalis.passkeys.enroll</code></td><td>Register passkey <span style="color:var(--ox)">(auth)</span></td></tr>
+        <tr><td>GET /oxalis/passkeys/recovery-codes</td><td><code>oxalis.passkeys.recovery</code></td><td>View passkey recovery-code status <span style="color:var(--ox)">(auth)</span></td></tr>
+        <tr><td>POST /oxalis/passkeys/recovery-codes</td><td><code>oxalis.passkeys.recovery.regenerate</code></td><td>Regenerate passkey recovery codes <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>GET /oxalis/account</td><td><code>oxalis.account</code></td><td>Account settings <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>GET /oxalis/step-up</td><td><code>oxalis.step-up.prompt</code></td><td>Step-up prompt <span style="color:var(--ox)">(auth)</span></td></tr>
         <tr><td>POST /oxalis/logout</td><td><code>oxalis.logout</code></td><td>Sign out <span style="color:var(--ox)">(auth)</span></td></tr>
@@ -871,7 +887,7 @@ class EventServiceProvider
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-fill-check"></i></div><h4>IP Rate Limiting</h4><p>All POST auth endpoints rate-limited per IP via a DB-backed <code>Lockout</code> model — works with MongoDB, no cache needed.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-lock-fill"></i></div><h4>TOTP 2FA Enforcement</h4><p>Once enabled, <em>every</em> login method requires the TOTP step. No bypass possible.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-fingerprint"></i></div><h4>Passkey Sessions</h4><p>After passkey login, the credential ID is stamped on the session for audit by <code>ValidatePasskeySession</code>.</p></div>
-      <div class="feature-card"><div class="feature-icon"><i class="bi bi-key-fill"></i></div><h4>Recovery Codes</h4><p>8 one-time recovery codes, each bcrypt-hashed. Consumed on use, regeneratable from account settings.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-key-fill"></i></div><h4>Recovery Codes</h4><p>TOTP and passkey recovery codes are one-time use, bcrypt/password-hashed, and regeneratable from account settings.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-bell-fill"></i></div><h4>Login Notifications</h4><p>Optional email on every new sign-in, showing method, IP, and device. Opt-in via <code>OXALIS_LOGIN_NOTIFICATION=true</code>.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-graph-up"></i></div><h4>Auth Event Log</h4><p>Every attempt recorded in <code>oxalis_auth_events</code> with method, IP, and outcome. View at <code>/oxalis/stats</code>.</p></div>
     </div>
@@ -906,6 +922,9 @@ class EventServiceProvider
 
     <h3>Email change</h3>
     <p>A <strong>Change</strong> badge next to the email address opens a 2-step flow: enter new email → receive OTP → verify → email updated with <code>email_verified_at = now()</code>. Works the same as registration verification.</p>
+
+    <h3>Passkey recovery</h3>
+    <p>The account page shows active passkey recovery-code count and links to <code>/oxalis/passkeys/recovery-codes</code>. Regenerating codes invalidates the previous set.</p>
 
     <h3>Account deletion</h3>
     <p>A collapsible <strong>Danger zone</strong> at the bottom of the account page. User must type their email to confirm. Deletes all Oxalis records for that user (passkeys, TOTP, OTP challenges, magic links, auth events, trusted devices). Configurable:</p>

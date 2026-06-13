@@ -88,6 +88,11 @@ return [
     // 0 = never show the nudge. After this many dismissals it stops appearing.
     'passkey_nudge_max' => (int) env('OXALIS_PASSKEY_NUDGE_MAX', 3),
 
+    'passkey_recovery' => [
+        'enabled' => env('OXALIS_PASSKEY_RECOVERY', true),
+        'codes'   => (int) env('OXALIS_PASSKEY_RECOVERY_CODES', 8),
+    ],
+
     // ── Enabled auth methods ──────────────────────────────────────────────────
     'methods' => [
         'passkey'    => env('OXALIS_ENABLE_PASSKEY', true),

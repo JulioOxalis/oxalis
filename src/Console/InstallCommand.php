@@ -315,17 +315,33 @@ class InstallCommand extends Command
         }
 
         // 4. Append the oxalis redirect shim once
-        if (!str_contains($content, 'oxalis — redirect /login and /register')) {
+        if (
+            !str_contains($content, 'oxalis - redirect default Laravel auth URLs')
+            && !str_contains($content, 'oxalis — redirect /login and /register')
+        ) {
             $p = config('oxalis.routes.prefix', 'oxalis');
             $content .= PHP_EOL . implode(PHP_EOL, [
                 '',
-                '// oxalis — redirect /login and /register to oxalis routes',
-                "Route::redirect('/login',          '/{$p}/login')->name('login');",
-                "Route::redirect('/register',       '/{$p}/register')->name('register');",
-                "Route::redirect('/password/reset', '/{$p}/forgot-password');",
+                '// oxalis - redirect default Laravel auth URLs',
+                "if (! \\Illuminate\\Support\\Facades\\Route::has('login')) {",
+                "    Route::redirect('/login', '/{$p}/login')->name('login');",
+                "} else {",
+                "    Route::redirect('/login', '/{$p}/login')->name('oxalis.redirect.app-login');",
+                "}",
+                "if (! \\Illuminate\\Support\\Facades\\Route::has('register')) {",
+                "    Route::redirect('/register', '/{$p}/register')->name('register');",
+                "} else {",
+                "    Route::redirect('/register', '/{$p}/register')->name('oxalis.redirect.app-register');",
+                "}",
+                "Route::redirect('/password/reset', '/{$p}/forgot-password')->name('oxalis.redirect.app-password-reset');",
                 // Handles both GET bookmarks and POST form submissions (Breeze / Laravel UI).
                 // Actually logs the user out so the session is invalidated.
-                "Route::match(['get','post'], '/logout', function() { \\Illuminate\\Support\\Facades\\Auth::logout(); request()->session()->invalidate(); request()->session()->regenerateToken(); return redirect('/{$p}/login'); })->name('logout');",
+                "if (! \\Illuminate\\Support\\Facades\\Route::has('logout')) {",
+                "    Route::match(['get','post'], '/logout', function() { \\Illuminate\\Support\\Facades\\Auth::logout(); request()->session()->invalidate(); request()->session()->regenerateToken(); return redirect('/{$p}/login'); })->name('logout');",
+                "} else {",
+                "    Route::match(['get','post'], '/logout', function() { \\Illuminate\\Support\\Facades\\Auth::logout(); request()->session()->invalidate(); request()->session()->regenerateToken(); return redirect('/{$p}/login'); })->name('oxalis.redirect.app-logout');",
+                "}",
+                '// end oxalis redirects',
                 '',
             ]);
         }

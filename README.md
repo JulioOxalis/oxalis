@@ -591,6 +591,11 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 
 ## Changelog
 
+### v1.8.8
+- Routes: package fallback auth redirects now use `oxalis.redirect.*` names, avoiding duplicate `login` route names during `php artisan optimize`.
+- Install: generated app redirect shims only claim `login`, `register`, and `logout` route names when those names are not already registered.
+- Uninstall: cleanup now removes the guarded redirect shim added by newer installers.
+
 ### v1.8.7
 - Install: full Oxalis views are no longer published by default, so package auth UI fixes keep applying after upgrades.
 - Install: added `--publish-views` for apps that intentionally want to override every Blade template.

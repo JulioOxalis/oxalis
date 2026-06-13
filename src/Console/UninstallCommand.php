@@ -129,9 +129,14 @@ class UninstallCommand extends Command
 
         $content = File::get($path);
 
-        // Remove the oxalis redirect block added during install
+        // Remove the oxalis redirect block added during install.
         $content = preg_replace(
-            '/\n*\/\/ oxalis[^\n]*\n(?:Route::redirect[^\n]*\n){1,5}/s',
+            '/\n*\/\/ oxalis - redirect default Laravel auth URLs.*?\/\/ end oxalis redirects\n?/s',
+            "\n",
+            $content
+        );
+        $content = preg_replace(
+            '/\n*\/\/ oxalis[^\n]*\n(?:Route::redirect[^\n]*\n|Route::match[^\n]*\n){1,5}/s',
             "\n",
             $content
         );

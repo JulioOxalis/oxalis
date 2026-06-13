@@ -32,7 +32,7 @@ Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic 
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11+
+- Laravel 12 or 13
 - MySQL / PostgreSQL / SQLite (for Oxalis tables)
 
 > If your app's default connection is MongoDB, set `OXALIS_DB_CONNECTION` to a separate SQL connection — Oxalis stores auth data in SQL while your app data stays on MongoDB.
@@ -590,6 +590,10 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 ---
 
 ## Changelog
+
+### v1.8.9
+- Composer: allow installation on Laravel 13 while keeping Laravel 12 support.
+- Dev tooling: allow the matching Orchestra Testbench generation for Laravel 13.
 
 ### v1.8.8
 - Routes: package fallback auth redirects now use `oxalis.redirect.*` names, avoiding duplicate `login` route names during `php artisan optimize`.

@@ -559,6 +559,11 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 
 ## Changelog
 
+### v1.8.5
+- Passkeys: normalize browser creation options before calling `navigator.credentials.create()`.
+- Passkeys: retry once without optional WebAuthn `hints` when a browser rejects the request with `TypeError`.
+- Passkeys: show the browser's TypeError detail instead of a generic "Could not create passkey" message.
+
 ### v1.8.4
 - Passkeys: enrollment now checks whether the browser reports a built-in platform authenticator before launching the "This device" registration flow.
 - Passkeys: users can choose "This device/password manager" or "Phone/security key"; Oxalis sends the matching WebAuthn `authenticatorAttachment`.

@@ -70,7 +70,8 @@ document.getElementById('btn-enroll').addEventListener('click',async()=>{
     if(o.rp?.id&&!rpMatchesHost(o.rp.id,window.location.hostname)){showErr(`RP ID mismatch: server says "${o.rp.id}" but browser is on "${window.location.hostname}". Check {{ route('oxalis.health.passkeys') }}`);reset();return;}
     o.challenge=toB(o.challenge);o.user.id=toB(o.user.id);
     if(o.excludeCredentials)o.excludeCredentials=o.excludeCredentials.map(c=>({...c,id:toB(c.id)}));
-    const cred=await navigator.credentials.create({publicKey:o});
+    prepareCreationOptions(o);
+    const cred=await createPasskeyCredential(o);
     const r2=await fetch('{{ route('oxalis.passkeys.register.finish') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({id:cred.id,rawId:toS(cred.rawId),type:cred.type,response:{clientDataJSON:toS(cred.response.clientDataJSON),attestationObject:toS(cred.response.attestationObject)}})});
     const d=await jsonResponse(r2);
     if(d.message)window.location.href=d.recovery_url||'{{ config('oxalis.routes.home','/dashboard') }}';
@@ -106,8 +107,28 @@ async function selectedAuthenticatorAvailable(attachment){
   try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}
   catch(e){return true;}
 }
+function prepareCreationOptions(o){
+  if(Array.isArray(o.pubKeyCredParams))o.pubKeyCredParams=o.pubKeyCredParams.map(p=>({...p,alg:Number(p.alg)}));
+  if(Array.isArray(o.excludeCredentials)&&o.excludeCredentials.length===0)delete o.excludeCredentials;
+  if(o.authenticatorSelection&&!o.authenticatorSelection.authenticatorAttachment)delete o.authenticatorSelection.authenticatorAttachment;
+  if(Array.isArray(o.hints)&&o.hints.length===0)delete o.hints;
+}
+async function createPasskeyCredential(publicKey){
+  try{return await navigator.credentials.create({publicKey});}
+  catch(e){
+    if(e instanceof TypeError&&publicKey.hints){
+      console.warn('[oxalis] Browser rejected WebAuthn hints; retrying passkey creation without hints.',e);
+      const retry={...publicKey};
+      delete retry.hints;
+      return await navigator.credentials.create({publicKey:retry});
+    }
+    throw e;
+  }
+}
 function friendlyErr(e){
   const m=(e.message||'').toLowerCase();
+  if(e.name==='TypeError')
+    return 'The browser rejected the passkey request before showing the prompt. Refresh and try again; if it continues, choose "Phone or security key". Details: '+(e.message||'invalid WebAuthn options');
   if(e.name==='AbortError')
     return 'Passkey creation was cancelled. Please click "Create passkey" and approve the browser prompt.';
   if(e.name==='InvalidCharacterError')

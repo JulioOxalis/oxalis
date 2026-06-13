@@ -3,12 +3,16 @@
   Publish to customise: php artisan vendor:publish --tag=oxalis-partials
   Output: resources/views/vendor/oxalis/partials/split-brand.blade.php
 --}}
-@if(config('oxalis.brand.logo_url'))
-<img src="{{ config('oxalis.brand.logo_url') }}"
-     alt="{{ config('app.name') }}"
-     style="max-height:64px;width:auto;object-fit:contain;margin-bottom:1.5rem">
+@php
+    $oxLogoUrl = \Oxalis\Support\Branding::logoUrl();
+    $oxTagline = \Oxalis\Support\Branding::tagline();
+@endphp
+@if($oxLogoUrl)
+<img src="{{ $oxLogoUrl }}"
+     alt="{{ \Oxalis\Support\Branding::logoAlt() }}"
+     style="max-height:{{ \Oxalis\Support\Branding::logoHeight(64) }}px;width:auto;max-width:100%;object-fit:contain;margin-bottom:1.5rem">
 @endif
 <div style="font-size:1.6rem;font-weight:700;letter-spacing:-.02em">{{ config('app.name') }}</div>
-@if(config('oxalis.brand.tagline'))
-<div style="font-size:.9rem;opacity:.8;margin-top:.5rem">{{ config('oxalis.brand.tagline') }}</div>
+@if($oxTagline)
+<div style="font-size:.9rem;opacity:.8;margin-top:.5rem">{{ $oxTagline }}</div>
 @endif

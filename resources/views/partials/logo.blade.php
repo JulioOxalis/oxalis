@@ -1,7 +1,10 @@
-@if(config('oxalis.brand.logo_url'))
+@php
+    $oxLogoUrl = \Oxalis\Support\Branding::logoUrl();
+@endphp
+@if($oxLogoUrl)
 <div class="ox-brand-logo text-center mb-3">
-    <img src="{{ config('oxalis.brand.logo_url') }}"
-         alt="{{ config('app.name') }}"
-         style="max-height:52px;width:auto;object-fit:contain">
+    <img src="{{ $oxLogoUrl }}"
+         alt="{{ \Oxalis\Support\Branding::logoAlt() }}"
+         style="max-height:{{ \Oxalis\Support\Branding::logoHeight() }}px;width:auto;max-width:100%;object-fit:contain">
 </div>
 @endif

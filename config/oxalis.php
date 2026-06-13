@@ -42,22 +42,37 @@ return [
     'theme_color' => env('OXALIS_PRIMARY_COLOR', null),
 
     // ── Layout variant ────────────────────────────────────────────────────────
-    // card  — centered card on body bg (default)
-    // split — brand panel on the left, form on the right
-    // bare  — holographic: dark space bg, animated orbs, spinning rainbow border
-    // glass — frosted glassmorphism card over animated pastel bokeh blobs
-    // float — elevated card with brand/logo displayed above it; hover-lift effect
+    // card  - centered card on body bg (default)
+    // split - brand panel on the left, form on the right
+    // bare  - holographic: dark space bg, animated orbs, spinning rainbow border
+    // glass - frosted glassmorphism card over animated pastel bokeh blobs
+    // float - elevated card with brand/logo displayed above it; hover-lift effect
     'layout' => env('OXALIS_LAYOUT', 'card'),
 
     // ── Branding ─────────────────────────────────────────────────────────────
     // Displayed in the card header above the form.
-    // set OXALIS_LOGO_URL to a publicly accessible image (PNG / SVG).
+    // set OXALIS_LOGO_URL to a full URL, /absolute public path, or public-relative path.
+    // Examples:
+    //   OXALIS_LOGO_URL=https://myapp.com/img/logo.svg
+    //   OXALIS_LOGO_URL=/img/logo.svg
+    //   OXALIS_LOGO_URL=img/logo.svg
+    //   OXALIS_LOGO_URL=public/img/logo.svg
     // set OXALIS_TAGLINE to a short subtitle shown under the app name.
     // OXALIS_SHOW_APP_NAME=false hides the app name (useful when logo says it all).
     'brand' => [
         'logo_url'      => env('OXALIS_LOGO_URL'),
+        'logo_alt'      => env('OXALIS_LOGO_ALT'),
+        'logo_height'   => env('OXALIS_LOGO_HEIGHT', 52),
         'tagline'       => env('OXALIS_TAGLINE'),
         'show_app_name' => env('OXALIS_SHOW_APP_NAME', false),
+
+        // Optional image rendered inside every auth card. Useful for product,
+        // school, clinic, or tenant artwork without publishing package views.
+        // Accepts the same URL/path formats as OXALIS_LOGO_URL.
+        'card_image_url'      => env('OXALIS_CARD_IMAGE_URL'),
+        'card_image_alt'      => env('OXALIS_CARD_IMAGE_ALT'),
+        'card_image_position' => env('OXALIS_CARD_IMAGE_POSITION', 'top'), // top | bottom
+        'card_image_height'   => env('OXALIS_CARD_IMAGE_HEIGHT', 140),
 
         // ── Split-layout brand panel customisation ────────────────────────────
         // split_bg accepts any valid CSS background value. IMPORTANT: values

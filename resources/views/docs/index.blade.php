@@ -378,6 +378,23 @@ OXALIS_PRIMARY_COLOR=#e11d48</code></pre></div>
 OXALIS_THEME=custom</code></pre></div>
     <p>The command writes <code>public/vendor/oxalis/theme.css</code>. Edit that file to define brand colors, surfaces, borders, button states, and focus rings.</p>
 
+    <h3>Auth branding</h3>
+    <p>Use a full URL, an absolute public path, or a path relative to Laravel's <code>public</code> directory.</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
+    <pre class="language-bash"><code>OXALIS_LOGO_URL=https://myapp.com/img/logo.svg
+OXALIS_LOGO_URL=/img/logo.svg
+OXALIS_LOGO_URL=img/logo.svg
+OXALIS_LOGO_URL=public/img/logo.svg
+OXALIS_LOGO_ALT="My App"
+OXALIS_LOGO_HEIGHT=64
+OXALIS_TAGLINE="Welcome back"
+OXALIS_SHOW_APP_NAME=true
+
+OXALIS_CARD_IMAGE_URL=/img/auth-card.jpg
+OXALIS_CARD_IMAGE_POSITION=top
+OXALIS_CARD_IMAGE_HEIGHT=140
+OXALIS_CARD_IMAGE_ALT="Workspace preview"</code></pre></div>
+
     <h3>Split layout branding</h3>
     <p>The split panel accepts any valid CSS background. Quote values containing <code>#</code>, spaces, commas, or gradients in <code>.env</code>.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
@@ -526,9 +543,14 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_PRIMARY_COLOR</div><div class="config-desc">Optional primary brand color override. Oxalis derives hover, soft-fill, and button text contrast from this value.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_SPLIT_BG</div><div class="config-desc">Custom background for the split layout brand panel. Quote gradients and hex colors in <code>.env</code>.</div><div class="config-default">var(--ox)</div></div>
     <div class="config-row"><div class="config-key">OXALIS_SPLIT_TEXT</div><div class="config-desc">Text color for the split layout brand panel.</div><div class="config-default">auto</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_LOGO_URL</div><div class="config-desc">Public logo URL shown in Oxalis auth pages.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_LOGO_URL</div><div class="config-desc">Full URL or public path to the logo shown in Oxalis auth pages.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_LOGO_ALT</div><div class="config-desc">Logo alt text.</div><div class="config-default">APP_NAME</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_LOGO_HEIGHT</div><div class="config-desc">Logo max height in pixels.</div><div class="config-default">52</div></div>
     <div class="config-row"><div class="config-key">OXALIS_TAGLINE</div><div class="config-desc">Short brand subtitle shown with the logo/app name.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_SHOW_APP_NAME</div><div class="config-desc">Show or hide the app name in Oxalis auth branding.</div><div class="config-default">false</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_URL</div><div class="config-desc">Full URL or public path to an image shown inside every auth card.</div><div class="config-default">null</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_POSITION</div><div class="config-desc">Auth-card image position: <code>top</code> or <code>bottom</code>.</div><div class="config-default">top</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_HEIGHT</div><div class="config-desc">Auth-card image max height in pixels.</div><div class="config-default">140</div></div>
     <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSKEY</div><div class="config-desc">Show the passkey sign-in button on the login page.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY</div><div class="config-desc">Enable one-time recovery codes for users who lose all passkey devices.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY_CODES</div><div class="config-desc">How many passkey recovery codes to generate.</div><div class="config-default">8</div></div>

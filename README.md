@@ -185,6 +185,31 @@ OXALIS_TAGLINE="Welcome back"                     # subtitle under app name
 OXALIS_SHOW_APP_NAME=true                         # show APP_NAME in the header
 ```
 
+For images stored in Laravel's `public` directory, use a public URL path or a public-relative path:
+
+```env
+# public/img/logo.svg
+OXALIS_LOGO_URL=/img/logo.svg
+# or
+OXALIS_LOGO_URL=img/logo.svg
+# also accepted
+OXALIS_LOGO_URL=public/img/logo.svg
+
+# public/img/auth-card.jpg
+OXALIS_CARD_IMAGE_URL=/img/auth-card.jpg
+OXALIS_CARD_IMAGE_POSITION=top
+OXALIS_CARD_IMAGE_HEIGHT=140
+```
+
+Optional branding controls:
+
+```env
+OXALIS_LOGO_ALT="Acme"
+OXALIS_LOGO_HEIGHT=64
+OXALIS_CARD_IMAGE_ALT="Acme workspace"
+OXALIS_CARD_IMAGE_POSITION=bottom   # top or bottom
+```
+
 On the **split layout**, `OXALIS_SHOW_APP_NAME` and `OXALIS_TAGLINE` appear **only in the brand panel** — they are intentionally suppressed inside the card to avoid duplication.
 
 ### Publishing partials
@@ -469,9 +494,14 @@ php artisan vendor:publish --tag=oxalis-config
 | `OXALIS_THEME` | `indigo` | Theme: `indigo` `neon` `aurora` `obsidian` `ember` `frost` `custom` |
 | `OXALIS_PRIMARY_COLOR` | _(theme default)_ | Hex override e.g. `#e11d48`; auto-derives hover/fill/contrast |
 | `OXALIS_LAYOUT` | `card` | Layout: `card` `split` `bare` `glass` `float` |
-| `OXALIS_LOGO_URL` | _(none)_ | Public URL to PNG/SVG logo |
+| `OXALIS_LOGO_URL` | _(none)_ | Full URL or public path to PNG/SVG logo |
+| `OXALIS_LOGO_ALT` | `APP_NAME` | Logo alt text |
+| `OXALIS_LOGO_HEIGHT` | `52` | Logo max height in pixels |
 | `OXALIS_TAGLINE` | _(none)_ | Subtitle shown under app name (quote in `.env`) |
 | `OXALIS_SHOW_APP_NAME` | `false` | Show APP_NAME in card header / split panel |
+| `OXALIS_CARD_IMAGE_URL` | _(none)_ | Full URL or public path to image shown inside auth cards |
+| `OXALIS_CARD_IMAGE_POSITION` | `top` | Auth-card image position: `top` or `bottom` |
+| `OXALIS_CARD_IMAGE_HEIGHT` | `140` | Auth-card image max height in pixels |
 | `OXALIS_SPLIT_BG` | `var(--ox)` | Split panel background — any CSS value; **must quote in `.env`** |
 | `OXALIS_SPLIT_TEXT` | `#fff` | Split panel text color; **must quote in `.env`** |
 
@@ -558,6 +588,12 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 ---
 
 ## Changelog
+
+### v1.8.6
+- Branding: logo URLs now accept full URLs, `/public-paths`, public-relative paths, and `public/...` paths.
+- Branding: added optional `OXALIS_CARD_IMAGE_URL` support for rendering tenant/product artwork inside every auth card.
+- Layouts: invalid or mixed-case `OXALIS_LAYOUT` values now safely normalize to a supported layout instead of breaking auth pages.
+- Docs: added public-folder `.env` examples for logos and auth-card images.
 
 ### v1.8.5
 - Passkeys: normalize browser creation options before calling `navigator.credentials.create()`.

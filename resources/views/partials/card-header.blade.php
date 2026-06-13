@@ -1,7 +1,7 @@
 @php
-    $oxHasLogo    = (bool) config('oxalis.brand.logo_url');
-    $oxShowName   = (bool) config('oxalis.brand.show_app_name', false);
-    $oxTagline    = config('oxalis.brand.tagline');
+    $oxHasLogo    = (bool) \Oxalis\Support\Branding::logoUrl();
+    $oxShowName   = \Oxalis\Support\Branding::showAppName();
+    $oxTagline    = \Oxalis\Support\Branding::tagline();
 @endphp
 @if($oxHasLogo || $oxShowName || $oxTagline)
 <div class="ox-card-header text-center mb-4">

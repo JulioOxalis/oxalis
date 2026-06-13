@@ -1,7 +1,7 @@
 @php
   $oxTheme     = config('oxalis.theme', 'indigo');
   $oxColor     = config('oxalis.theme_color');
-  $oxLayout    = config('oxalis.layout', 'card');
+  $oxLayout    = \Oxalis\Support\Branding::layout();
   $oxSplitBg   = config('oxalis.brand.split_bg');
   $oxSplitText = config('oxalis.brand.split_text');
 
@@ -359,7 +359,9 @@
         <div class="ox-wrap">
             <div class="ox-card">
                 @stack('oxalis:card-top')
+                @include('oxalis::partials.card-image', ['position' => 'top'])
                 @yield('content')
+                @include('oxalis::partials.card-image', ['position' => 'bottom'])
                 @stack('oxalis:card-bottom')
             </div>
         </div>
@@ -384,7 +386,9 @@
         <div class="ox-holo-inner">
             @stack('oxalis:card-top')
             @include('oxalis::partials.card-header')
+            @include('oxalis::partials.card-image', ['position' => 'top'])
             @yield('content')
+            @include('oxalis::partials.card-image', ['position' => 'bottom'])
             @stack('oxalis:card-bottom')
         </div>
     </div>
@@ -407,7 +411,9 @@
     <div class="ox-glass-card">
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-header')
+        @include('oxalis::partials.card-image', ['position' => 'top'])
         @yield('content')
+        @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
     </div>
     @stack('oxalis:after-card')
@@ -430,7 +436,9 @@
     @stack('oxalis:before-card')
     <div class="ox-float-card">
         @stack('oxalis:card-top')
+        @include('oxalis::partials.card-image', ['position' => 'top'])
         @yield('content')
+        @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
     </div>
     @stack('oxalis:after-card')
@@ -451,7 +459,9 @@
     <div class="ox-card">
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-header')
+        @include('oxalis::partials.card-image', ['position' => 'top'])
         @yield('content')
+        @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
     </div>
     @stack('oxalis:after-card')

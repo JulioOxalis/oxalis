@@ -95,9 +95,9 @@ git add .
 git commit -m "fix: enforce TOTP on all login paths"
 
 # Tag the new version
-git tag v1.0.1
+git tag v1.8.1
 git push origin main
-git push origin v1.0.1
+git push origin v1.8.1
 ```
 
 Packagist updates within seconds. Users who run `composer update julio/oxalis` get the new version.
@@ -119,7 +119,7 @@ Follow [Semantic Versioning](https://semver.org):
 ## After publishing — what users do
 
 ```bash
-composer require julio/oxalis
+composer require julio/oxalis:^1.8
 php artisan oxalis:install
 ```
 
@@ -144,7 +144,7 @@ In your project, the path repository still works:
 When you're ready to use the published Packagist version instead, remove that block and run:
 
 ```bash
-composer require julio/oxalis:^1.0
+composer require julio/oxalis:^1.8
 ```
 
 ---

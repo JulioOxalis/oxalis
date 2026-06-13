@@ -3,6 +3,18 @@
     "description": "Passkey-first authentication package for Laravel 12",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "authentication",
+        "laravel",
+        "passkeys",
+        "totp",
+        "webauthn"
+    ],
+    "homepage": "https://github.com/JulioOxalis/oxalis",
+    "support": {
+        "issues": "https://github.com/JulioOxalis/oxalis/issues",
+        "source": "https://github.com/JulioOxalis/oxalis"
+    },
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",

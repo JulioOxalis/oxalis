@@ -200,6 +200,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
   <nav id="doc-nav">
     <div class="nav-section">Introduction</div>
     <a class="nav-link" href="#what-is-oxalis">What is Oxalis?</a>
+    <a class="nav-link" href="#security-hardening">v1.9 hardening</a>
     <a class="nav-link" href="#requirements">Requirements</a>
 
     <div class="nav-section">Getting Started</div>
@@ -265,7 +266,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
       <span class="badge-pill badge-ox"><i class="bi bi-fingerprint me-1"></i>WebAuthn</span>
       <span class="badge-pill badge-green"><i class="bi bi-shield-check me-1"></i>Rate limited</span>
       <span class="badge-pill badge-gray">PHP 8.2+</span>
-      <span class="badge-pill badge-gray">Laravel</span>
+      <span class="badge-pill badge-gray">Laravel 12/13</span>
       <span class="badge-pill badge-gray"><i class="bi bi-database me-1"></i>DB safe</span>
     </div>
     <h1>Julio Oxalis</h1>
@@ -278,11 +279,25 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-fingerprint"></i></div><h4>Passkeys (FIDO2)</h4><p>Fingerprint, Face ID, hardware keys — no password needed. Powered by webauthn-framework v5.3.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-envelope-paper"></i></div><h4>Magic Link</h4><p>One-click sign-in link delivered by email. Expires in 15 min, single use.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-123"></i></div><h4>Email OTP</h4><p>6-digit code via email, bcrypt-hashed in DB, 5-attempt lockout per challenge.</p></div>
-      <div class="feature-card"><div class="feature-icon"><i class="bi bi-phone"></i></div><h4>TOTP (2FA)</h4><p>Google Authenticator, Authy, 1Password — enforced as second factor for every login method.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-phone"></i></div><h4>TOTP (2FA)</h4><p>Google Authenticator, Authy, 1Password — enforced as a second factor when enabled and configured for the user.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-lock"></i></div><h4>Password</h4><p>Classic email+password with bcrypt, DB-level lockout, and forgot-password flow.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-google"></i></div><h4>Social Login</h4><p>Google and GitHub OAuth via Laravel Socialite. Enable per provider in .env.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-lock"></i></div><h4>Step-up Auth</h4><p>Require TOTP or passkey verification before sensitive actions, with a 15-min grace window.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-lightning"></i></div><h4>Smart Dispatch</h4><p>One field. User types their email — Oxalis picks the fastest available method automatically.</p></div>
+    </div>
+  </section>
+
+  <!-- SECURITY HARDENING RELEASE -->
+  <section id="security-hardening">
+    <h2>v1.9.0 security hardening</h2>
+    <p>This release keeps Oxalis' original auth architecture. It does <strong>not</strong> replace Oxalis with Fortify. Instead, the existing Oxalis controllers, routes, views, Smart Dispatch, admin panel, and components were hardened in place.</p>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-diagram-3"></i></div><h4>One login pipeline</h4><p>Passkey login now finishes through <code>LoginHandler</code>, so TOTP, session regeneration, risk scoring, session limits, events, webhooks, and notifications run consistently.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-toggle-off"></i></div><h4>Method gates</h4><p><code>OXALIS_ENABLE_*</code> and <code>OXALIS_PASSKEY_ONLY</code> are enforced server-side with <code>oxalis.method</code>. Disabled methods return 404 even on direct POSTs.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-person-check"></i></div><h4>Registration policy</h4><p>Normal registration, Smart Dispatch auto-registration, and social auto-registration all share invite-only and domain allowlist checks.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-lock"></i></div><h4>Admin setup guarded</h4><p><code>OXALIS_ADMIN_GATE</code> is enforced. First admin setup requires either that Gate or <code>OXALIS_ADMIN_SETUP_TOKEN</code>.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-link-45deg"></i></div><h4>Hashed magic links</h4><p>New magic-link bearer tokens are stored as SHA-256 hashes. Old in-flight raw links are upgraded when used.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-window-sidebar"></i></div><h4>Docs/components</h4><p><code>&lt;x-oxalis-user-menu /&gt;</code> is registered exactly as documented and opens without Bootstrap JavaScript.</p></div>
     </div>
   </section>
 
@@ -291,7 +306,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
     <h2>Requirements</h2>
     <ul style="padding-left:1.25rem">
       <li>PHP 8.2 or higher</li>
-      <li>Laravel 11+</li>
+      <li>Laravel 12 or 13</li>
       <li>A relational database (MySQL, PostgreSQL, or SQLite) — <strong>even if your app's default is MongoDB</strong>, set <code>OXALIS_DB_CONNECTION</code> to a separate SQL connection</li>
       <li>Mail configured for OTP / magic-link / notifications</li>
     </ul>
@@ -314,7 +329,7 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
         <pre class="language-bash"><code>php artisan oxalis:install</code></pre></div>
         The wizard asks which auth methods to enable, whether to activate Smart Dispatch, social OAuth credentials, and where to redirect after login. It writes all needed <code>.env</code> variables and runs migrations automatically.
       </div></div>
-      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Done.</strong> Visit <code>/oxalis/login</code> — your login page is live. <code>/login</code> and <code>/register</code> now redirect there automatically.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Done.</strong> Visit <code>/oxalis/login</code> &mdash; your login page is live. By default <code>/login</code>, <code>/register</code>, <code>/logout</code>, and <code>/password/reset</code> redirect to Oxalis.</div></div>
     </div>
     <div class="alert-box alert-tip">
       <i class="bi bi-lightbulb-fill"></i>
@@ -422,7 +437,11 @@ OXALIS_SHOW_APP_NAME=true</code></pre></div>
         <tr><td><code>/oxalis/docs</code></td><td><code>/auth/docs</code></td></tr>
       </tbody>
     </table>
-    <p>The <code>/login</code> and <code>/register</code> redirects in <code>routes/web.php</code> also update automatically to point to the new prefix.</p>
+    <p>The Laravel auth URL redirects also update automatically to point to the new prefix.</p>
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div>Oxalis replaces Laravel's common auth URLs by default. If an app needs to keep its own <code>/login</code> or <code>/register</code>, set <code>OXALIS_REPLACE_LARAVEL_ROUTES=false</code>. The canonical Oxalis routes under your prefix remain available.</div>
+    </div>
     <div class="alert-box alert-tip">
       <i class="bi bi-lightbulb-fill"></i>
       <div>You can also change the post-login redirect: <code>OXALIS_HOME=/home</code> — defaults to <code>/dashboard</code>.</div>
@@ -441,7 +460,8 @@ OXALIS_ENABLE_MAGIC_LINK=true
 OXALIS_ENABLE_EMAIL_OTP=true
 OXALIS_ENABLE_TOTP=true
 OXALIS_ENABLE_PASSWORD=true
-OXALIS_SMART_DISPATCH=false</code></pre></div>
+OXALIS_SMART_DISPATCH=false
+OXALIS_REPLACE_LARAVEL_ROUTES=true</code></pre></div>
 
     <h3>Enable social login later</h3>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
@@ -495,6 +515,7 @@ GITHUB_REDIRECT_URI=https://myapp.com/oxalis/social/github/callback</code></pre>
     <pre class="language-bash"><code>composer update julio/oxalis
 php artisan migrate</code></pre></div>
     <p>Always run <code>php artisan migrate</code> after updating — new releases may include additional migrations.</p>
+    <p>The in-app documentation at <code>/oxalis/docs</code> is served from the package, so it updates with <code>composer update julio/oxalis</code>. If you published Oxalis views into your app, republish them to copy the latest docs and UI templates.</p>
     <div class="alert-box alert-tip">
       <i class="bi bi-lightbulb-fill"></i>
       <div>If you published views with <code>vendor:publish --tag=oxalis-views</code>, re-publish after a major update to get the latest UI: <code>php artisan vendor:publish --tag=oxalis-views --force</code></div>
@@ -537,6 +558,7 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_ORIGINS</div><div class="config-desc">Comma-separated allowed WebAuthn origins. e.g. <code>https://myapp.com,https://www.myapp.com</code></div><div class="config-default">APP_URL</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PREFIX</div><div class="config-desc">URL prefix for all Oxalis routes. Change to <code>auth</code> for <code>/auth/login</code> instead of <code>/oxalis/login</code>.</div><div class="config-default">oxalis</div></div>
     <div class="config-row"><div class="config-key">OXALIS_HOME</div><div class="config-desc">Where to redirect users after a successful login.</div><div class="config-default">/dashboard</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_REPLACE_LARAVEL_ROUTES</div><div class="config-desc">Redirect Laravel's common auth URLs to Oxalis. Set false if the host app owns <code>/login</code>, <code>/register</code>, <code>/logout</code>, or <code>/password/reset</code>.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_DB_CONNECTION</div><div class="config-desc">SQL DB connection for Oxalis tables. Leave blank to use app default.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_THEME</div><div class="config-desc">Auth UI theme: <code>indigo</code>, <code>neon</code>, <code>aurora</code>, <code>obsidian</code>, <code>ember</code>, <code>frost</code>, or <code>custom</code>.</div><div class="config-default">indigo</div></div>
     <div class="config-row"><div class="config-key">OXALIS_LAYOUT</div><div class="config-desc">Auth page layout: <code>card</code>, <code>split</code>, <code>bare</code>, <code>glass</code>, or <code>float</code>.</div><div class="config-default">card</div></div>
@@ -551,18 +573,21 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_URL</div><div class="config-desc">Full URL or public path to an image shown inside every auth card.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_POSITION</div><div class="config-desc">Auth-card image position: <code>top</code> or <code>bottom</code>.</div><div class="config-default">top</div></div>
     <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_HEIGHT</div><div class="config-desc">Auth-card image max height in pixels.</div><div class="config-default">140</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSKEY</div><div class="config-desc">Show the passkey sign-in button on the login page.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSKEY</div><div class="config-desc">Enable passkey routes and UI. Disabled methods are blocked server-side, not only hidden.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_PASSKEY_ONLY</div><div class="config-desc">Disable every non-passkey auth method server-side for passkey-only deployments.</div><div class="config-default">false</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY</div><div class="config-desc">Enable one-time recovery codes for users who lose all passkey devices.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_RECOVERY_CODES</div><div class="config-desc">How many passkey recovery codes to generate.</div><div class="config-default">8</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_AUTHENTICATOR_ATTACHMENT</div><div class="config-desc">Set to <code>platform</code> to prefer this device/password manager, or <code>cross-platform</code> for USB/NFC security keys.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_PASSKEY_HINTS</div><div class="config-desc">Browser UI preference order for passkey creation.</div><div class="config-default">client-device,hybrid,security-key</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_ENABLE_MAGIC_LINK</div><div class="config-desc">Show the magic-link send form.</div><div class="config-default">true</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_ENABLE_EMAIL_OTP</div><div class="config-desc">Show the one-time code send form.</div><div class="config-default">true</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_ENABLE_TOTP</div><div class="config-desc">Allow users to set up authenticator app 2FA.</div><div class="config-default">true</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSWORD</div><div class="config-desc">Show the password login link.</div><div class="config-default">true</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_ENABLE_SOCIAL</div><div class="config-desc">Enable social login (requires provider config below).</div><div class="config-default">false</div></div>
-    <div class="config-row"><div class="config-key">OXALIS_SMART_DISPATCH</div><div class="config-desc">Show the one-field "Smart sign-in" link on the login page.</div><div class="config-default">false</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_ENABLE_MAGIC_LINK</div><div class="config-desc">Enable magic-link routes and UI. Tokens are stored hashed at rest.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_ENABLE_EMAIL_OTP</div><div class="config-desc">Enable one-time email code routes and UI.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_ENABLE_TOTP</div><div class="config-desc">Enable authenticator app 2FA setup and login step-up routes.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_ENABLE_PASSWORD</div><div class="config-desc">Enable password login and reset routes.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_ENABLE_SOCIAL</div><div class="config-desc">Enable social OAuth routes (requires provider config below).</div><div class="config-default">false</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_SMART_DISPATCH</div><div class="config-desc">Enable the one-field Smart Dispatch route and UI.</div><div class="config-default">false</div></div>
     <div class="config-row"><div class="config-key">OXALIS_LOGIN_NOTIFICATION</div><div class="config-desc">Send an email to the user on every new sign-in.</div><div class="config-default">false</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_SECURITY_HEADERS</div><div class="config-desc">Add Oxalis security headers including frame, referrer, and Content-Security-Policy headers.</div><div class="config-default">true</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_CSP</div><div class="config-desc">Override the package Content-Security-Policy value when your app needs a custom policy.</div><div class="config-default">package default</div></div>
     <div class="config-row"><div class="config-key">OXALIS_LOCKOUT_ATTEMPTS</div><div class="config-desc">Failed attempts before IP lockout kicks in.</div><div class="config-default">5</div></div>
     <div class="config-row"><div class="config-key">OXALIS_LOCKOUT_MINUTES</div><div class="config-desc">Minutes the lockout lasts.</div><div class="config-default">15</div></div>
     <div class="config-row"><div class="config-key">OXALIS_GOOGLE_ENABLED</div><div class="config-desc">Enable Google OAuth.</div><div class="config-default">false</div></div>
@@ -642,7 +667,7 @@ MAIL_HOST=smtp.gmail.com</code></pre></div>
   <!-- TOTP -->
   <section id="totp">
     <h2>Authenticator App (TOTP)</h2>
-    <p>Users set up TOTP once at <code>/oxalis/totp/setup</code> by scanning a QR code with Google Authenticator, Authy, or 1Password. After setup, <strong>every login via any method</strong> automatically requires the TOTP code as a second factor — no configuration needed.</p>
+    <p>Users set up TOTP once at <code>/oxalis/totp/setup</code> by scanning a QR code with Google Authenticator, Authy, or 1Password. When <code>OXALIS_ENABLE_TOTP=true</code> and passkey-only mode is off, every login automatically requires the TOTP code as a second factor.</p>
     <h3>Setup flow</h3>
     <ol style="padding-left:1.25rem">
       <li>User navigates to <code>/oxalis/totp/setup</code> (must be logged in).</li>
@@ -650,7 +675,7 @@ MAIL_HOST=smtp.gmail.com</code></pre></div>
       <li>Confirms by entering the first 6-digit code.</li>
       <li>Shown 8 one-time recovery codes to save.</li>
     </ol>
-    <p>From now on, after any successful auth method, <code>LoginHandler</code> checks TOTP and redirects to the TOTP verify page if enabled.</p>
+    <p>From now on, after any successful auth method, <code>LoginHandler</code> checks TOTP and redirects to the TOTP verify page only when the method is enabled and the user has a confirmed TOTP secret.</p>
     <h3>Recovery codes</h3>
     <p>8 random codes generated at TOTP setup. Each is bcrypt-hashed and consumed on use. Users can regenerate them at <code>/oxalis/account</code>.</p>
     <h3>Remember this device</h3>
@@ -669,7 +694,7 @@ OXALIS_TOTP_TRUST_DAYS=30    # how long the device is trusted</code></pre></div>
   <!-- SOCIAL -->
   <section id="social">
     <h2>Social Login</h2>
-    <p>Google and GitHub OAuth via Laravel Socialite. A new user who signs in with OAuth gets an account created automatically. Existing users are matched by email.</p>
+    <p>Google and GitHub OAuth via Laravel Socialite. A new user who signs in with OAuth gets an account created automatically only when the shared registration policy allows it. Existing users are matched by email.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_ENABLE_SOCIAL=true
 OXALIS_GOOGLE_ENABLED=true
@@ -681,7 +706,7 @@ GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback</code></pre>
   <!-- SMART DISPATCH -->
   <section id="smart-dispatch">
     <h2>Smart Dispatch (One-Field Auth)</h2>
-    <p>User visits <code>/oxalis/start</code> and types their email. Oxalis decides the best available sign-in method: if they have a passkey → passkey; if TOTP is enabled → TOTP; otherwise magic link or OTP. Enable with:</p>
+    <p>User visits <code>/oxalis/start</code> and types their email. Oxalis decides the best available enabled sign-in method: passkey first when available, then password, magic link, or OTP. Smart Dispatch also respects passkey-only mode, invite-only mode, and the email domain allowlist.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_SMART_DISPATCH=true</code></pre></div>
   </section>
@@ -689,7 +714,7 @@ GOOGLE_REDIRECT_URI=https://myapp.com/oxalis/social/google/callback</code></pre>
   <!-- REGISTRATION FLOW -->
   <section id="reg-flow">
     <h2>Registration flow</h2>
-    <p>Oxalis uses a 3-step verified registration by default. Every step is conditional on your config.</p>
+    <p>Oxalis uses a 3-step verified registration by default. Every step is conditional on your config, and the same registration policy is reused by Smart Dispatch and social auto-registration.</p>
     <table>
       <thead><tr><th>Step</th><th>What happens</th><th>Config flag</th></tr></thead>
       <tbody>
@@ -735,7 +760,7 @@ OXALIS_ENABLE_EMAIL_OTP=true    # fallback: 6-digit code</code></pre></div>
     <p>When set, the registration form shows a notice: <em>"Registration is restricted to: mycompany.com, partner.org"</em>. Attempting to register with any other domain returns a validation error. Leave the value empty (default) to allow any domain.</p>
     <div class="alert-box alert-info">
       <i class="bi bi-info-circle-fill"></i>
-      <div>The allowlist is also enforced for social login — a Google account with a non-allowed domain cannot register through OAuth either.</div>
+      <div>The allowlist is also enforced for Smart Dispatch and social login — a non-allowed domain cannot auto-register through those paths either.</div>
     </div>
   </section>
 
@@ -746,7 +771,7 @@ OXALIS_ENABLE_EMAIL_OTP=true    # fallback: 6-digit code</code></pre></div>
     <h3>Enable invite-only mode</h3>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_INVITE_ONLY=true</code></pre></div>
-    <p>Once enabled, the registration form shows an <strong>Invite code</strong> field. Without a valid code, registration is blocked.</p>
+    <p>Once enabled, the registration form shows an <strong>Invite code</strong> field. Without a valid code, registration is blocked for normal registration, Smart Dispatch auto-registration, and social auto-registration.</p>
     <h3>Generate invite codes</h3>
     <p>Go to <code>/oxalis/admin/invites</code> in the admin panel. For each code you can set:</p>
     <ul style="padding-left:1.25rem">
@@ -861,7 +886,7 @@ if (!hash_equals($expected, $signature)) {
       <div class="feature-card">
         <div class="feature-icon"><i class="bi bi-shield-fill-check"></i></div>
         <h4>Healthcare / compliance</h4>
-        <p>Passkey-only (no password). TOTP enforced. Login notifications on every sign-in. Session revocation available so admins can force sign-out.</p>
+        <p>Passkey-only (no password). Optional TOTP step-up for users who have configured it. Login notifications on every sign-in. Session revocation available so admins can force sign-out.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><i class="bi bi-terminal"></i></div>
@@ -905,7 +930,7 @@ if (!hash_equals($expected, $signature)) {
         <tr><td>GET /oxalis/account/email</td><td><code>oxalis.account.email.show</code></td><td>Change email <span style="color:var(--ox)">(user)</span></td></tr>
         <tr><td>POST /oxalis/account/delete</td><td><code>oxalis.account.delete</code></td><td>Delete account <span style="color:var(--ox)">(user)</span></td></tr>
         <tr><td>POST /oxalis/passkeys/login/autofill-begin</td><td><code>oxalis.passkeys.login.autofill</code></td><td>Conditional passkey begin</td></tr>
-        <tr style="border-top:2px solid var(--border)"><td colspan="3" style="color:#ef4444;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding-top:.75rem">Admin-only — requires <code>OXALIS_ADMIN=true</code> + admin password</td></tr>
+        <tr style="border-top:2px solid var(--border)"><td colspan="3" style="color:#ef4444;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding-top:.75rem">Admin-only — requires <code>OXALIS_ADMIN=true</code>, guarded first setup, and admin password</td></tr>
         <tr><td>GET /oxalis/admin</td><td><code>oxalis.admin</code></td><td>Dashboard — users, events, lockouts <span style="color:#ef4444">(admin)</span></td></tr>
         <tr><td>GET /oxalis/admin/setup</td><td><code>oxalis.admin.setup</code></td><td>First-time admin setup</td></tr>
         <tr><td>GET /oxalis/admin/login</td><td><code>oxalis.admin.login</code></td><td>Admin sign in</td></tr>
@@ -914,8 +939,10 @@ if (!hash_equals($expected, $signature)) {
         <tr><td>GET /oxalis/admin/change-password</td><td><code>oxalis.admin.password</code></td><td>Change admin password <span style="color:#ef4444">(admin)</span></td></tr>
         <tr><td>GET /oxalis/stats</td><td><code>oxalis.stats</code></td><td>Auth analytics <span style="color:#ef4444">(admin)</span></td></tr>
         <tr><td>GET /oxalis/docs</td><td><code>oxalis.docs</code></td><td>This page — public</td></tr>
-        <tr><td>GET /login</td><td><code>login</code></td><td>Redirects → /oxalis/login</td></tr>
-        <tr><td>GET /register</td><td>—</td><td>Redirects → /oxalis/register</td></tr>
+        <tr><td>GET /login</td><td><code>login</code></td><td>Redirects → /oxalis/login when route replacement is enabled</td></tr>
+        <tr><td>GET /register</td><td>—</td><td>Redirects → /oxalis/register when route replacement is enabled</td></tr>
+        <tr><td>POST /logout</td><td>—</td><td>Redirects → /oxalis/logout when route replacement is enabled</td></tr>
+        <tr><td>GET /password/reset</td><td>—</td><td>Redirects → /oxalis/forgot-password when route replacement is enabled</td></tr>
       </tbody>
     </table>
   </section>
@@ -930,7 +957,7 @@ if (!hash_equals($expected, $signature)) {
 &#64;auth
   &lt;x-oxalis-user-menu /&gt;
 &#64;endauth</code></pre></div>
-    <p style="margin-top:.75rem">Requires Bootstrap 5.3 JS in the layout — uses standard <code>data-bs-toggle="dropdown"</code>.</p>
+    <p style="margin-top:.75rem">No Bootstrap JavaScript is required. The documented <code>&lt;x-oxalis-user-menu /&gt;</code> alias and the namespaced <code>&lt;x-oxalis::user-menu /&gt;</code> form both render the same package component.</p>
     <h3>Account settings page</h3>
     <p>Link users here — shows only the auth methods the developer enabled in config.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
@@ -985,7 +1012,7 @@ class EventServiceProvider
     <h2>Security Features</h2>
     <div class="feature-grid">
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-fill-check"></i></div><h4>IP Rate Limiting</h4><p>All POST auth endpoints rate-limited per IP via a DB-backed <code>Lockout</code> model — works with MongoDB, no cache needed.</p></div>
-      <div class="feature-card"><div class="feature-icon"><i class="bi bi-lock-fill"></i></div><h4>TOTP 2FA Enforcement</h4><p>Once enabled, <em>every</em> login method requires the TOTP step. No bypass possible.</p></div>
+      <div class="feature-card"><div class="feature-icon"><i class="bi bi-lock-fill"></i></div><h4>TOTP 2FA Enforcement</h4><p>When TOTP is enabled and a user has confirmed a secret, every login method goes through the same second-factor step.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-fingerprint"></i></div><h4>Passkey Sessions</h4><p>After passkey login, the credential ID is stamped on the session for audit by <code>ValidatePasskeySession</code>.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-key-fill"></i></div><h4>Recovery Codes</h4><p>TOTP and passkey recovery codes are one-time use, bcrypt/password-hashed, and regeneratable from account settings.</p></div>
       <div class="feature-card"><div class="feature-icon"><i class="bi bi-bell-fill"></i></div><h4>Login Notifications</h4><p>Optional email on every new sign-in, showing method, IP, and device. Opt-in via <code>OXALIS_LOGIN_NOTIFICATION=true</code>.</p></div>
@@ -1055,10 +1082,11 @@ php artisan oxalis:user delete       # delete user + all their Oxalis data</code
     <p>The admin panel is disabled by default. Enable it with:</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_ADMIN=true
-OXALIS_ADMIN_GATE=admin    # optional — ties to a Laravel Gate for extra protection</code></pre></div>
+OXALIS_ADMIN_GATE=admin              # preferred: ties first setup/admin access to a Laravel Gate
+OXALIS_ADMIN_SETUP_TOKEN=change-me   # alternative first-setup token if no Gate exists yet</code></pre></div>
 
     <h3>First visit — setup wizard</h3>
-    <p>The first time anyone visits <code>/oxalis/admin</code>, they are redirected to a one-time setup page at <code>/oxalis/admin/setup</code>:</p>
+    <p>The first time an authorized operator visits <code>/oxalis/admin</code>, they are redirected to a one-time setup page. First setup now requires either a passing <code>OXALIS_ADMIN_GATE</code> check or a setup URL such as <code>/oxalis/admin/setup?setup_token=change-me</code>:</p>
     <ol style="padding-left:1.25rem">
       <li>Set an admin password — the form enforces 12+ chars, uppercase, number, and symbol via a live strength meter. The submit button stays disabled until all requirements pass.</li>
       <li>Optionally enable TOTP — scan a QR code with Google Authenticator or Authy, confirm with the first 6-digit code. Adds a second factor to every future admin login.</li>

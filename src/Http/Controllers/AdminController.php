@@ -35,20 +35,26 @@ class AdminController extends Controller
         )->map(fn($id) => (string) $id)->toArray();
 
         // Cached aggregate stats — 5-minute TTL, safe for large datasets
-        $passkeyCounts = Cache::remember('oxalis_admin_passkeys_' . md5(implode(',', $uids)), 300,
+        $passkeyCounts = $this->rememberArray('oxalis_admin_passkeys_' . md5(implode(',', $uids)), 300,
             fn() => Passkey::whereIn('user_id', $uids)->get(['user_id'])
-                ->groupBy('user_id')->map(fn($g) => $g->count())
+                ->groupBy('user_id')->map(fn($g) => $g->count())->all()
         );
 
-        $totpEnabled = Cache::remember('oxalis_admin_totp_' . md5(implode(',', $uids)), 300,
+        $totpEnabled = $this->rememberArray('oxalis_admin_totp_' . md5(implode(',', $uids)), 300,
             fn() => TotpSecret::whereIn('user_id', $uids)->whereNotNull('confirmed_at')
-                ->get(['user_id'])->pluck('user_id')->map(fn($id) => (string) $id)->flip()
+                ->get(['user_id'])->pluck('user_id')->map(fn($id) => (string) $id)->flip()->all()
         );
 
-        $lastLogin = Cache::remember('oxalis_admin_last_' . md5(implode(',', $uids)), 300,
+        $lastLogin = $this->rememberArray('oxalis_admin_last_' . md5(implode(',', $uids)), 300,
             fn() => AuthEvent::whereIn('user_id', $uids)->where('status', 'success')
                 ->get(['user_id', 'created_at'])
-                ->groupBy('user_id')->map(fn($g) => $g->max('created_at'))
+                ->groupBy('user_id')->map(function ($g) {
+                    $value = $g->max('created_at');
+
+                    return $value instanceof \DateTimeInterface
+                        ? $value->format('Y-m-d H:i:s')
+                        : ($value ? (string) $value : null);
+                })->all()
         );
 
         // Apply filter after fetching (keeps pagination correct for search)
@@ -61,7 +67,7 @@ class AdminController extends Controller
         }
 
         // Global stats (cached for 60 seconds)
-        [$totalLogins, $totalFailed, $lockedNow, $totalUsers, $totalPasskeys] = Cache::remember('oxalis_admin_global', 60, function () use ($userModel) {
+        $globalStats = $this->rememberArray('oxalis_admin_global', 60, function () use ($userModel) {
             try {
                 return [
                     AuthEvent::where('status', 'success')->count(),
@@ -74,6 +80,7 @@ class AdminController extends Controller
                 return [0, 0, 0, 0, 0];
             }
         });
+        [$totalLogins, $totalFailed, $lockedNow, $totalUsers, $totalPasskeys] = array_pad($globalStats, 5, 0);
 
         $cred           = AdminCredential::first();
         $recentEvents   = AuthEvent::latest()->take(10)->get();
@@ -85,6 +92,50 @@ class AdminController extends Controller
             'totalLogins', 'totalFailed', 'lockedNow', 'totalUsers', 'totalPasskeys',
             'search', 'filter', 'cred',
         ));
+    }
+
+    private function rememberArray(string $key, int $seconds, callable $resolver): array
+    {
+        try {
+            $cached = Cache::get($key);
+
+            if (is_array($cached)) {
+                return $cached;
+            }
+
+            if ($cached instanceof \Illuminate\Support\Collection) {
+                $array = $cached->all();
+                Cache::put($key, $array, $seconds);
+
+                return $array;
+            }
+
+            if ($cached !== null) {
+                Cache::forget($key);
+            }
+        } catch (\Throwable) {
+            try {
+                Cache::forget($key);
+            } catch (\Throwable) {
+            }
+        }
+
+        $value = $resolver();
+
+        if ($value instanceof \Illuminate\Support\Collection) {
+            $value = $value->all();
+        }
+
+        if (! is_array($value)) {
+            $value = [];
+        }
+
+        try {
+            Cache::put($key, $value, $seconds);
+        } catch (\Throwable) {
+        }
+
+        return $value;
     }
 
     public function events(Request $request)

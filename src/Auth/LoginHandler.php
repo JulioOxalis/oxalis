@@ -30,9 +30,11 @@ class LoginHandler
         bool            $remember = false,
     ): RedirectResponse {
         // If the user has TOTP enabled, hold the session in pending state
-        $hasTotpEnabled = TotpSecret::where('user_id', $user->getAuthIdentifier())
-            ->whereNotNull('confirmed_at')
-            ->exists();
+        $hasTotpEnabled = ! config('oxalis.passkey_only', false)
+            && config('oxalis.methods.totp', true)
+            && TotpSecret::where('user_id', $user->getAuthIdentifier())
+                ->whereNotNull('confirmed_at')
+                ->exists();
 
         if ($hasTotpEnabled) {
             // Check if this device was trusted after a previous TOTP verification

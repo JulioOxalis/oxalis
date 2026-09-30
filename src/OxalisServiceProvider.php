@@ -32,6 +32,7 @@ use Oxalis\MagicLink\MagicLinkService;
 use Oxalis\Passkeys\PasskeyRecoveryService;
 use Oxalis\StepUp\StepUpService;
 use Oxalis\Totp\TotpService;
+use Oxalis\View\Components\UserMenu;
 use Oxalis\WebAuthn\WebAuthnService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
@@ -102,12 +103,15 @@ class OxalisServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         Blade::componentNamespace('Oxalis\\View\\Components', 'oxalis');
+        Blade::component(UserMenu::class, 'oxalis-user-menu');
 
         // @oxalisAdmin / @endOxalisAdmin — renders content only when admin is authenticated
         Blade::if('oxalisAdmin', fn() => session('oxalis_admin_authenticated') === true);
+        Blade::directive('endOxalisAdmin', fn() => '<?php endif; ?>');
 
         // @oxalisUser — renders content only when a regular user is logged in
         Blade::if('oxalisUser', fn() => \Illuminate\Support\Facades\Auth::check());
+        Blade::directive('endOxalisUser', fn() => '<?php endif; ?>');
 
         foreach (['google', 'github'] as $provider) {
             $cfg = config("oxalis.social.{$provider}");

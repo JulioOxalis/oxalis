@@ -609,6 +609,21 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 
 ## Changelog
 
+### v1.9.0
+- Security hardening: passkey login now goes through Oxalis `LoginHandler`, so TOTP, session regeneration, risk scoring, session limits, events, webhooks, and login notifications apply consistently.
+- Security hardening: disabled auth methods are enforced server-side with `oxalis.method`; `OXALIS_PASSKEY_ONLY=true` now blocks non-passkey endpoints instead of only hiding UI.
+- Registration policy: normal registration, Smart Dispatch auto-registration, and social auto-registration now share the same domain allowlist and invite-only checks.
+- Admin hardening: `OXALIS_ADMIN_GATE` is enforced, and first admin setup now requires either that Gate or `OXALIS_ADMIN_SETUP_TOKEN`.
+- Step-up hardening: protected routes no longer auto-pass when the user has no enrolled TOTP/passkey factor.
+- Token storage: new magic-link bearer tokens are stored as SHA-256 hashes; old in-flight raw links are upgraded on use.
+- OTP: the configured final OTP attempt can now succeed when the code is correct.
+- Headers: Oxalis security middleware now emits Content-Security-Policy and supports `OXALIS_CSP` overrides.
+- Mongo/UUID compatibility: added migration to convert remaining Oxalis auth `user_id` columns to strings.
+- Routes: Oxalis still replaces Laravel auth URLs by default, and apps can disable that with `OXALIS_REPLACE_LARAVEL_ROUTES=false`.
+- Components: the documented `<x-oxalis-user-menu />` alias is registered and works without Bootstrap JavaScript.
+- Admin dashboard: cached filter aggregates now store arrays and recover from stale serialized cache objects after dependency updates.
+- CI: GitHub Actions added for Laravel 12/13 package release checks.
+
 ### v1.8.9
 - Composer: allow installation on Laravel 13 while keeping Laravel 12 support.
 - Dev tooling: allow the matching Orchestra Testbench generation for Laravel 13.

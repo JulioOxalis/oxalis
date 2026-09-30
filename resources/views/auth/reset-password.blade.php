@@ -1,19 +1,10 @@
-@extends('oxalis::layouts.oxalis')
-@section('title','Set new password')
-@section('content')
-<h5 class="fw-bold text-center mb-4">Set a new password</h5>
-<form action="{{ route('oxalis.password.reset') }}" method="POST">
-  @csrf
-  <input type="hidden" name="token" value="{{ $token }}">
-  <div class="form-floating mb-3">
-    <input type="password" name="password" class="form-control rounded-3 @error('password') is-invalid @enderror" placeholder="p" autofocus minlength="8">
-    <label>New password <span class="text-secondary fw-normal">(min 8)</span></label>
-    @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-  </div>
-  <div class="form-floating mb-4">
-    <input type="password" name="password_confirmation" class="form-control rounded-3" placeholder="c">
-    <label>Confirm new password</label>
-  </div>
-  <button class="btn btn-ox w-100">Set new password</button>
-</form>
-@endsection
+<x-auth.layout title="Choose a new password">
+    <form method="POST" action="{{ route('password.update') }}">
+        @csrf
+        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+        <x-auth.field name="email" label="Email address" type="email" autocomplete="email" :value="$request->email" />
+        <x-auth.field name="password" label="New password" type="password" autocomplete="new-password" autofocus />
+        <x-auth.field name="password_confirmation" label="Confirm new password" type="password" autocomplete="new-password" />
+        <button class="btn btn-primary btn-lg w-100" type="submit">Reset password</button>
+    </form>
+</x-auth.layout>

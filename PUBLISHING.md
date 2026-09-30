@@ -92,12 +92,12 @@ Now every `git push` + `git tag` automatically updates Packagist.
 ```bash
 # Make your changes, commit them
 git add .
-git commit -m "fix: enforce TOTP on all login paths"
+git commit -m "fix: harden oxalis package boundary"
 
 # Tag the new version
-git tag v1.8.1
+git tag v1.0.1
 git push origin main
-git push origin v1.8.1
+git push origin v1.0.1
 ```
 
 Packagist updates within seconds. Users who run `composer update julio/oxalis` get the new version.
@@ -119,11 +119,15 @@ Follow [Semantic Versioning](https://semver.org):
 ## After publishing — what users do
 
 ```bash
-composer require julio/oxalis:^1.8
-php artisan oxalis:install
+composer require julio/oxalis
+php artisan vendor:publish --tag=oxalis-config
+php artisan vendor:publish --tag=oxalis-migrations
+php artisan vendor:publish --tag=oxalis-assets
+php artisan vendor:publish --tag=oxalis-views
+php artisan migrate
 ```
 
-That's it. The interactive wizard handles everything else.
+Then configure Fortify, Laravel Passkeys, and the app-owned views to use the published Oxalis config and components. Oxalis v2 intentionally does not provide a parallel route stack or an install wizard.
 
 ---
 
@@ -144,7 +148,7 @@ In your project, the path repository still works:
 When you're ready to use the published Packagist version instead, remove that block and run:
 
 ```bash
-composer require julio/oxalis:^1.8
+composer require julio/oxalis:^1.0
 ```
 
 ---

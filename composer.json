@@ -1,59 +1,23 @@
 {
     "name": "julio/oxalis",
-    "description": "Passkey-first authentication package for Laravel 12 and 13",
+    "description": "A configurable Laravel Fortify and passkey integration layer",
     "type": "library",
     "license": "MIT",
-    "keywords": [
-        "authentication",
-        "laravel",
-        "passkeys",
-        "totp",
-        "webauthn"
-    ],
-    "homepage": "https://github.com/JulioOxalis/oxalis",
-    "support": {
-        "issues": "https://github.com/JulioOxalis/oxalis/issues",
-        "source": "https://github.com/JulioOxalis/oxalis"
-    },
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^12.0 || ^13.0",
-        "web-auth/webauthn-framework": "^5.2",
-        "pragmarx/google2fa": "^8.0",
-        "laravel/socialite": "^5.0"
-    },
-    "require-dev": {
-        "orchestra/testbench": "^10.0 || ^11.0",
-        "pestphp/pest": "^3.0"
+        "laravel/framework": "^12.0|^13.0",
+        "laravel/fortify": "^1.40",
+        "laravel/passkeys": "^0.2.1"
     },
     "autoload": {
         "psr-4": {
             "Oxalis\\": "src/"
         }
     },
-    "autoload-dev": {
-        "psr-4": {
-            "Oxalis\\Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "post-autoload-dump": [
-            "@php -r \"if (PHP_SAPI === 'cli' && !getenv('COMPOSER_NO_OXALIS_HINT')) { fwrite(STDERR, PHP_EOL.'  julio/oxalis: run php artisan oxalis:install && php artisan migrate before using passkeys.'.PHP_EOL.PHP_EOL); }\""
-        ],
-        "test": "pest"
-    },
     "extra": {
         "laravel": {
-            "providers": ["Oxalis\\OxalisServiceProvider"],
-            "aliases": {
-                "Oxalis": "Oxalis\\Facades\\Oxalis"
-            }
+            "providers": ["Oxalis\\OxalisServiceProvider"]
         }
     },
-    "minimum-stability": "stable",
-    "config": {
-        "allow-plugins": {
-            "pestphp/pest-plugin": true
-        }
-    }
+    "minimum-stability": "stable"
 }

@@ -49,6 +49,14 @@ php artisan migrate
 
 The interactive wizard configures everything — auth methods, social credentials, redirects, and runs migrations automatically.
 
+Oxalis keeps its own auth pages and controllers under the configured prefix, e.g. `/oxalis/login`, `/oxalis/register`, `/oxalis/passkeys/*`. The installer also rewires Laravel's common auth URLs (`/login`, `/register`, `/logout`, `/password/reset`) to Oxalis so apps can replace Breeze/Laravel UI auth without changing every link.
+
+If an application must keep its own Laravel auth routes, set:
+
+```env
+OXALIS_REPLACE_LARAVEL_ROUTES=false
+```
+
 By default, Oxalis uses package Blade views so future theme/layout/branding fixes arrive with `composer update`. Use `php artisan oxalis:install --publish-views` only when you need to deeply customize the templates in `resources/views/vendor/oxalis`.
 
 > **Passkeys:** After install, users must **register** and then **enroll a passkey** at `/oxalis/passkeys/enroll` before passkey login works. Diagnose configuration at `/oxalis/health/passkeys` (JSON).
@@ -67,6 +75,7 @@ OXALIS_ENABLE_EMAIL_OTP=true
 OXALIS_ENABLE_TOTP=true
 OXALIS_ENABLE_PASSWORD=true
 OXALIS_SMART_DISPATCH=false
+OXALIS_REPLACE_LARAVEL_ROUTES=true
 ```
 
 **Enable social login later:**
@@ -341,10 +350,11 @@ php artisan oxalis:prune-logs              # delete auth events older than OXALI
 Enable with:
 ```env
 OXALIS_ADMIN=true
+OXALIS_ADMIN_SETUP_TOKEN=secret  # alternative for first setup if no Gate is configured
 OXALIS_ADMIN_GATE=admin   # optional — ties to a Laravel Gate
 ```
 
-First visit at `/oxalis/admin` runs a one-time setup wizard to create admin credentials and optionally enable TOTP for the admin login. The panel provides:
+First setup is intentionally protected. Either define `OXALIS_ADMIN_GATE` and allow the intended admin user through that Gate, or set `OXALIS_ADMIN_SETUP_TOKEN` and visit `/oxalis/admin/setup?setup_token=secret`. The setup wizard creates admin credentials and can enable TOTP for the admin login. The panel provides:
 
 - User table with search and filters
 - Auth event log
@@ -370,6 +380,8 @@ OXALIS_INVITE_ONLY=true
 ```
 Generate codes in the admin panel at `/oxalis/admin/invites`. Each code has a configurable max-use count and optional expiry.
 
+Domain allowlists and invite-only mode are enforced by the shared Oxalis registration policy. Normal registration, Smart Dispatch auto-registration, and social-login auto-registration all use the same checks.
+
 ---
 
 ## Security & privacy
@@ -377,6 +389,7 @@ Generate codes in the admin panel at `/oxalis/admin/invites`. Each code has a co
 ### Security headers
 ```env
 OXALIS_SECURITY_HEADERS=true   # X-Frame-Options, CSP, Referrer-Policy, etc.
+OXALIS_CSP=                   # optional custom Content-Security-Policy
 ```
 
 ### IP privacy
@@ -420,6 +433,8 @@ OXALIS_PASSKEY_ONLY=true          # disable all other auth methods
 OXALIS_PASSKEY_NUDGE_MAX=3        # max dismissals of "upgrade to passkey" prompt (0 = never show)
 OXALIS_REQUIRE_ATTESTATION=true   # enterprise: reject 'none' attestation
 ```
+
+`OXALIS_PASSKEY_ONLY=true` is enforced server-side. Password, OTP, magic-link, TOTP-login, social, QR, and ultrasonic login endpoints return 404 when passkey-only mode is active.
 
 ---
 
@@ -513,6 +528,7 @@ php artisan vendor:publish --tag=oxalis-config
 |---|---|---|
 | `OXALIS_PREFIX` | `oxalis` | URL prefix — change to `auth` for `/auth/login` |
 | `OXALIS_HOME` | `/dashboard` | Redirect after successful login |
+| `OXALIS_REPLACE_LARAVEL_ROUTES` | `true` | Redirect `/login`, `/register`, `/logout`, `/password/reset` to Oxalis |
 | `OXALIS_RP_ID` | APP_URL host | WebAuthn Relying Party ID |
 | `OXALIS_ORIGINS` | APP_URL | Allowed WebAuthn origins (comma-separated) |
 | `OXALIS_DB_CONNECTION` | app default | SQL connection for Oxalis tables |
@@ -527,6 +543,7 @@ php artisan vendor:publish --tag=oxalis-config
 | `OXALIS_TOTP_TRUST_DAYS` | `30` | Days a trusted device skips TOTP |
 | `OXALIS_MAX_SESSIONS` | `0` | Max concurrent sessions (0 = unlimited) |
 | `OXALIS_SECURITY_HEADERS` | `true` | Add security headers to all responses |
+| `OXALIS_CSP` | package default | Override Oxalis Content-Security-Policy |
 | `OXALIS_REQUIRE_ATTESTATION` | `false` | Require attestation for passkey registration |
 | `OXALIS_BREACH_CHECK` | `false` | Check passwords against HaveIBeenPwned |
 
@@ -552,6 +569,7 @@ For most public apps, leave `OXALIS_REQUIRE_ATTESTATION=false`. If browsers show
 |---|---|---|
 | `OXALIS_ADMIN` | `false` | Enable the admin panel |
 | `OXALIS_ADMIN_GATE` | _(none)_ | Laravel Gate to additionally protect admin |
+| `OXALIS_ADMIN_SETUP_TOKEN` | _(none)_ | One-time first-setup token when no admin Gate is configured |
 | `OXALIS_ALLOWED_DOMAINS` | _(any)_ | Comma-separated allowed registration domains |
 | `OXALIS_INVITE_ONLY` | `false` | Require invite code to register |
 | `OXALIS_WEBHOOKS` | `false` | Enable webhook delivery |

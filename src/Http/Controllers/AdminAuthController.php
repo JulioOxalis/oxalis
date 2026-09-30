@@ -17,6 +17,7 @@ class AdminAuthController extends Controller
     private const SESSION_KEY      = 'oxalis_admin_authenticated';
     private const SESSION_AT       = 'oxalis_admin_at';
     private const SESSION_VERSION  = 'oxalis_admin_version';
+    private const SETUP_AUTHORIZED = 'oxalis_admin_setup_authorized';
 
     // ── First-time setup ──────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ class AdminAuthController extends Controller
             $totpConfirmed = now();
         }
 
-        session()->forget('oxalis_admin_setup_secret');
+        session()->forget(['oxalis_admin_setup_secret', self::SETUP_AUTHORIZED]);
 
         AdminCredential::create([
             'password_hash'     => Hash::make($request->password),
@@ -148,6 +149,8 @@ class AdminAuthController extends Controller
 
         $cred->recordLogin($request->ip());
 
+        $request->session()->regenerate();
+
         session([
             self::SESSION_KEY     => true,
             self::SESSION_AT      => now()->timestamp,
@@ -160,6 +163,8 @@ class AdminAuthController extends Controller
     public function logout(Request $request)
     {
         session()->forget([self::SESSION_KEY, self::SESSION_AT, self::SESSION_VERSION]);
+        $request->session()->regenerateToken();
+
         return redirect()->route('oxalis.admin.login')
             ->with('admin_success', 'Signed out successfully.');
     }

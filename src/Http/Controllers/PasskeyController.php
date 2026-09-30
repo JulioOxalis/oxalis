@@ -1,9 +1,9 @@
 <?php
 namespace Oxalis\Http\Controllers;
 
+use Oxalis\Auth\LoginHandler;
 use Oxalis\Events\PasskeyRegistered;
 use Oxalis\Facades\Oxalis;
-use Oxalis\Models\AuthEvent;
 use Oxalis\Models\Passkey;
 use Oxalis\Passkeys\PasskeyRecoveryService;
 use Illuminate\Http\Request;
@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Auth;
 
 class PasskeyController extends Controller
 {
-    public function __construct(private PasskeyRecoveryService $passkeyRecovery) {}
+    public function __construct(
+        private PasskeyRecoveryService $passkeyRecovery,
+        private readonly LoginHandler $login,
+    ) {}
 
     // ── Guest: begin authentication ──────────────────────────────────────────
 
@@ -80,20 +83,17 @@ class PasskeyController extends Controller
         } catch (\Throwable) {
         }
 
-        Auth::login($user, true);
-
         session(['oxalis_session_credential_id' => $passkey->credential_id]);
 
-        AuthEvent::create([
-            'user_id'    => (string) $user->getAuthIdentifier(),
-            'event'      => 'login',
-            'method'     => 'passkey',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'status'     => 'success',
-        ]);
+        $response = $this->login->attempt(
+            user:      $user,
+            method:    'passkey',
+            ip:        $request->ip(),
+            userAgent: $request->userAgent() ?? '',
+            remember:  true,
+        );
 
-        return response()->json(['redirect' => config('oxalis.routes.home', '/dashboard')]);
+        return response()->json(['redirect' => $response->getTargetUrl()]);
     }
 
     public function beginAutofill()

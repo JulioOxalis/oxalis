@@ -8,6 +8,7 @@ use Oxalis\WebAuthn\WebAuthnService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class StepUpController extends Controller
 {
@@ -20,13 +21,17 @@ class StepUpController extends Controller
     public function prompt()
     {
         $user        = Auth::user();
-        $hasTotp     = $this->totp->isEnabled($user);
-        $hasPasskey  = $this->webAuthn->hasPasskeys($user);
+        $hasTotp     = config('oxalis.methods.totp', true) && $this->totp->isEnabled($user);
+        $hasPasskey  = config('oxalis.methods.passkey', true) && $this->webAuthn->hasPasskeys($user);
 
         if (! $hasTotp && ! $hasPasskey) {
-            $this->stepUp->markVerified();
+            $target = Route::has('oxalis.account.security')
+                ? route('oxalis.account.security')
+                : config('oxalis.routes.home', '/dashboard');
 
-            return redirect($this->stepUp->intendedUrl(config('oxalis.routes.home', '/dashboard')));
+            return redirect($target)->withErrors([
+                'step_up' => 'Set up TOTP or a passkey before accessing this protected area.',
+            ]);
         }
 
         $passkeyOptions = $hasPasskey ? $this->webAuthn->beginAuthentication($user) : null;

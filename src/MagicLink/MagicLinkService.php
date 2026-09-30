@@ -20,7 +20,7 @@ class MagicLinkService
 
         MagicLink::create([
             'user_id'    => $user->getAuthIdentifier(),
-            'token'      => $token,
+            'token'      => hash('sha256', $token),
             'expires_at' => now()->addMinutes(config('oxalis.magic_link.expires_in', 15)),
             'ip_address' => $ip,
         ]);
@@ -37,7 +37,17 @@ class MagicLinkService
 
     public function verify(string $token): ?Authenticatable
     {
-        $link = MagicLink::where('token', $token)->first();
+        $hashed = hash('sha256', $token);
+        $link = MagicLink::where('token', $hashed)->first();
+
+        // Backwards compatibility for links created before Oxalis hashed tokens.
+        // When one is used, upgrade the row before marking it consumed.
+        if (! $link) {
+            $link = MagicLink::where('token', $token)->first();
+            if ($link) {
+                $link->update(['token' => $hashed]);
+            }
+        }
 
         if (!$link || !$link->isValid()) {
             return null;

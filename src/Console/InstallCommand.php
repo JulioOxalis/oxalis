@@ -170,7 +170,8 @@ class InstallCommand extends Command
         $this->line('  2. Enroll a passkey at '.url("{$p}/passkeys/enroll").' (required before passkey login works)');
         $this->line('  3. Diagnose config: '.url("{$p}/health/passkeys"));
         $this->newLine();
-        $this->line('  <fg=yellow>Admin routes require a separate admin password set on first visit.</>');
+        $this->line('  <fg=yellow>Admin first setup requires OXALIS_ADMIN_GATE or OXALIS_ADMIN_SETUP_TOKEN.</>');
+        $this->line('  <fg=yellow>With a setup token, visit /'.$p.'/admin/setup?setup_token=YOUR_TOKEN.</>');
         $this->line('  <fg=yellow>Regular users are blocked from /admin/* even if they know the URL.</>');
         $this->newLine();
         $this->comment('Show admin links in Blade only when admin is signed in:');
@@ -213,6 +214,7 @@ class InstallCommand extends Command
             "OXALIS_RP_ID={$host}",
             "OXALIS_RP_NAME=\"{$name}\"",
             "OXALIS_ORIGINS={$origins}",
+            'OXALIS_REPLACE_LARAVEL_ROUTES=true',
             '',
             'OXALIS_ENABLE_PASSKEY='    . $flag('passkey'),
             'OXALIS_ENABLE_MAGIC_LINK=' . $flag('magic_link'),

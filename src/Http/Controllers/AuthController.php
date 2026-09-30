@@ -1,17 +1,20 @@
 <?php
 namespace Oxalis\Http\Controllers;
 
+use Oxalis\Auth\RegistrationPolicy;
 use Oxalis\Mail\OtpMail;
-use Oxalis\Models\Invite;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly RegistrationPolicy $registration) {}
+
     public function showLogin()
     {
         return view('oxalis::auth.login');
@@ -34,26 +37,13 @@ class AuthController extends Controller
             'invite_code' => config('oxalis.invites.required', false) ? 'required|string' : 'nullable|string',
         ]);
 
-        // Domain allowlist
-        $allowed = array_filter(array_map('trim', explode(',', config('oxalis.allowed_domains', ''))));
-        if (!empty($allowed)) {
-            $domain = strtolower(substr($data['email'], strpos($data['email'], '@') + 1));
-            if (!in_array($domain, array_map('strtolower', $allowed))) {
-                return back()->withErrors(['email' => 'Registration is restricted to specific email domains.']);
-            }
-        }
-
-        // Invite code check
-        if (config('oxalis.invites.required', false)) {
-            try {
-                $invite = Invite::where('code', strtoupper(trim($data['invite_code'] ?? '')))->first();
-                if (!$invite || !$invite->isValid()) {
-                    return back()->withErrors(['invite_code' => 'Invalid or expired invite code.']);
-                }
+        try {
+            $invite = $this->registration->validate($data['email'], $data['invite_code'] ?? null);
+            if ($invite) {
                 session(['oxalis_reg_invite_id' => $invite->id]);
-            } catch (\Throwable) {
-                return back()->withErrors(['invite_code' => 'Invite system unavailable.']);
             }
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         }
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -151,20 +141,24 @@ class AuthController extends Controller
         $name     = session('oxalis_reg_name');
         $email    = session('oxalis_reg_email');
         $inviteId = session('oxalis_reg_invite_id');
-
-        // Consume invite if one was used
-        if ($inviteId) {
-            try { Invite::find($inviteId)?->consume(); } catch (\Throwable) {}
-        }
-
-        session()->forget(['oxalis_reg_name','oxalis_reg_email','oxalis_reg_code','oxalis_reg_expires','oxalis_reg_verified','oxalis_reg_dev_code','oxalis_reg_invite_id']);
-
         $userModel = config('oxalis.user_model');
 
         if ($userModel::where('email', $email)->exists()) {
+            session()->forget(['oxalis_reg_name','oxalis_reg_email','oxalis_reg_code','oxalis_reg_expires','oxalis_reg_verified','oxalis_reg_dev_code','oxalis_reg_invite_id']);
+
             return redirect()->route('oxalis.register')
                 ->withErrors(['email' => 'This email is already registered.']);
         }
+
+        try {
+            $this->registration->consumeInvite($inviteId);
+        } catch (ValidationException $e) {
+            session()->forget(['oxalis_reg_name','oxalis_reg_email','oxalis_reg_code','oxalis_reg_expires','oxalis_reg_verified','oxalis_reg_dev_code','oxalis_reg_invite_id']);
+
+            return redirect()->route('oxalis.register')->withErrors($e->errors());
+        }
+
+        session()->forget(['oxalis_reg_name','oxalis_reg_email','oxalis_reg_code','oxalis_reg_expires','oxalis_reg_verified','oxalis_reg_dev_code','oxalis_reg_invite_id']);
 
         $user = $userModel::create([
             'name'              => $name,
@@ -174,6 +168,7 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+        request()->session()->regenerate();
 
         $redirect = config('oxalis.methods.passkey', true)
             ? route('oxalis.passkeys.enroll')

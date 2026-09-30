@@ -192,10 +192,11 @@ return [
     // ── Routing ───────────────────────────────────────────────────────────────
     // Change OXALIS_PREFIX to use a custom URL prefix, e.g. "auth" → /auth/login
     'routes' => [
-        'prefix'     => env('OXALIS_PREFIX', 'oxalis'),
-        'middleware' => ['web'],
-        'home'       => env('OXALIS_HOME', '/dashboard'),
-        'login'      => '/'.env('OXALIS_PREFIX', 'oxalis').'/login',
+        'prefix'                 => env('OXALIS_PREFIX', 'oxalis'),
+        'middleware'             => ['web'],
+        'home'                   => env('OXALIS_HOME', '/dashboard'),
+        'login'                  => '/'.env('OXALIS_PREFIX', 'oxalis').'/login',
+        'replace_laravel_routes' => env('OXALIS_REPLACE_LARAVEL_ROUTES', true),
     ],
 
     // ── User model ────────────────────────────────────────────────────────────
@@ -216,8 +217,9 @@ return [
     // Disabled by default — set OXALIS_ADMIN=true to enable.
     // Optionally gate with a Laravel Gate: OXALIS_ADMIN_GATE=admin
     'admin' => [
-        'enabled' => env('OXALIS_ADMIN', false),
-        'gate'    => env('OXALIS_ADMIN_GATE', null),
+        'enabled'     => env('OXALIS_ADMIN', false),
+        'gate'        => env('OXALIS_ADMIN_GATE', null),
+        'setup_token' => env('OXALIS_ADMIN_SETUP_TOKEN', null),
     ],
 
     // ── Account deletion ──────────────────────────────────────────────────────
@@ -248,8 +250,9 @@ return [
 
     // ── Security headers ──────────────────────────────────────────────────────
     // Adds X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
-    // X-XSS-Protection, and Permissions-Policy to all Oxalis responses.
+    // Content-Security-Policy, X-XSS-Protection, and Permissions-Policy.
     'security_headers' => env('OXALIS_SECURITY_HEADERS', true),
+    'csp'              => env('OXALIS_CSP', null),
 
     // ── IP privacy ────────────────────────────────────────────────────────────
     // ip_anonymize: zero last IPv4 octet / truncate IPv6 to /64 before storage

@@ -2,6 +2,7 @@
 namespace Oxalis;
 
 use Oxalis\Auth\LoginHandler;
+use Oxalis\Auth\RegistrationPolicy;
 use Oxalis\Telemetry\TelemetryService;
 use Oxalis\Console\AdminCommand;
 use Oxalis\Console\InstallCommand;
@@ -13,6 +14,7 @@ use Oxalis\Console\UserCommand;
 use Oxalis\EmailOtp\OtpService;
 use Oxalis\EmailVerification\EmailVerificationService;
 use Oxalis\Http\Middleware\OxalisAdminAuth;
+use Oxalis\Http\Middleware\EnsureMethodEnabled;
 use Oxalis\Http\Middleware\OxalisIpThrottle;
 use Oxalis\Http\Middleware\OxalisSecurityHeaders;
 use Oxalis\Http\Middleware\OxalisSessionGuard;
@@ -41,6 +43,7 @@ class OxalisServiceProvider extends ServiceProvider
         $this->mergeOxalisConfig();
 
         $this->app->singleton(LoginHandler::class);
+        $this->app->singleton(RegistrationPolicy::class);
         $this->app->singleton(WebAuthnService::class);
         $this->app->singleton(OtpService::class);
         $this->app->singleton(MagicLinkService::class);
@@ -124,6 +127,7 @@ class OxalisServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oxalis.throttle',      OxalisThrottle::class);
         $router->aliasMiddleware('oxalis.ip',            OxalisIpThrottle::class);
         $router->aliasMiddleware('oxalis.verified',      RequireEmailVerified::class);
+        $router->aliasMiddleware('oxalis.method',        EnsureMethodEnabled::class);
         $router->aliasMiddleware('oxalis.passkey-session', ValidatePasskeySession::class);
         $router->aliasMiddleware('oxalis.admin-auth',    OxalisAdminAuth::class);
         $router->aliasMiddleware('oxalis.session-guard',    OxalisSessionGuard::class);

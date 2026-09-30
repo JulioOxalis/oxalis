@@ -1,19 +1,24 @@
 <?php
 namespace Oxalis\Http\Controllers;
 
+use Oxalis\Auth\RegistrationPolicy;
 use Oxalis\Auth\LoginHandler;
 use Oxalis\Models\SocialLogin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialController extends Controller
 {
     private array $supported = ['google', 'github'];
 
-    public function __construct(private readonly LoginHandler $login) {}
+    public function __construct(
+        private readonly LoginHandler $login,
+        private readonly RegistrationPolicy $registration,
+    ) {}
 
     public function redirect(string $provider)
     {
@@ -70,15 +75,21 @@ class SocialController extends Controller
                     ->withErrors(['email' => 'This account no longer exists. Please register again.']);
             }
         } else {
-            // Find or create user by email
-            $user = $userModel::firstOrCreate(
-                ['email' => $email],
-                [
+            $user = $userModel::where('email', $email)->first();
+
+            if (! $user) {
+                try {
+                    $this->registration->validateAccountCreationWithoutInvite($email);
+                } catch (ValidationException $e) {
+                    return redirect()->route('oxalis.login')->withErrors($e->errors());
+                }
+
+                $user = $userModel::create([
                     'name'              => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
                     'password'          => Hash::make(Str::random(40)),
                     'email_verified_at' => now(),
-                ],
-            );
+                ]);
+            }
 
             try {
                 SocialLogin::create([

@@ -21,7 +21,30 @@ class OxalisSecurityHeaders
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         // Allow microphone for ultrasonic auth on own origin; deny camera/geo
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
+        $response->headers->set('Content-Security-Policy', config('oxalis.csp') ?: $this->defaultCsp($request));
 
         return $response;
+    }
+
+    private function defaultCsp(Request $request): string
+    {
+        $directives = [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'",
+            "object-src 'none'",
+            "img-src 'self' data: https:",
+            "font-src 'self' data:",
+            "style-src 'self' 'unsafe-inline'",
+            "script-src 'self' 'unsafe-inline'",
+            "connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*",
+        ];
+
+        if ($request->isSecure()) {
+            $directives[] = 'upgrade-insecure-requests';
+        }
+
+        return implode('; ', $directives);
     }
 }

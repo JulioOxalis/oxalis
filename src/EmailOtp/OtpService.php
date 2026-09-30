@@ -63,20 +63,17 @@ class OtpService
             }
         }
 
-        $challenge->increment('attempts');
-
-        if ($challenge->attempts >= $challenge->max_attempts) {
-            $challenge->update(['status' => 'locked']);
-            if (isset($lockout)) {
-                $this->incrementIpLockout($lockout);
-            }
-            return false;
-        }
-
         if (!password_verify($code, $challenge->code_hash)) {
+            $attempts = $challenge->attempts + 1;
+            $challenge->update([
+                'attempts' => $attempts,
+                'status'   => $attempts >= $challenge->max_attempts ? 'locked' : 'pending',
+            ]);
+
             if (isset($lockout)) {
                 $this->incrementIpLockout($lockout);
             }
+
             return false;
         }
 

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Blade;
 use Oxalis\Support\Branding;
 
 it('normalizes public logo paths to asset urls', function () {
@@ -29,4 +30,28 @@ it('normalizes layout and card image options', function () {
     expect(Branding::layout())->toBe('split');
     expect(Branding::cardImagePosition())->toBe('top');
     expect(Branding::cardImageHeight())->toBe(360);
+});
+
+it('renders the auth trust strip design primitive', function () {
+    config([
+        'oxalis.brand.security_strip' => true,
+        'oxalis.methods.passkey' => true,
+        'oxalis.methods.totp' => true,
+    ]);
+
+    $html = Blade::render('@include("oxalis::partials.trust-strip")');
+
+    expect($html)
+        ->toContain('Secured by Oxalis')
+        ->toContain('Passkey ready')
+        ->toContain('2FA supported')
+        ->toContain('Rate limited');
+});
+
+it('renders labeled login method tiles', function () {
+    $this->get('/oxalis/login')
+        ->assertOk()
+        ->assertSee('ox-method-label', false)
+        ->assertSee('Passkey')
+        ->assertSee('Password');
 });

@@ -219,9 +219,12 @@ OXALIS_LOGO_ALT="Acme"
 OXALIS_LOGO_HEIGHT=64
 OXALIS_CARD_IMAGE_ALT="Acme workspace"
 OXALIS_CARD_IMAGE_POSITION=bottom   # top or bottom
+OXALIS_SECURITY_STRIP=true          # show/hide the compact auth-card security strip
 ```
 
 On the **split layout**, `OXALIS_SHOW_APP_NAME` and `OXALIS_TAGLINE` appear **only in the brand panel** — they are intentionally suppressed inside the card to avoid duplication.
+
+v1.9.4 adds a compact trust strip to the auth shell by default: "Secured by Oxalis", passkey readiness, 2FA support, and rate-limit cues. Set `OXALIS_SECURITY_STRIP=false` if your published auth views already provide this.
 
 ### Publishing partials
 
@@ -539,6 +542,7 @@ php artisan vendor:publish --tag=oxalis-config
 | `OXALIS_LOGO_HEIGHT` | `52` | Logo max height in pixels |
 | `OXALIS_TAGLINE` | _(none)_ | Subtitle shown under app name (quote in `.env`) |
 | `OXALIS_SHOW_APP_NAME` | `false` | Show APP_NAME in card header / split panel |
+| `OXALIS_SECURITY_STRIP` | `true` | Show the compact auth-card security/trust strip |
 | `OXALIS_CARD_IMAGE_URL` | _(none)_ | Full URL or public path to image shown inside auth cards |
 | `OXALIS_CARD_IMAGE_POSITION` | `top` | Auth-card image position: `top` or `bottom` |
 | `OXALIS_CARD_IMAGE_HEIGHT` | `140` | Auth-card image max height in pixels |
@@ -631,6 +635,11 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 ---
 
 ## Changelog
+
+### v1.9.4
+- Design: upgraded the shared auth shell with a polished card accent, standardized security icons, and a compact trust strip across login, register, reset, passkey, and TOTP pages.
+- UX: replaced tiny icon-only login switches with labeled method tiles, so users can clearly choose Passkey, Password, Magic Link, OTP, Social, QR, or Nearby sign-in.
+- Customization: added `OXALIS_SECURITY_STRIP=false` for apps that want to hide the default trust strip, plus a built-in light/auto/dark switcher on light-capable themes.
 
 ### v1.9.3
 - Fix: first admin setup now honors a valid `OXALIS_ADMIN_SETUP_TOKEN` even when `OXALIS_ADMIN_GATE` is also configured. Gate enforcement still protects admin routes after admin credentials exist.

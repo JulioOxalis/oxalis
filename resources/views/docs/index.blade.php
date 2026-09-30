@@ -359,6 +359,10 @@ OXALIS_PRIMARY_COLOR=#e11d48</code></pre></div>
       <i class="bi bi-info-circle-fill"></i>
       <div><strong>v1.9.1 UI refresh:</strong> the same theme and layout names now render a calmer, more professional interface with better spacing, focus rings, mobile behavior, and reduced-motion support. Keep using your existing <code>OXALIS_THEME</code> and <code>OXALIS_LAYOUT</code> values.</div>
     </div>
+    <div class="alert-box alert-tip">
+      <i class="bi bi-stars"></i>
+      <div><strong>v1.9.4 design shell:</strong> auth pages now get a polished card accent, standardized security icons, labeled sign-in method tiles, a compact trust strip, and a built-in light/auto/dark switcher on light-capable themes.</div>
+    </div>
 
     <h3>Built-in themes</h3>
     <table>
@@ -409,6 +413,7 @@ OXALIS_LOGO_ALT="My App"
 OXALIS_LOGO_HEIGHT=64
 OXALIS_TAGLINE="Welcome back"
 OXALIS_SHOW_APP_NAME=true
+OXALIS_SECURITY_STRIP=true
 
 OXALIS_CARD_IMAGE_URL=/img/auth-card.jpg
 OXALIS_CARD_IMAGE_POSITION=top
@@ -575,6 +580,7 @@ php artisan migrate</code></pre></div>
     <div class="config-row"><div class="config-key">OXALIS_LOGO_HEIGHT</div><div class="config-desc">Logo max height in pixels.</div><div class="config-default">52</div></div>
     <div class="config-row"><div class="config-key">OXALIS_TAGLINE</div><div class="config-desc">Short brand subtitle shown with the logo/app name.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_SHOW_APP_NAME</div><div class="config-desc">Show or hide the app name in Oxalis auth branding.</div><div class="config-default">false</div></div>
+    <div class="config-row"><div class="config-key">OXALIS_SECURITY_STRIP</div><div class="config-desc">Show the compact auth-card security/trust strip.</div><div class="config-default">true</div></div>
     <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_URL</div><div class="config-desc">Full URL or public path to an image shown inside every auth card.</div><div class="config-default">null</div></div>
     <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_POSITION</div><div class="config-desc">Auth-card image position: <code>top</code> or <code>bottom</code>.</div><div class="config-default">top</div></div>
     <div class="config-row"><div class="config-key">OXALIS_CARD_IMAGE_HEIGHT</div><div class="config-desc">Auth-card image max height in pixels.</div><div class="config-default">140</div></div>

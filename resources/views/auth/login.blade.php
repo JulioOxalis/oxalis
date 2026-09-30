@@ -32,12 +32,13 @@
 
 <style>
 /* ── Login-page styles ──────────────────────────────────────────────────── */
-.ox-method-rail{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:.25rem}
+.ox-method-rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:.55rem;margin-top:.25rem}
 .ox-rail-btn{
-  width:46px;height:46px;border-radius:16px;
-  border:1px solid var(--ox-border,var(--bs-border-color));background:color-mix(in srgb,var(--ox-surface,#fff) 92%,var(--ox) 8%);
-  color:var(--ox-muted,var(--bs-secondary-color));display:inline-flex;align-items:center;
-  justify-content:center;font-size:1.05rem;cursor:pointer;
+  min-height:64px;border-radius:18px;padding:.6rem .5rem;
+  border:1px solid var(--ox-border,var(--bs-border-color));
+  background:color-mix(in srgb,var(--ox-surface,#fff) 90%,var(--ox) 6%);
+  color:var(--ox-muted,var(--bs-secondary-color));display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:.2rem;font-size:1.05rem;cursor:pointer;
   transition:border-color .18s,color .18s,background .18s,transform .15s,box-shadow .18s;
   position:relative;
 }
@@ -49,9 +50,13 @@
 [data-bs-theme=dark] .ox-rail-btn:hover,
 [data-bs-theme=dark] .ox-rail-btn.active{color:var(--ox);border-color:var(--ox);background:var(--ox-sf)}
 [data-ox-theme=obsidian] .ox-rail-btn{border-radius:12px}
+.ox-method-label{font-size:.68rem;font-weight:800;letter-spacing:.01em;line-height:1;color:currentColor}
 
 /* panel fade-in */
-.ox-panel{animation:ox-in .22s ease both}
+.ox-panel{
+  animation:ox-in .22s ease both;border:1px solid color-mix(in srgb,var(--ox-border,var(--bs-border-color)) 78%,transparent);
+  border-radius:18px;padding:.82rem;background:color-mix(in srgb,var(--ox-surface,#fff) 88%,var(--ox) 5%);
+}
 .ox-panel.ox-instant{animation:none}
 @keyframes ox-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
@@ -280,22 +285,26 @@
   @if($m['passkey'] ?? true)
   <button class="ox-rail-btn" data-method="passkey" title="Passkey" aria-label="Sign in with Passkey">
     <i class="bi bi-fingerprint"></i>
+    <span class="ox-method-label">Passkey</span>
   </button>
   @endif
   @if(!$passkeyOnly)
     @if($m['password'] ?? true)
     <button class="ox-rail-btn" data-method="password" title="Password" aria-label="Password">
       <i class="bi bi-lock-fill"></i>
+      <span class="ox-method-label">Password</span>
     </button>
     @endif
     @if($m['magic_link'] ?? true)
     <button class="ox-rail-btn" data-method="magic_link" title="Magic link" aria-label="Magic link">
       <i class="bi bi-send-fill"></i>
+      <span class="ox-method-label">Magic</span>
     </button>
     @endif
     @if($m['email_otp'] ?? true)
     <button class="ox-rail-btn" data-method="email_otp" title="One-time code" aria-label="One-time code">
       <i class="bi bi-grid-3x3-gap-fill"></i>
+      <span class="ox-method-label">Code</span>
     </button>
     @endif
     @if($hasSocial)
@@ -303,16 +312,19 @@
       title="{{ $hasGoogle && $hasGithub ? 'Google / GitHub' : ($hasGoogle ? 'Google' : 'GitHub') }}"
       aria-label="Social login">
       <i class="bi bi-{{ $hasGoogle ? 'google' : 'github' }}"></i>
+      <span class="ox-method-label">Social</span>
     </button>
     @endif
     @if($hasQr)
     <button class="ox-rail-btn" data-method="qr" title="QR Login" aria-label="QR Login">
       <i class="bi bi-qr-code-scan"></i>
+      <span class="ox-method-label">QR</span>
     </button>
     @endif
     @if($hasUltrasonic)
     <button class="ox-rail-btn" data-method="ultrasonic" title="Ultrasonic" aria-label="Ultrasonic proximity">
       <i class="bi bi-soundwave"></i>
+      <span class="ox-method-label">Nearby</span>
     </button>
     @endif
   @endif

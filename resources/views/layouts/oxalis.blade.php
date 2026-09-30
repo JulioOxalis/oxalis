@@ -149,13 +149,54 @@
 
     .ox-wrap{width:100%;max-width:464px;padding:1.2rem}
     .ox-card,.ox-float-card,.ox-glass-card,.ox-holo-inner{
+      position:relative;overflow:hidden;
       width:100%;border:1px solid var(--ox-border);border-radius:var(--ox-r);
-      background:var(--ox-surface);box-shadow:var(--ox-shadow);padding:2rem;
+      background:
+        linear-gradient(180deg,color-mix(in srgb,var(--ox-surface-strong) 88%,transparent),var(--ox-surface)),
+        var(--ox-surface);
+      box-shadow:var(--ox-shadow);padding:2rem;
+    }
+    .ox-card::before,.ox-float-card::before,.ox-glass-card::before,.ox-holo-inner::before{
+      content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--ox-gradient);opacity:.96;
+    }
+    .ox-card>*:not(style),.ox-float-card>*:not(style),.ox-glass-card>*:not(style),.ox-holo-inner>*:not(style){
+      position:relative;z-index:1;
     }
     .ox-card,.ox-float-card{backdrop-filter:saturate(130%);-webkit-backdrop-filter:saturate(130%)}
     .ox-card-header{margin-bottom:1.65rem!important}
     .ox-card-header .fw-bold{letter-spacing:-.035em}
     .ox-card-image img{box-shadow:0 16px 42px rgba(16,24,40,.10)}
+    .ox-icon{
+      width:58px;height:58px;margin:0 auto 1rem;border-radius:20px;
+      display:flex;align-items:center;justify-content:center;
+      background:var(--ox-sf);color:var(--ox);font-size:1.45rem;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 16px 36px color-mix(in srgb,var(--ox) 16%,transparent);
+    }
+    .ox-trust-strip{
+      display:flex;align-items:center;justify-content:center;gap:.45rem;flex-wrap:wrap;
+      margin:-.35rem 0 1.25rem;padding:.55rem;border:1px solid color-mix(in srgb,var(--ox-border) 70%,transparent);
+      border-radius:16px;background:color-mix(in srgb,var(--ox-surface-strong) 78%,var(--ox) 6%);
+    }
+    .ox-trust-chip{
+      display:inline-flex;align-items:center;gap:.32rem;padding:.28rem .58rem;border-radius:999px;
+      font-size:.69rem;font-weight:750;letter-spacing:.01em;line-height:1;
+      color:var(--ox-muted);background:color-mix(in srgb,var(--ox-surface) 82%,var(--ox) 7%);
+      border:1px solid color-mix(in srgb,var(--ox-border) 80%,transparent);
+      white-space:nowrap;
+    }
+    .ox-trust-chip i{font-size:.78rem;color:var(--ox)}
+    .ox-trust-chip-strong{color:var(--ox);background:var(--ox-sf);border-color:color-mix(in srgb,var(--ox) 28%,var(--ox-border))}
+    .ox-theme-switcher{
+      position:fixed;top:1rem;right:1rem;z-index:20;display:flex;gap:.25rem;
+      padding:.25rem;border:1px solid var(--ox-border);border-radius:999px;
+      background:color-mix(in srgb,var(--ox-surface) 86%,transparent);
+      box-shadow:0 12px 30px rgba(16,24,40,.10);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    }
+    .ox-theme-switcher button{
+      width:32px;height:32px;border:0;border-radius:999px;background:transparent;color:var(--ox-muted);
+      display:inline-flex;align-items:center;justify-content:center;transition:background var(--ox-transition),color var(--ox-transition),transform var(--ox-transition);
+    }
+    .ox-theme-switcher button:hover,.ox-theme-switcher button.active{background:var(--ox-sf);color:var(--ox);transform:translateY(-1px)}
 
     h1,h2,h3,h4,h5,h6{color:var(--ox-text);letter-spacing:-.025em}
     .text-secondary{color:var(--ox-muted)!important}
@@ -256,10 +297,13 @@
     [data-bs-theme=dark] .ox-float-card:hover{box-shadow:0 32px 90px rgba(0,0,0,.46),0 7px 24px rgba(0,0,0,.24)}
 
     @media(max-width:575.98px){
+      .ox-theme-switcher{top:.65rem;right:.65rem}
       body{justify-content:flex-start}
       .ox-wrap{padding:1rem;max-width:100%}
       .ox-card,.ox-float-card,.ox-glass-card,.ox-holo-inner{padding:1.35rem;border-radius:18px}
       .ox-bare-root,.ox-glass-root,.ox-float-root{padding:1rem}
+      .ox-trust-strip{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;margin-bottom:1rem}
+      .ox-trust-strip::-webkit-scrollbar{display:none}
     }
     @media(prefers-reduced-motion:reduce){
       *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -281,6 +325,14 @@
     @stack('styles')
 </head>
 <body class="ox-layout-{{ $oxLayout }}">
+
+@if(!$oxDark)
+<div class="ox-theme-switcher" id="ox-auth-theme-switcher" role="group" aria-label="Auth color mode">
+    <button type="button" data-theme="light" title="Light mode" aria-label="Light mode"><i class="bi bi-sun-fill"></i></button>
+    <button type="button" data-theme="auto" title="Use system theme" aria-label="Use system theme"><i class="bi bi-circle-half"></i></button>
+    <button type="button" data-theme="dark" title="Dark mode" aria-label="Dark mode"><i class="bi bi-moon-stars-fill"></i></button>
+</div>
+@endif
 
 @if($oxLayout === 'split')
 <div class="ox-split-root">
@@ -305,6 +357,7 @@
             <section class="ox-card">
                 @stack('oxalis:card-top')
                 @include('oxalis::partials.card-image', ['position' => 'top'])
+                @include('oxalis::partials.trust-strip')
                 @yield('content')
                 @include('oxalis::partials.card-image', ['position' => 'bottom'])
                 @stack('oxalis:card-bottom')
@@ -331,6 +384,7 @@
             @stack('oxalis:card-top')
             @include('oxalis::partials.card-header')
             @include('oxalis::partials.card-image', ['position' => 'top'])
+            @include('oxalis::partials.trust-strip')
             @yield('content')
             @include('oxalis::partials.card-image', ['position' => 'bottom'])
             @stack('oxalis:card-bottom')
@@ -355,6 +409,7 @@
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-header')
         @include('oxalis::partials.card-image', ['position' => 'top'])
+        @include('oxalis::partials.trust-strip')
         @yield('content')
         @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
@@ -379,6 +434,7 @@
     <section class="ox-float-card">
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-image', ['position' => 'top'])
+        @include('oxalis::partials.trust-strip')
         @yield('content')
         @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
@@ -401,6 +457,7 @@
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-header')
         @include('oxalis::partials.card-image', ['position' => 'top'])
+        @include('oxalis::partials.trust-strip')
         @yield('content')
         @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
@@ -411,6 +468,31 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+@if(!$oxDark)
+<script>
+(function(){
+  var group = document.getElementById('ox-auth-theme-switcher');
+  if (!group) return;
+  var current = localStorage.getItem('ox-theme') || 'auto';
+  function actualTheme(mode) {
+    return mode === 'auto'
+      ? (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light')
+      : mode;
+  }
+  function apply(mode) {
+    localStorage.setItem('ox-theme', mode);
+    document.documentElement.setAttribute('data-bs-theme', actualTheme(mode));
+    group.querySelectorAll('[data-theme]').forEach(function(btn){
+      btn.classList.toggle('active', btn.dataset.theme === mode);
+    });
+  }
+  group.querySelectorAll('[data-theme]').forEach(function(btn){
+    btn.addEventListener('click', function(){ apply(this.dataset.theme); });
+  });
+  apply(current);
+})();
+</script>
+@endif
 @stack('scripts')
 </body>
 </html>

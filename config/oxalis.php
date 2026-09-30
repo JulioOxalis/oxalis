@@ -66,6 +66,11 @@ return [
         'tagline'       => env('OXALIS_TAGLINE'),
         'show_app_name' => env('OXALIS_SHOW_APP_NAME', false),
 
+        // Show a compact trust strip on auth cards ("Secured by Oxalis",
+        // passkey/2FA/rate-limit highlights). Disable if your published
+        // views already provide their own security affordance.
+        'security_strip' => env('OXALIS_SECURITY_STRIP', true),
+
         // Optional image rendered inside every auth card. Useful for product,
         // school, clinic, or tenant artwork without publishing package views.
         // Accepts the same URL/path formats as OXALIS_LOGO_URL.

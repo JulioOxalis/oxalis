@@ -32,20 +32,21 @@ it('normalizes layout and card image options', function () {
     expect(Branding::cardImageHeight())->toBe(360);
 });
 
-it('renders the auth trust strip design primitive', function () {
-    config([
-        'oxalis.brand.security_strip' => true,
-        'oxalis.methods.passkey' => true,
-        'oxalis.methods.totp' => true,
-    ]);
+it('keeps the optional auth security note muted and off by default', function () {
+    config(['oxalis.brand.security_strip' => false]);
+
+    expect(Blade::render('@include("oxalis::partials.trust-strip")'))->not->toContain('Protected by Oxalis');
+
+    config(['oxalis.brand.security_strip' => true]);
 
     $html = Blade::render('@include("oxalis::partials.trust-strip")');
 
     expect($html)
-        ->toContain('Secured by Oxalis')
-        ->toContain('Passkey ready')
-        ->toContain('2FA supported')
-        ->toContain('Rate limited');
+        ->toContain('ox-security-note')
+        ->toContain('Protected by Oxalis security controls')
+        ->not->toContain('Passkey ready')
+        ->not->toContain('2FA supported')
+        ->not->toContain('Rate limited');
 });
 
 it('renders labeled login method tiles', function () {
@@ -53,5 +54,7 @@ it('renders labeled login method tiles', function () {
         ->assertOk()
         ->assertSee('ox-method-label', false)
         ->assertSee('Passkey')
-        ->assertSee('Password');
+        ->assertSee('Password')
+        ->assertDontSee('ox-auth-theme-switcher', false)
+        ->assertDontSee('Secured by Oxalis');
 });

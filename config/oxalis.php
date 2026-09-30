@@ -66,10 +66,9 @@ return [
         'tagline'       => env('OXALIS_TAGLINE'),
         'show_app_name' => env('OXALIS_SHOW_APP_NAME', false),
 
-        // Show a compact trust strip on auth cards ("Secured by Oxalis",
-        // passkey/2FA/rate-limit highlights). Disable if your published
-        // views already provide their own security affordance.
-        'security_strip' => env('OXALIS_SECURITY_STRIP', true),
+        // Optional, muted footer security note on auth cards. Disabled by
+        // default to keep host app branding clean.
+        'security_strip' => env('OXALIS_SECURITY_STRIP', false),
 
         // Optional image rendered inside every auth card. Useful for product,
         // school, clinic, or tenant artwork without publishing package views.

@@ -215,7 +215,8 @@ return [
 
     // ── Admin panel (/oxalis/admin) ───────────────────────────────────────────
     // Disabled by default — set OXALIS_ADMIN=true to enable.
-    // Optionally gate with a Laravel Gate: OXALIS_ADMIN_GATE=admin
+    // First setup can be authorized by OXALIS_ADMIN_SETUP_TOKEN or by a Gate.
+    // Only set OXALIS_ADMIN_GATE if your app defines a Laravel Gate with that name.
     'admin' => [
         'enabled'     => env('OXALIS_ADMIN', false),
         'gate'        => env('OXALIS_ADMIN_GATE', null),

@@ -350,11 +350,28 @@ php artisan oxalis:prune-logs              # delete auth events older than OXALI
 Enable with:
 ```env
 OXALIS_ADMIN=true
-OXALIS_ADMIN_SETUP_TOKEN=secret  # alternative for first setup if no Gate is configured
-OXALIS_ADMIN_GATE=admin   # optional — ties to a Laravel Gate
+OXALIS_ADMIN_SETUP_TOKEN=use-a-long-random-secret
+# OXALIS_ADMIN_GATE=admin   # optional only if your app defines a Laravel Gate named "admin"
 ```
 
-First setup is intentionally protected. Either define `OXALIS_ADMIN_GATE` and allow the intended admin user through that Gate, or set `OXALIS_ADMIN_SETUP_TOKEN` and visit `/oxalis/admin/setup?setup_token=secret`. The setup wizard creates admin credentials and can enable TOTP for the admin login. The panel provides:
+Clear config/cache and run migrations:
+
+```bash
+php artisan config:clear
+php artisan migrate
+```
+
+Open the first-setup URL:
+
+```text
+/oxalis/admin/setup?setup_token=use-a-long-random-secret
+```
+
+The setup wizard creates admin credentials and can enable TOTP for the admin login. Once setup is complete, sign in at `/oxalis/admin` or `/oxalis/admin/login`.
+
+`OXALIS_ADMIN_GATE` is optional. Use it only after defining a Laravel Gate with the same name. During first setup, either a valid setup token or a passing Gate can authorize setup. After admin credentials exist, the Gate also protects admin login/panel access.
+
+The panel provides:
 
 - User table with search and filters
 - Auth event log
@@ -608,6 +625,10 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 ---
 
 ## Changelog
+
+### v1.9.3
+- Fix: first admin setup now honors a valid `OXALIS_ADMIN_SETUP_TOKEN` even when `OXALIS_ADMIN_GATE` is also configured. Gate enforcement still protects admin routes after admin credentials exist.
+- Admin docs: expanded setup instructions for dependency users, including `config:clear`, migrations, setup-token URL, and when to use `OXALIS_ADMIN_GATE`.
 
 ### v1.9.2
 - Fix: default Content-Security-Policy now allows the `cdn.jsdelivr.net` CSS, font, and script assets that Oxalis package views use for Bootstrap, Bootstrap Icons, QR rendering, and docs highlighting. This restores broken form-floating labels, button widths, grid utilities, and icons when `OXALIS_SECURITY_HEADERS=true`.

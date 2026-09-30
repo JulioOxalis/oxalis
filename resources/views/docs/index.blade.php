@@ -1087,11 +1087,15 @@ php artisan oxalis:user delete       # delete user + all their Oxalis data</code
     <p>The admin panel is disabled by default. Enable it with:</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_ADMIN=true
-OXALIS_ADMIN_GATE=admin              # preferred: ties first setup/admin access to a Laravel Gate
-OXALIS_ADMIN_SETUP_TOKEN=change-me   # alternative first-setup token if no Gate exists yet</code></pre></div>
+OXALIS_ADMIN_SETUP_TOKEN=change-me
+# OXALIS_ADMIN_GATE=admin   # optional only if your app defines a Laravel Gate named "admin"</code></pre></div>
 
     <h3>First visit — setup wizard</h3>
-    <p>The first time an authorized operator visits <code>/oxalis/admin</code>, they are redirected to a one-time setup page. First setup now requires either a passing <code>OXALIS_ADMIN_GATE</code> check or a setup URL such as <code>/oxalis/admin/setup?setup_token=change-me</code>:</p>
+    <p>After changing <code>.env</code>, run <code>php artisan config:clear</code> and <code>php artisan migrate</code>. Then open <code>/oxalis/admin/setup?setup_token=change-me</code>. First setup requires either a matching setup token or an authenticated user who passes the configured <code>OXALIS_ADMIN_GATE</code>.</p>
+    <div class="alert-box alert-warn">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div>Do not set <code>OXALIS_ADMIN_GATE</code> unless your app has defined that Laravel Gate. The setup token is the simplest first-install path.</div>
+    </div>
     <ol style="padding-left:1.25rem">
       <li>Set an admin password — the form enforces 12+ chars, uppercase, number, and symbol via a live strength meter. The submit button stays disabled until all requirements pass.</li>
       <li>Optionally enable TOTP — scan a QR code with Google Authenticator or Authy, confirm with the first 6-digit code. Adds a second factor to every future admin login.</li>

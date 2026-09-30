@@ -4,6 +4,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Auth\User as AuthenticatableUser;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -146,6 +147,26 @@ it('supports the documented oxalis admin blade directive closing tag', function 
     session(['oxalis_admin_authenticated' => true]);
 
     expect(Blade::render('@oxalisAdmin Admin panel @endOxalisAdmin'))->toContain('Admin panel');
+});
+
+it('allows first admin setup with a valid setup token even when an admin gate is configured', function () {
+    config()->set('oxalis.admin.enabled', true);
+    config()->set('oxalis.admin.setup_token', 'setup-secret');
+    config()->set('oxalis.admin.gate', 'admin');
+
+    Gate::define('admin', fn ($user = null) => false);
+
+    $this->get('/oxalis/admin/setup?setup_token=setup-secret')
+        ->assertOk()
+        ->assertSessionHas('oxalis_admin_setup_authorized', true);
+});
+
+it('preserves the setup token when redirecting from the admin dashboard before setup', function () {
+    config()->set('oxalis.admin.enabled', true);
+    config()->set('oxalis.admin.setup_token', 'setup-secret');
+
+    $this->get('/oxalis/admin?setup_token=setup-secret')
+        ->assertRedirect('/oxalis/admin/setup?setup_token=setup-secret');
 });
 
 it('recovers admin user filters from poisoned cached aggregate data', function () {

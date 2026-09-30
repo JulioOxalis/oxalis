@@ -18,18 +18,25 @@ class OxalisAdminAuth
     {
         abort_unless(config('oxalis.admin.enabled', false), 404);
 
-        $this->enforceGate($request);
-
         // First-time setup
         if (!AdminCredential::isSetup()) {
             if (!$request->routeIs('oxalis.admin.setup', 'oxalis.admin.setup.post')) {
-                return redirect()->route('oxalis.admin.setup');
+                $parameters = [];
+                $setupToken = $request->query('setup_token');
+
+                if (is_string($setupToken) && $setupToken !== '') {
+                    $parameters['setup_token'] = $setupToken;
+                }
+
+                return redirect()->route('oxalis.admin.setup', $parameters);
             }
 
             abort_unless($this->firstSetupAuthorized($request), 403);
 
             return $next($request);
         }
+
+        $this->enforceGate($request);
 
         // Allow login/logout routes through
         if ($request->routeIs('oxalis.admin.login', 'oxalis.admin.login.post', 'oxalis.admin.logout')) {
@@ -78,10 +85,6 @@ class OxalisAdminAuth
 
     private function firstSetupAuthorized(Request $request): bool
     {
-        if (filled(config('oxalis.admin.gate'))) {
-            return true;
-        }
-
         if (session(self::SETUP_AUTHORIZED) === true) {
             return true;
         }
@@ -93,6 +96,14 @@ class OxalisAdminAuth
             session([self::SETUP_AUTHORIZED => true]);
 
             return true;
+        }
+
+        $gate = config('oxalis.admin.gate');
+
+        if (filled($gate)) {
+            $user = $request->user();
+
+            return $user && Gate::forUser($user)->allows($gate);
         }
 
         return false;

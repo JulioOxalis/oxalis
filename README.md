@@ -609,6 +609,9 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 
 ## Changelog
 
+### v1.9.2
+- Fix: default Content-Security-Policy now allows the `cdn.jsdelivr.net` CSS, font, and script assets that Oxalis package views use for Bootstrap, Bootstrap Icons, QR rendering, and docs highlighting. This restores broken form-floating labels, button widths, grid utilities, and icons when `OXALIS_SECURITY_HEADERS=true`.
+
 ### v1.9.1
 - UI refresh: rebuilt the auth theme system into calmer professional palettes while keeping the existing `OXALIS_THEME` values backward-compatible.
 - Layout refresh: redesigned `card`, `split`, `bare`, `glass`, and `float` outputs with better spacing, surface tokens, focus states, mobile behavior, and reduced-motion support.

@@ -35,9 +35,9 @@ class OxalisSecurityHeaders
             "frame-ancestors 'none'",
             "object-src 'none'",
             "img-src 'self' data: https:",
-            "font-src 'self' data:",
-            "style-src 'self' 'unsafe-inline'",
-            "script-src 'self' 'unsafe-inline'",
+            "font-src 'self' data: https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
             "connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*",
         ];
 

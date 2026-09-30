@@ -37,6 +37,17 @@ it('emits content security policy headers on oxalis responses', function () {
         ->assertHeader('Content-Security-Policy');
 });
 
+it('allows package cdn assets in the default content security policy', function () {
+    $response = $this->get('/oxalis/docs')->assertOk();
+
+    $csp = $response->headers->get('Content-Security-Policy');
+
+    expect($csp)
+        ->toContain("style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net")
+        ->toContain("script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net")
+        ->toContain("font-src 'self' data: https://cdn.jsdelivr.net");
+});
+
 it('accepts a correct otp on the configured final attempt', function () {
     Schema::dropIfExists('oxalis_otp_challenges');
     Schema::dropIfExists('oxalis_lockouts');

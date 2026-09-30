@@ -219,6 +219,12 @@ Route::prefix($prefix)->middleware([...$middleware, 'oxalis.security-headers'])-
         Route::get('/account/sessions',          [SessionController::class, 'index'])->name('oxalis.sessions');
         Route::post('/account/sessions/revoke',  [SessionController::class, 'revoke'])->name('oxalis.sessions.revoke');
         Route::post('/account/sessions/revoke-all',[SessionController::class, 'revokeAll'])->name('oxalis.sessions.revoke-all');
+    });
+
+    // Auth analytics — admin session required
+    Route::get('/stats', [StatsController::class, 'index'])
+        ->middleware('oxalis.admin-auth')
+        ->name('oxalis.stats');
 
         // Admin panel — protected by OxalisAdminAuth middleware
         Route::middleware('oxalis.admin-auth')->prefix('admin')->group(function () {
@@ -245,7 +251,6 @@ Route::prefix($prefix)->middleware([...$middleware, 'oxalis.security-headers'])-
         Route::post('/admin/setup', [AdminAuthController::class, 'setup'])    ->middleware('oxalis.admin-auth')->name('oxalis.admin.setup.post');
         Route::get('/admin/login',  [AdminAuthController::class, 'showLogin'])->middleware('oxalis.admin-auth')->name('oxalis.admin.login');
         Route::post('/admin/login', [AdminAuthController::class, 'login'])    ->middleware(['oxalis.admin-auth','oxalis.ip:5,5'])->name('oxalis.admin.login.post');
-    });
 });
 
 // ── Replace default Laravel auth URLs ─────────────────────────────────────────

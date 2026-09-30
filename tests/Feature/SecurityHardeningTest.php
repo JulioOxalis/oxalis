@@ -138,7 +138,25 @@ it('renders the documented oxalis user menu blade alias', function () {
         ->toContain('Jane Developer')
         ->toContain('Account settings')
         ->toContain('Sign out')
+        ->not->toContain('Admin panel')
         ->toContain('<details class="ox-user-menu">');
+});
+
+it('keeps the user menu admin link opt in and admin session protected', function () {
+    $user = new class extends AuthenticatableUser {
+        protected $guarded = [];
+    };
+    $user->forceFill([
+        'id' => '507f1f77bcf86cd799439012',
+        'name' => 'Admin Developer',
+        'email' => 'admin@example.com',
+    ]);
+
+    $this->actingAs($user);
+    session(['oxalis_admin_authenticated' => true]);
+
+    expect(Blade::render('<x-oxalis-user-menu />'))->not->toContain('Admin panel');
+    expect(Blade::render('<x-oxalis-user-menu show-admin-link />'))->toContain('Admin panel');
 });
 
 it('supports the documented oxalis admin blade directive closing tag', function () {

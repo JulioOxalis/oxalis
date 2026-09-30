@@ -956,13 +956,14 @@ if (!hash_equals($expected, $signature)) {
   <section id="components">
     <h2>Blade Components</h2>
     <h3>&lt;x-oxalis-user-menu /&gt;</h3>
-    <p>Drop a fully-styled user avatar dropdown into any layout. Shows user initials, name, a link to account settings, and a sign-out button.</p>
+    <p>Drop a fully-styled user avatar dropdown into any layout. Shows user initials, name, a link to account settings, and a sign-out button. It does not show admin links by default, so it is safe for normal user navbars.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-html"><code>&lt;!-- In your app layout's nav --&gt;
 &#64;auth
   &lt;x-oxalis-user-menu /&gt;
 &#64;endauth</code></pre></div>
     <p style="margin-top:.75rem">No Bootstrap JavaScript is required. The documented <code>&lt;x-oxalis-user-menu /&gt;</code> alias and the namespaced <code>&lt;x-oxalis::user-menu /&gt;</code> form both render the same package component.</p>
+    <p>To include an Admin Panel shortcut, opt in with <code>&lt;x-oxalis-user-menu show-admin-link /&gt;</code>. The link still appears only when the browser already has an active Oxalis admin session.</p>
     <h3>Account settings page</h3>
     <p>Link users here — shows only the auth methods the developer enabled in config.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
@@ -973,7 +974,7 @@ if (!hash_equals($expected, $signature)) {
     <pre class="language-html"><code>&#64;oxalisAdmin
   &lt;a href="{{ route('oxalis.admin') }}"&gt;Admin panel&lt;/a&gt;
 &#64;endOxalisAdmin</code></pre></div>
-    <p>The <code>&lt;x-oxalis-user-menu /&gt;</code> component already uses this internally — an <strong>Admin panel</strong> link appears in the dropdown only when you are signed into the admin panel.</p>
+    <p>The default <code>&lt;x-oxalis-user-menu /&gt;</code> intentionally hides admin links. Use <code>&lt;x-oxalis-user-menu show-admin-link /&gt;</code> only in layouts where you want an admin shortcut, and Oxalis still requires an active admin session before rendering it.</p>
     <div class="alert-box alert-warn">
       <i class="bi bi-exclamation-triangle-fill"></i>
       <div>This directive only hides the UI. Admin routes are independently protected by <code>oxalis.admin-auth</code> middleware — a regular user can never access <code>/oxalis/admin/*</code> even if they know the URL.</div>

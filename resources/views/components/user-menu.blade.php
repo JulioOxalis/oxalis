@@ -57,7 +57,7 @@
             Account settings
         </a>
 
-        @if (session('oxalis_admin_authenticated') === true && \Illuminate\Support\Facades\Route::has('oxalis.admin'))
+        @if ($showAdminLink && session('oxalis_admin_authenticated') === true && \Illuminate\Support\Facades\Route::has('oxalis.admin'))
         <a class="ox-user-menu__item" href="{{ route('oxalis.admin') }}" role="menuitem">
             <span class="ox-user-menu__icon">✓</span>
             Admin panel

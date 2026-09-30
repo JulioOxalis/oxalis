@@ -483,7 +483,13 @@ Verify the `X-Oxalis-Signature: sha256=...` header with your webhook secret. Aft
 @endauth
 ```
 
-Renders a styled user avatar dropdown with account settings link and sign-out.
+Renders a styled user avatar dropdown with account settings link and sign-out. It does not show admin links by default, so you can safely place it in every authenticated app layout.
+
+If you want the dropdown to include an Admin Panel shortcut, opt in explicitly. The link still appears only when the browser already has an active Oxalis admin session:
+
+```blade
+<x-oxalis-user-menu show-admin-link />
+```
 
 ---
 
@@ -628,6 +634,8 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 
 ### v1.9.3
 - Fix: first admin setup now honors a valid `OXALIS_ADMIN_SETUP_TOKEN` even when `OXALIS_ADMIN_GATE` is also configured. Gate enforcement still protects admin routes after admin credentials exist.
+- Fix: admin setup/login routes now sit outside the normal app-user `auth` middleware, so first setup works before any app user is signed in.
+- Components: `<x-oxalis-user-menu />` hides Admin Panel by default. Use `<x-oxalis-user-menu show-admin-link />` to opt in, and the link still requires an active Oxalis admin session.
 - Admin docs: expanded setup instructions for dependency users, including `config:clear`, migrations, setup-token URL, and when to use `OXALIS_ADMIN_GATE`.
 
 ### v1.9.2

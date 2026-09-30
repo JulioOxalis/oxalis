@@ -5,11 +5,11 @@
   $oxSplitBg   = config('oxalis.brand.split_bg');
   $oxSplitText = config('oxalis.brand.split_text');
 
-  // bare + glass are always dark regardless of theme
+  // Keep the existing contract: these layouts are immersive and dark by design.
   $oxForceDark = in_array($oxLayout, ['bare', 'glass']);
   $oxDark      = in_array($oxTheme, ['neon','aurora','obsidian','ember']) || $oxForceDark;
 
-  // Derive all color tokens from OXALIS_PRIMARY_COLOR (any theme)
+  // Derive usable UI tokens from OXALIS_PRIMARY_COLOR.
   $oxDerived = null;
   if ($oxColor && preg_match('/^#([0-9a-fA-F]{6})$/', $oxColor, $oxM)) {
       $r = hexdec(substr($oxM[1], 0, 2));
@@ -17,9 +17,10 @@
       $b = hexdec(substr($oxM[1], 4, 2));
       $oxDerived = [
           'ox'     => $oxColor,
-          'ox-dk'  => sprintf('#%02x%02x%02x', max(0,(int)($r*.88)), max(0,(int)($g*.88)), max(0,(int)($b*.88))),
-          'ox-sf'  => "rgba({$r},{$g},{$b},.12)",
-          'btn-fg' => ((0.299*$r + 0.587*$g + 0.114*$b)/255 > 0.5) ? '#000' : '#fff',
+          'ox-dk'  => sprintf('#%02x%02x%02x', max(0,(int)($r*.82)), max(0,(int)($g*.82)), max(0,(int)($b*.82))),
+          'ox-sf'  => "rgba({$r},{$g},{$b},.13)",
+          'ring'   => "rgba({$r},{$g},{$b},.22)",
+          'btn-fg' => ((0.299*$r + 0.587*$g + 0.114*$b)/255 > 0.62) ? '#101828' : '#ffffff',
       ];
   }
 @endphp
@@ -33,7 +34,7 @@
     @if($oxDark)
     <script>document.documentElement.setAttribute('data-bs-theme','dark');</script>
     @else
-    <script>(function(){var p=localStorage.getItem('ox-theme')||'auto';document.documentElement.setAttribute('data-bs-theme',p==='auto'?(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):p);})();</script>
+    <script>(function(){var p=localStorage.getItem('ox-theme')||'auto';var m=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',p==='auto'?m:p);})();</script>
     @endif
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -43,296 +44,237 @@
     <link rel="stylesheet" href="{{ asset('vendor/oxalis/theme.css') }}">
     @endif
     <style>
-    /* ─── THEME: indigo (default) ──────────────────────────────────────────── */
+    :root{
+      color-scheme:light dark;
+      --ox-font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      --ox-r:22px;
+      --ox-btn-radius:14px;
+      --ox-btn-fg:#fff;
+      --ox-success:#16a34a;
+      --ox-danger:#dc2626;
+      --ox-focus:rgba(79,70,229,.22);
+      --ox-transition:180ms ease;
+      --ox:#4f46e5;--ox-dk:#3730a3;--ox-sf:rgba(79,70,229,.11);
+      --ox-body-bg:#f6f7fb;--ox-surface:#ffffff;--ox-surface-strong:#ffffff;
+      --ox-text:#101828;--ox-muted:#667085;--ox-border:#e4e7ec;
+      --ox-shadow:0 24px 70px rgba(16,24,40,.10),0 4px 18px rgba(16,24,40,.06);
+      --ox-gradient:linear-gradient(135deg,#4f46e5 0%,#2563eb 58%,#0891b2 100%);
+    }
+
+    /* Professional built-in palettes. Existing .env theme names remain supported. */
     [data-ox-theme=indigo]{
-      --ox:{{ ($oxTheme==='indigo' && $oxColor) ? $oxColor : '#5c6ac4' }};
-      --ox-dk:#4959b8;--ox-sf:rgba(92,106,196,.12);--ox-r:14px;
-      --ox-btn-fg:#fff;--ox-btn-radius:50rem;
-      --ox-font:system-ui,-apple-system,sans-serif;--ox-body-bg:#f0f2fd;
+      --ox:#4f46e5;--ox-dk:#3730a3;--ox-sf:rgba(79,70,229,.11);--ox-focus:rgba(79,70,229,.22);
+      --ox-body-bg:#f6f7fb;--ox-surface:#ffffff;--ox-surface-strong:#ffffff;
+      --ox-text:#101828;--ox-muted:#667085;--ox-border:#e4e7ec;
+      --ox-shadow:0 24px 70px rgba(16,24,40,.10),0 4px 18px rgba(16,24,40,.06);
+      --ox-gradient:linear-gradient(135deg,#4f46e5 0%,#2563eb 58%,#0891b2 100%);
     }
     [data-ox-theme=indigo][data-bs-theme=dark]{
-      --bs-body-bg:#0d0f18;--bs-card-bg:#181b2a;--bs-border-color:#252840;--ox-body-bg:#0d0f18;
+      --ox:#8b8cf6;--ox-dk:#c4b5fd;--ox-sf:rgba(139,140,246,.14);--ox-focus:rgba(139,140,246,.26);
+      --ox-body-bg:#0b1020;--ox-surface:#111827;--ox-surface-strong:#172033;
+      --ox-text:#f8fafc;--ox-muted:#a7b0c3;--ox-border:#253044;
+      --ox-shadow:0 24px 70px rgba(0,0,0,.36),0 4px 18px rgba(0,0,0,.22);
     }
 
-    /* ─── THEME: neon (cyberpunk) ───────────────────────────────────────────── */
     [data-ox-theme=neon]{
-      --ox:#00f5ff;--ox-dk:#00c8d4;--ox-sf:rgba(0,245,255,.07);--ox-r:3px;
-      --ox-btn-fg:#07090e;--ox-btn-radius:3px;
-      --ox-font:'Courier New',Courier,monospace;--ox-body-bg:#07090e;
-      --bs-body-bg:#07090e;--bs-card-bg:#0e1117;--bs-border-color:#00f5ff28;
-      --bs-body-color:#c8f0f2;--bs-secondary-color:#7ac8ce;
+      --ox:#14b8a6;--ox-dk:#5eead4;--ox-sf:rgba(20,184,166,.13);--ox-focus:rgba(20,184,166,.24);
+      --ox-r:18px;--ox-btn-radius:13px;--ox-btn-fg:#07111f;
+      --ox-body-bg:#07111f;--ox-surface:#0c1726;--ox-surface-strong:#101d30;
+      --ox-text:#eef6ff;--ox-muted:#9eb3c7;--ox-border:#1d3347;
+      --ox-shadow:0 26px 80px rgba(0,0,0,.42),0 0 0 1px rgba(20,184,166,.04);
+      --ox-gradient:linear-gradient(135deg,#14b8a6 0%,#0ea5e9 100%);
     }
-    [data-ox-theme=neon] .ox-card{border-color:#00f5ff30;box-shadow:0 0 0 1px #00f5ff18,0 4px 40px rgba(0,245,255,.06);}
-    [data-ox-theme=neon] .btn-ox{box-shadow:0 0 18px rgba(0,245,255,.2);letter-spacing:.07em;text-transform:uppercase;font-size:.82rem;}
-    [data-ox-theme=neon] .btn-ox:hover{box-shadow:0 0 30px rgba(0,245,255,.45);}
-    [data-ox-theme=neon] .form-control{background:rgba(0,245,255,.03);border-color:#00f5ff28;color:#c8f0f2;}
-    [data-ox-theme=neon] .form-control:focus{background:rgba(0,245,255,.05)!important;border-color:#00f5ff!important;box-shadow:0 0 0 2px rgba(0,245,255,.12)!important;}
-    [data-ox-theme=neon] h5,[data-ox-theme=neon] h4{letter-spacing:.1em;text-transform:uppercase;font-size:.88rem;}
-    [data-ox-theme=neon] .btn-ox-out{color:#00f5ff;border-color:#00f5ff40;}
-    [data-ox-theme=neon] .btn-ox-out:hover{background:#00f5ff;color:#07090e;}
 
-    /* ─── THEME: aurora (glassmorphism) ────────────────────────────────────── */
     [data-ox-theme=aurora]{
-      --ox:#a78bfa;--ox-dk:#7c3aed;--ox-sf:rgba(167,139,250,.1);--ox-r:22px;
-      --ox-btn-fg:#fff;--ox-btn-radius:50rem;
-      --ox-font:system-ui,-apple-system,sans-serif;--ox-body-bg:#08001a;
-      --bs-body-bg:#08001a;--bs-card-bg:rgba(255,255,255,.05);
-      --bs-border-color:rgba(255,255,255,.09);
-      --bs-body-color:#e4dbff;--bs-secondary-color:#b0a4e0;
+      --ox:#a78bfa;--ox-dk:#c4b5fd;--ox-sf:rgba(167,139,250,.14);--ox-focus:rgba(167,139,250,.27);
+      --ox-r:26px;--ox-btn-radius:15px;
+      --ox-body-bg:#0c1020;--ox-surface:rgba(18,24,43,.86);--ox-surface-strong:rgba(25,33,58,.92);
+      --ox-text:#f5f3ff;--ox-muted:#b9b3d6;--ox-border:rgba(255,255,255,.12);
+      --ox-shadow:0 26px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.06);
+      --ox-gradient:linear-gradient(135deg,#8b5cf6 0%,#06b6d4 55%,#22c55e 100%);
     }
-    [data-ox-theme=aurora] body{background:linear-gradient(135deg,#08001a 0%,#0d1b32 50%,#001a10 100%)!important;background-attachment:fixed!important;}
-    [data-ox-theme=aurora] .ox-card{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);}
-    [data-ox-theme=aurora] .form-control{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#e4dbff;}
 
-    /* ─── THEME: obsidian (brutalist minimal) ──────────────────────────────── */
     [data-ox-theme=obsidian]{
-      --ox:#fff;--ox-dk:#d4d4d4;--ox-sf:rgba(255,255,255,.05);--ox-r:0px;
-      --ox-btn-fg:#000;--ox-btn-radius:0px;
-      --ox-font:'Courier New',Courier,monospace;--ox-body-bg:#000;
-      --bs-body-bg:#000;--bs-card-bg:#000;--bs-border-color:#2a2a2a;
-      --bs-body-color:#fff;--bs-secondary-color:#999;
+      --ox:#e5e7eb;--ox-dk:#ffffff;--ox-sf:rgba(255,255,255,.10);--ox-focus:rgba(255,255,255,.18);
+      --ox-r:16px;--ox-btn-radius:12px;--ox-btn-fg:#101828;
+      --ox-body-bg:#070707;--ox-surface:#111111;--ox-surface-strong:#171717;
+      --ox-text:#f5f5f5;--ox-muted:#a3a3a3;--ox-border:#2c2c2c;
+      --ox-shadow:0 26px 80px rgba(0,0,0,.55);
+      --ox-gradient:linear-gradient(135deg,#fafafa 0%,#a3a3a3 100%);
     }
-    [data-ox-theme=obsidian] .ox-card{border:1px solid #2a2a2a;box-shadow:none;}
-    [data-ox-theme=obsidian] .form-control{background:transparent;border:none;border-bottom:2px solid #2a2a2a;border-radius:0;color:#fff;padding-left:0;}
-    [data-ox-theme=obsidian] .form-control:focus{border-bottom-color:#fff!important;box-shadow:none!important;}
-    [data-ox-theme=obsidian] .form-floating>label{left:0;}
-    [data-ox-theme=obsidian] .btn-ox{border:2px solid #fff;letter-spacing:.1em;text-transform:uppercase;}
-    [data-ox-theme=obsidian] .btn-ox-out{border-color:#fff;color:#fff;}
-    [data-ox-theme=obsidian] .btn-ox-out:hover{background:#fff;color:#000;}
-    [data-ox-theme=obsidian] h5,[data-ox-theme=obsidian] h4{text-transform:uppercase;letter-spacing:.14em;font-size:.88rem;}
 
-    /* ─── THEME: ember (warm dark) ──────────────────────────────────────────── */
     [data-ox-theme=ember]{
-      --ox:#f59e0b;--ox-dk:#d97706;--ox-sf:rgba(245,158,11,.1);--ox-r:10px;
-      --ox-btn-fg:#1a0e00;--ox-btn-radius:8px;
-      --ox-font:system-ui,-apple-system,sans-serif;--ox-body-bg:#100a02;
-      --bs-body-bg:#100a02;--bs-card-bg:#1c1206;--bs-border-color:#3a2810;
-      --bs-body-color:#f5deb3;--bs-secondary-color:#c08850;
+      --ox:#f97316;--ox-dk:#fdba74;--ox-sf:rgba(249,115,22,.14);--ox-focus:rgba(249,115,22,.24);
+      --ox-r:20px;--ox-btn-radius:14px;--ox-btn-fg:#1f1308;
+      --ox-body-bg:#160f0a;--ox-surface:#201610;--ox-surface-strong:#2a1b12;
+      --ox-text:#fff7ed;--ox-muted:#d4a983;--ox-border:#3a2719;
+      --ox-shadow:0 26px 80px rgba(0,0,0,.45);
+      --ox-gradient:linear-gradient(135deg,#f97316 0%,#f59e0b 100%);
     }
-    [data-ox-theme=ember] .ox-card{box-shadow:0 4px 24px rgba(0,0,0,.6);}
-    [data-ox-theme=ember] .btn-ox:hover{box-shadow:0 0 22px rgba(245,158,11,.3);}
-    [data-ox-theme=ember] .form-control{background:rgba(245,158,11,.04);border-color:#3a2810;color:#f5deb3;}
-    [data-ox-theme=ember] .form-control:focus{border-color:#f59e0b!important;box-shadow:0 0 0 2px rgba(245,158,11,.15)!important;}
 
-    /* ─── THEME: frost (light glassmorphism) ────────────────────────────────── */
     [data-ox-theme=frost]{
-      --ox:#38bdf8;--ox-dk:#0ea5e9;--ox-sf:rgba(56,189,248,.12);--ox-r:20px;
-      --ox-btn-fg:#0c3c5c;--ox-btn-radius:50rem;
-      --ox-font:system-ui,-apple-system,sans-serif;--ox-body-bg:#dbeafe;
-      --bs-body-bg:#dbeafe;--bs-border-color:rgba(56,189,248,.25);
-      --bs-body-color:#0c3c5c;--bs-secondary-color:#4d8aa8;
+      --ox:#0284c7;--ox-dk:#0369a1;--ox-sf:rgba(2,132,199,.12);--ox-focus:rgba(2,132,199,.22);
+      --ox-r:24px;--ox-btn-radius:15px;--ox-btn-fg:#ffffff;
+      --ox-body-bg:#eef7ff;--ox-surface:rgba(255,255,255,.82);--ox-surface-strong:#ffffff;
+      --ox-text:#0f2a3d;--ox-muted:#507085;--ox-border:rgba(14,116,144,.18);
+      --ox-shadow:0 24px 70px rgba(14,116,144,.13),0 5px 20px rgba(14,116,144,.08);
+      --ox-gradient:linear-gradient(135deg,#0284c7 0%,#22d3ee 100%);
     }
-    [data-ox-theme=frost] .ox-card{background:rgba(255,255,255,.72)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 32px rgba(56,189,248,.15),0 1px 3px rgba(0,0,0,.06);}
-    [data-ox-theme=frost] .form-control{background:rgba(255,255,255,.6);}
 
-    /* ─── BASE ──────────────────────────────────────────────────────────────── */
+    html[data-bs-theme=dark]{
+      --bs-body-bg:var(--ox-body-bg);--bs-body-color:var(--ox-text);
+      --bs-card-bg:var(--ox-surface);--bs-border-color:var(--ox-border);
+      --bs-secondary-color:var(--ox-muted);color-scheme:dark;
+    }
+
+    *{box-sizing:border-box}
     body{
-      min-height:100vh;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      font-family:var(--ox-font,system-ui,-apple-system,sans-serif);
-      background:var(--ox-body-bg,var(--bs-body-bg,#f4f5fb));
+      min-height:100vh;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      font-family:var(--ox-font);color:var(--ox-text);background:var(--ox-body-bg);
+      text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;
     }
-    .ox-wrap{width:100%;max-width:440px;padding:0 1rem}
-    .ox-card{
-      border-radius:var(--ox-r);border:1px solid var(--bs-border-color);
-      background:var(--bs-card-bg,#fff);box-shadow:0 4px 24px rgba(0,0,0,.07);
-      padding:2rem 2rem 1.75rem;
+    body::before{
+      content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+      background:
+        radial-gradient(circle at 15% 12%,var(--ox-sf) 0,transparent 32%),
+        radial-gradient(circle at 88% 80%,rgba(20,184,166,.10) 0,transparent 30%),
+        linear-gradient(180deg,rgba(255,255,255,.36),transparent 36%);
+      opacity:.92;
     }
+    [data-bs-theme=dark] body::before{background:
+      radial-gradient(circle at 12% 10%,var(--ox-sf) 0,transparent 32%),
+      radial-gradient(circle at 84% 85%,rgba(14,165,233,.13) 0,transparent 28%),
+      linear-gradient(180deg,rgba(255,255,255,.035),transparent 42%);
+    }
+
+    .ox-wrap{width:100%;max-width:464px;padding:1.2rem}
+    .ox-card,.ox-float-card,.ox-glass-card,.ox-holo-inner{
+      width:100%;border:1px solid var(--ox-border);border-radius:var(--ox-r);
+      background:var(--ox-surface);box-shadow:var(--ox-shadow);padding:2rem;
+    }
+    .ox-card,.ox-float-card{backdrop-filter:saturate(130%);-webkit-backdrop-filter:saturate(130%)}
+    .ox-card-header{margin-bottom:1.65rem!important}
+    .ox-card-header .fw-bold{letter-spacing:-.035em}
+    .ox-card-image img{box-shadow:0 16px 42px rgba(16,24,40,.10)}
+
+    h1,h2,h3,h4,h5,h6{color:var(--ox-text);letter-spacing:-.025em}
+    .text-secondary{color:var(--ox-muted)!important}
+    a{color:var(--ox);text-decoration:none;text-underline-offset:3px}
+    a:hover{color:var(--ox-dk);text-decoration:underline}
+
     .btn-ox{
-      background:var(--ox);color:var(--ox-btn-fg,#fff);border:none;
-      border-radius:var(--ox-btn-radius,50rem);font-weight:600;
-      font-family:var(--ox-font);transition:background .15s,box-shadow .15s;
+      min-height:44px;background:var(--ox-gradient,var(--ox));color:var(--ox-btn-fg,#fff);border:0;
+      border-radius:var(--ox-btn-radius);font-weight:700;font-family:var(--ox-font);
+      box-shadow:0 10px 24px var(--ox-sf);transition:transform var(--ox-transition),box-shadow var(--ox-transition),filter var(--ox-transition);
     }
-    .btn-ox:hover,.btn-ox:focus{background:var(--ox-dk);color:var(--ox-btn-fg,#fff);}
-    .btn-ox:disabled{opacity:.55;pointer-events:none;}
+    .btn-ox:hover,.btn-ox:focus{color:var(--ox-btn-fg,#fff);filter:saturate(1.06) brightness(.98);box-shadow:0 14px 34px var(--ox-sf);transform:translateY(-1px)}
+    .btn-ox:disabled{opacity:.58;pointer-events:none;box-shadow:none;transform:none}
     .btn-ox-out{
-      background:transparent;color:var(--ox);border:2px solid var(--ox);
-      border-radius:var(--ox-btn-radius,50rem);font-weight:500;
-      font-family:var(--ox-font);transition:all .15s;
+      min-height:42px;background:color-mix(in srgb,var(--ox-surface) 92%,var(--ox) 8%);
+      color:var(--ox);border:1px solid color-mix(in srgb,var(--ox) 38%,var(--ox-border));
+      border-radius:var(--ox-btn-radius);font-weight:650;font-family:var(--ox-font);
+      transition:background var(--ox-transition),border-color var(--ox-transition),transform var(--ox-transition),color var(--ox-transition);
     }
-    .btn-ox-out:hover{background:var(--ox);color:var(--ox-btn-fg,#fff);}
-    .ox-div{display:flex;align-items:center;gap:.6rem;color:var(--bs-secondary-color);font-size:.78rem;margin:1rem 0;}
-    .ox-div::before,.ox-div::after{content:'';flex:1;border-top:1px solid var(--bs-border-color);}
-    .form-control:focus{border-color:var(--ox)!important;box-shadow:0 0 0 .2rem var(--ox-sf)!important;}
-    a{color:var(--ox);}a:hover{color:var(--ox-dk);}
+    .btn-ox-out:hover{background:var(--ox);border-color:var(--ox);color:var(--ox-btn-fg,#fff);transform:translateY(-1px);text-decoration:none}
 
-    /* ─── SPLIT LAYOUT ──────────────────────────────────────────────────────── */
-    /* App name / tagline live in the brand panel — card-header is NOT shown in the card */
-    body.ox-layout-split{align-items:stretch;justify-content:stretch;padding:0}
-    .ox-split-root{display:flex;min-height:100vh;width:100%}
-    .ox-split-brand{
-      width:40%;
-      background:{{ $oxSplitBg ? $oxSplitBg : 'var(--ox)' }};
-      color:{{ $oxSplitText ? $oxSplitText : 'var(--ox-btn-fg,#fff)' }};
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      padding:3rem 2.5rem;text-align:center;position:sticky;top:0;height:100vh;
-      background-size:cover;background-position:center;
+    .form-control,.form-select{
+      min-height:46px;border-radius:14px;border:1px solid var(--ox-border);
+      background:color-mix(in srgb,var(--ox-surface-strong) 86%,transparent);
+      color:var(--ox-text);font-size:.95rem;transition:border-color var(--ox-transition),box-shadow var(--ox-transition),background var(--ox-transition);
     }
-    .ox-split-form{
-      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      padding:2rem 1.5rem;background:var(--ox-body-bg,var(--bs-body-bg,#f4f5fb));
-      min-height:100vh;overflow-y:auto;
+    .form-control::placeholder{color:var(--ox-muted);opacity:.72}
+    .form-control:focus,.form-select:focus{
+      border-color:var(--ox)!important;box-shadow:0 0 0 .24rem var(--ox-focus)!important;
+      background:var(--ox-surface-strong);color:var(--ox-text);
     }
-    .ox-split-form .ox-wrap{max-width:420px;padding:0}
-    @media(max-width:768px){
-      body.ox-layout-split{flex-direction:column}
-      .ox-split-root{flex-direction:column}
-      .ox-split-brand{width:100%;height:auto;min-height:160px;position:static;padding:2rem}
-      .ox-split-form{min-height:auto}
-    }
-
-    /* ─── BARE / HOLOGRAPHIC LAYOUT ─────────────────────────────────────────── */
-    body.ox-layout-bare{background:#02030a}
-    /* Animated deep-space atmosphere layer (fixed so it covers full viewport) */
-    .ox-bare-bg{
-      position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:
-        radial-gradient(ellipse 70% 50% at 15% 25%,rgba(120,40,220,.42) 0%,transparent 62%),
-        radial-gradient(ellipse 55% 60% at 85% 75%,rgba(0,180,255,.26) 0%,transparent 65%),
-        radial-gradient(ellipse 45% 55% at 60% 10%,rgba(255,30,100,.2) 0%,transparent 55%);
-      animation:ox-holo-orbs 16s ease-in-out infinite alternate;
-    }
-    /* Grid overlay */
-    .ox-bare-bg::after{
-      content:'';position:absolute;inset:0;
-      background-image:
-        linear-gradient(rgba(100,60,255,.05) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(100,60,255,.05) 1px,transparent 1px);
-      background-size:48px 48px;
-    }
-    @keyframes ox-holo-orbs{
-      0%  {opacity:1;transform:scale(1)}
-      50% {opacity:.78;transform:scale(1.07) translate(1.5%,-1.5%)}
-      100%{opacity:1;transform:scale(.96) translate(-1%,1%)}
-    }
-    .ox-bare-root{
-      position:relative;z-index:1;width:100%;
-      display:flex;flex-direction:column;align-items:center;
-      padding:2rem 1rem;
-    }
-    /* Outer wrapper: overflow:hidden + large rotating conic = spinning rainbow border */
-    .ox-holo-outer{
-      position:relative;border-radius:var(--ox-r,18px);
-      overflow:hidden;padding:2px;width:100%;max-width:440px;
-    }
-    .ox-holo-outer::before{
-      content:'';position:absolute;left:50%;top:50%;
-      width:260%;aspect-ratio:1;
-      transform:translate(-50%,-50%) rotate(0deg);
-      background:conic-gradient(from 0deg,#ff0080 0deg,#ff8c00 60deg,#ffef00 120deg,#00f5ff 180deg,#7b2fff 240deg,#ff0080 360deg);
-      animation:ox-holo-spin 4s linear infinite;
-      z-index:0;
-    }
-    @keyframes ox-holo-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-    /* Glassmorphism inner card */
-    .ox-holo-inner{
-      position:relative;z-index:1;
-      border-radius:calc(var(--ox-r,18px) - 1px);
-      background:rgba(8,10,28,.86);
-      backdrop-filter:blur(28px) saturate(150%);
-      -webkit-backdrop-filter:blur(28px) saturate(150%);
-      padding:2rem 2rem 1.75rem;overflow:hidden;
-      --bs-body-color:#e2e8ff;--bs-secondary-color:#8a92bc;
-      --bs-border-color:rgba(255,255,255,.1);
-    }
-    /* Shimmer sweep */
-    .ox-holo-inner::after{
-      content:'';position:absolute;top:0;left:-100%;
-      width:50%;height:100%;
-      background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.042) 50%,transparent 100%);
-      animation:ox-holo-shimmer 8s ease-in-out infinite;
-      pointer-events:none;
-    }
-    @keyframes ox-holo-shimmer{0%,15%{left:-100%}55%,100%{left:160%}}
-    .ox-holo-inner .form-control{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13);color:#e2e8ff}
-    .ox-holo-inner .form-control:focus{background:rgba(255,255,255,.1)!important;border-color:var(--ox)!important;box-shadow:0 0 0 .2rem rgba(120,40,220,.3)!important}
-    .ox-holo-inner .form-floating>label{color:#8a92bc}
-    .ox-holo-inner a{color:#c4b5fd}
-    .ox-holo-inner a:hover{color:#a78bfa}
-    .ox-holo-inner .form-check-input:not(:checked){background-color:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
-
-    /* ─── GLASS LAYOUT ──────────────────────────────────────────────────────── */
-    body.ox-layout-glass{background:#120d28;position:relative}
-    /* Animated pastel bokeh blobs */
-    .ox-glass-bg{
-      position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:
-        radial-gradient(ellipse 55% 50% at 22% 38%,rgba(167,139,250,.55) 0%,transparent 62%),
-        radial-gradient(ellipse 50% 55% at 78% 62%,rgba(96,165,250,.45) 0%,transparent 60%),
-        radial-gradient(ellipse 45% 42% at 55% 12%,rgba(244,114,182,.35) 0%,transparent 56%);
-      animation:ox-glass-blobs 14s ease-in-out infinite alternate;
-    }
-    @keyframes ox-glass-blobs{
-      0%  {transform:scale(1) rotate(0deg);opacity:.85}
-      100%{transform:scale(1.12) rotate(7deg);opacity:1}
-    }
-    .ox-glass-root{
-      position:relative;z-index:1;width:100%;
-      display:flex;flex-direction:column;align-items:center;
-      padding:2rem 1rem;
-    }
-    .ox-glass-card{
-      width:100%;max-width:440px;
-      background:rgba(255,255,255,.11);
-      backdrop-filter:blur(32px) saturate(170%);
-      -webkit-backdrop-filter:blur(32px) saturate(170%);
-      border:1px solid rgba(255,255,255,.22);
-      border-radius:var(--ox-r,22px);
-      padding:2rem 2rem 1.75rem;
-      box-shadow:0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18);
-      --bs-body-color:#f0eeff;--bs-secondary-color:rgba(240,238,255,.65);
-      --bs-border-color:rgba(255,255,255,.16);
-    }
-    .ox-glass-card .form-control{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);color:#f0eeff}
-    .ox-glass-card .form-control:focus{background:rgba(255,255,255,.14)!important;border-color:rgba(255,255,255,.5)!important;box-shadow:0 0 0 .2rem rgba(255,255,255,.1)!important}
-    .ox-glass-card .form-floating>label{color:rgba(240,238,255,.6)}
-    .ox-glass-card a{color:#e0d9ff}
-    .ox-glass-card a:hover{color:#c4b5fd}
-    .ox-glass-card .form-check-input:not(:checked){background-color:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2)}
-
-    /* ─── FLOAT LAYOUT ──────────────────────────────────────────────────────── */
-    /* Brand shown above the card; card itself has no card-header */
-    .ox-float-root{
-      width:100%;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem
-    }
-    .ox-float-brand-above{text-align:center;margin-bottom:1.5rem;width:100%;max-width:440px}
-    .ox-float-card{
-      width:100%;max-width:440px;
-      border-radius:var(--ox-r);border:1px solid var(--bs-border-color);
-      background:var(--bs-card-bg,#fff);
-      padding:2rem 2rem 1.75rem;
-      box-shadow:0 20px 64px rgba(0,0,0,.14),0 6px 20px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.05);
-      transition:box-shadow .35s,transform .35s;
-    }
-    .ox-float-card:hover{
-      box-shadow:0 28px 80px rgba(0,0,0,.18),0 10px 28px rgba(0,0,0,.11),0 4px 10px rgba(0,0,0,.07);
-      transform:translateY(-3px)
-    }
-    @media(prefers-reduced-motion:reduce){.ox-float-card{transition:none;transform:none!important}}
-
-    /* ─── UNIVERSAL form readability across all themes ──────────────────────── */
-    .form-control{color:var(--bs-body-color)}
-    .form-control::placeholder{color:var(--bs-secondary-color);opacity:.8}
-    .form-floating>label{color:var(--bs-secondary-color);background:transparent}
+    .form-floating>label{color:var(--ox-muted);background:transparent}
     .form-floating>.form-control:focus~label,
-    .form-floating>.form-control:not(:placeholder-shown)~label{opacity:1}
-    .form-check-label{color:var(--bs-secondary-color)}
-    .form-check-input:not(:checked){background-color:var(--bs-tertiary-bg,rgba(0,0,0,.06));border-color:var(--bs-border-color)}
-    [data-bs-theme=dark] .ox-tier-best{background:rgba(25,135,84,.22);color:#5fd194}
-    [data-bs-theme=dark] .ox-tier-good{background:rgba(13,110,253,.22);color:#7eb4ff}
-    [data-bs-theme=dark] .ox-tier-basic{background:rgba(255,193,7,.18);color:#ffd060}
-    [data-bs-theme=dark] .alert{color:inherit}
-    [data-ox-theme=neon] .form-check-input:not(:checked){background-color:rgba(0,245,255,.04);border-color:rgba(0,245,255,.2)}
-    [data-ox-theme=frost] .ox-tier-best{background:rgba(25,135,84,.1);color:#146435}
-    [data-ox-theme=frost] .ox-tier-good{background:rgba(13,110,253,.1);color:#0847b5}
-    [data-ox-theme=frost] .ox-tier-basic{background:rgba(150,100,0,.1);color:#7a5200}
+    .form-floating>.form-control:not(:placeholder-shown)~label{opacity:1;color:var(--ox)}
+    .form-check-input{border-color:var(--ox-border)}
+    .form-check-input:checked{background-color:var(--ox);border-color:var(--ox)}
+    .form-check-input:focus{box-shadow:0 0 0 .22rem var(--ox-focus);border-color:var(--ox)}
+    .form-check-label{color:var(--ox-muted)}
+    .alert{border-radius:16px;border:1px solid transparent}
+    .ox-alert-ok{background:rgba(22,163,74,.10);color:var(--ox-success);border-color:rgba(22,163,74,.16)!important}
+    .ox-alert-err{background:rgba(220,38,38,.10);color:var(--ox-danger);border-color:rgba(220,38,38,.16)!important}
+    [data-bs-theme=dark] .ox-alert-ok{color:#86efac}
+    [data-bs-theme=dark] .ox-alert-err{color:#fca5a5}
+    .ox-div{display:flex;align-items:center;gap:.75rem;color:var(--ox-muted);font-size:.78rem;margin:1.1rem 0}
+    .ox-div::before,.ox-div::after{content:"";flex:1;border-top:1px solid var(--ox-border)}
+
+    /* Split layout: calmer product-style landing panel. */
+    body.ox-layout-split{align-items:stretch;justify-content:stretch;padding:0}
+    .ox-split-root{display:grid;grid-template-columns:minmax(360px,44%) 1fr;min-height:100vh;width:100%}
+    .ox-split-brand{
+      position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;
+      padding:clamp(2rem,6vw,5rem);color:{{ $oxSplitText ? $oxSplitText : 'var(--ox-btn-fg,#fff)' }};
+      background:{{ $oxSplitBg ? $oxSplitBg : 'var(--ox-gradient)' }};background-size:cover;background-position:center;
+    }
+    .ox-split-brand::before,.ox-split-brand::after{content:"";position:absolute;border-radius:999px;pointer-events:none}
+    .ox-split-brand::before{width:360px;height:360px;right:-130px;top:-130px;background:rgba(255,255,255,.16);filter:blur(2px)}
+    .ox-split-brand::after{width:260px;height:260px;left:-120px;bottom:-110px;background:rgba(255,255,255,.10)}
+    .ox-split-brand>*{position:relative;z-index:1}
+    .ox-split-brand .ox-split-proof{margin-top:2rem;display:grid;gap:.85rem;max-width:420px}
+    .ox-split-proof-item{
+      display:flex;align-items:center;gap:.75rem;padding:.9rem 1rem;border-radius:18px;
+      background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.18);
+      backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-size:.88rem;
+    }
+    .ox-split-proof-item i{font-size:1.05rem}
+    .ox-split-form{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:var(--ox-body-bg);overflow-y:auto}
+    .ox-split-form .ox-wrap{max-width:464px;padding:0}
+    @media(max-width:900px){
+      .ox-split-root{grid-template-columns:1fr}
+      .ox-split-brand{min-height:260px;padding:2rem;text-align:left}
+      .ox-split-form{min-height:auto;padding:1.25rem}
+    }
+
+    /* Bare layout: focused, minimal, premium. */
+    body.ox-layout-bare{background:#05070f}
+    .ox-bare-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+      radial-gradient(circle at 50% -10%,rgba(255,255,255,.12),transparent 34%),
+      radial-gradient(circle at 10% 80%,var(--ox-sf),transparent 34%),
+      linear-gradient(180deg,#05070f,#080b16 58%,#05070f)}
+    .ox-bare-root,.ox-glass-root,.ox-float-root{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+    .ox-holo-outer{width:100%;max-width:464px;padding:1px;border-radius:calc(var(--ox-r) + 1px);background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.05),var(--ox-sf))}
+    .ox-holo-inner{background:rgba(11,16,32,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 28px 90px rgba(0,0,0,.52)}
+
+    /* Glass layout: soft translucent card with restrained movement. */
+    body.ox-layout-glass{background:#0b1020}
+    .ox-glass-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+      radial-gradient(circle at 18% 20%,rgba(167,139,250,.36),transparent 34%),
+      radial-gradient(circle at 78% 72%,rgba(14,165,233,.26),transparent 32%),
+      radial-gradient(circle at 48% 8%,rgba(45,212,191,.18),transparent 30%);animation:ox-drift 16s ease-in-out infinite alternate}
+    @keyframes ox-drift{to{transform:scale(1.06) translate3d(1.5%,-1%,0)}}
+    .ox-glass-card{max-width:464px;background:rgba(255,255,255,.10);backdrop-filter:blur(30px) saturate(145%);-webkit-backdrop-filter:blur(30px) saturate(145%);border-color:rgba(255,255,255,.18)}
+
+    /* Float layout: elevated but quiet. */
+    .ox-float-root{min-height:100vh;justify-content:center}
+    .ox-float-brand-above{text-align:center;margin-bottom:1.35rem;width:100%;max-width:464px}
+    .ox-float-card{max-width:464px;transition:transform .28s ease,box-shadow .28s ease}
+    .ox-float-card:hover{transform:translateY(-3px);box-shadow:0 32px 90px rgba(16,24,40,.14),0 7px 24px rgba(16,24,40,.08)}
+    [data-bs-theme=dark] .ox-float-card:hover{box-shadow:0 32px 90px rgba(0,0,0,.46),0 7px 24px rgba(0,0,0,.24)}
+
+    @media(max-width:575.98px){
+      body{justify-content:flex-start}
+      .ox-wrap{padding:1rem;max-width:100%}
+      .ox-card,.ox-float-card,.ox-glass-card,.ox-holo-inner{padding:1.35rem;border-radius:18px}
+      .ox-bare-root,.ox-glass-root,.ox-float-root{padding:1rem}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+      .btn-ox:hover,.btn-ox-out:hover,.ox-float-card:hover{transform:none}
+    }
     </style>
-    {{-- Primary color override — inlined after theme so it wins specificity --}}
     @if($oxDerived)
     <style>
-    [data-ox-theme={{ $oxTheme }}]{
-      --ox:{{ $oxDerived['ox'] }};--ox-dk:{{ $oxDerived['ox-dk'] }};
-      --ox-sf:{{ $oxDerived['ox-sf'] }};--ox-btn-fg:{{ $oxDerived['btn-fg'] }};
+    [data-ox-theme="{{ $oxTheme }}"]{
+      --ox:{{ $oxDerived['ox'] }};
+      --ox-dk:{{ $oxDerived['ox-dk'] }};
+      --ox-sf:{{ $oxDerived['ox-sf'] }};
+      --ox-focus:{{ $oxDerived['ring'] }};
+      --ox-btn-fg:{{ $oxDerived['btn-fg'] }};
+      --ox-gradient:linear-gradient(135deg,{{ $oxDerived['ox'] }} 0%,{{ $oxDerived['ox-dk'] }} 100%);
     }
     </style>
     @endif
@@ -341,131 +283,130 @@
 <body class="ox-layout-{{ $oxLayout }}">
 
 @if($oxLayout === 'split')
-{{-- ── Split: brand panel left (shows app name/tagline), form right ────── --}}
 <div class="ox-split-root">
     <aside class="ox-split-brand">
         @include('oxalis::partials.split-brand')
+        <div class="ox-split-proof" aria-label="Authentication highlights">
+            <div class="ox-split-proof-item"><i class="bi bi-fingerprint"></i><span>Passkeys, OTP, TOTP, and password flows in one secure layer.</span></div>
+            <div class="ox-split-proof-item"><i class="bi bi-shield-check"></i><span>Rate-limited, audited, and designed for Laravel teams.</span></div>
+        </div>
     </aside>
-    <div class="ox-split-form">
+    <main class="ox-split-form">
         @if(session('status'))
-        <div class="alert rounded-3 border-0 mb-3" style="max-width:420px;width:100%;background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+        <div class="alert ox-alert-ok mb-3" style="max-width:464px;width:100%"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
         @endif
         @if($errors->any())
-        <div class="alert rounded-3 border-0 mb-3" style="max-width:420px;width:100%;background:rgba(220,53,69,.1);color:#dc3545">
+        <div class="alert ox-alert-err mb-3" style="max-width:464px;width:100%">
         @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
         </div>
         @endif
         @stack('oxalis:before-card')
         <div class="ox-wrap">
-            <div class="ox-card">
+            <section class="ox-card">
                 @stack('oxalis:card-top')
                 @include('oxalis::partials.card-image', ['position' => 'top'])
                 @yield('content')
                 @include('oxalis::partials.card-image', ['position' => 'bottom'])
                 @stack('oxalis:card-bottom')
-            </div>
+            </section>
         </div>
         @stack('oxalis:after-card')
-    </div>
+    </main>
 </div>
 
 @elseif($oxLayout === 'bare')
-{{-- ── Bare / Holographic: dark space bg + spinning rainbow border card ── --}}
 <div class="ox-bare-bg" aria-hidden="true"></div>
-<div class="ox-bare-root">
+<main class="ox-bare-root">
     @if(session('status'))
-    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(25,135,84,.18);color:#5fd194;border:1px solid rgba(25,135,84,.3)!important"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    <div class="alert ox-alert-ok mb-3" style="max-width:464px;width:100%"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
     @endif
     @if($errors->any())
-    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(220,53,69,.18);color:#ff8a9a;border:1px solid rgba(220,53,69,.3)!important">
+    <div class="alert ox-alert-err mb-3" style="max-width:464px;width:100%">
     @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
     </div>
     @endif
     @stack('oxalis:before-card')
     <div class="ox-holo-outer">
-        <div class="ox-holo-inner">
+        <section class="ox-holo-inner">
             @stack('oxalis:card-top')
             @include('oxalis::partials.card-header')
             @include('oxalis::partials.card-image', ['position' => 'top'])
             @yield('content')
             @include('oxalis::partials.card-image', ['position' => 'bottom'])
             @stack('oxalis:card-bottom')
-        </div>
+        </section>
     </div>
     @stack('oxalis:after-card')
-</div>
+</main>
 
 @elseif($oxLayout === 'glass')
-{{-- ── Glass: frosted card floating over animated pastel bokeh blobs ───── --}}
 <div class="ox-glass-bg" aria-hidden="true"></div>
-<div class="ox-glass-root">
+<main class="ox-glass-root">
     @if(session('status'))
-    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(255,255,255,.14);color:#d4f0e8;border:1px solid rgba(255,255,255,.22)!important"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    <div class="alert ox-alert-ok mb-3" style="max-width:464px;width:100%"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
     @endif
     @if($errors->any())
-    <div class="alert border-0 rounded-3 mb-3" style="max-width:440px;width:100%;background:rgba(220,53,69,.2);color:#ffb3be;border:1px solid rgba(220,53,69,.3)!important">
+    <div class="alert ox-alert-err mb-3" style="max-width:464px;width:100%">
     @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
     </div>
     @endif
     @stack('oxalis:before-card')
-    <div class="ox-glass-card">
+    <section class="ox-glass-card">
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-header')
         @include('oxalis::partials.card-image', ['position' => 'top'])
         @yield('content')
         @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
-    </div>
+    </section>
     @stack('oxalis:after-card')
-</div>
+</main>
 
 @elseif($oxLayout === 'float')
-{{-- ── Float: brand above card, elevated shadow with hover lift ────────── --}}
-<div class="ox-float-root">
+<main class="ox-float-root">
     <div class="ox-float-brand-above">
         @include('oxalis::partials.card-header')
     </div>
     @if(session('status'))
-    <div class="alert rounded-3 border-0 mb-3" style="max-width:440px;width:100%;background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    <div class="alert ox-alert-ok mb-3" style="max-width:464px;width:100%"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
     @endif
     @if($errors->any())
-    <div class="alert rounded-3 border-0 mb-3" style="max-width:440px;width:100%;background:rgba(220,53,69,.1);color:#dc3545">
+    <div class="alert ox-alert-err mb-3" style="max-width:464px;width:100%">
     @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
     </div>
     @endif
     @stack('oxalis:before-card')
-    <div class="ox-float-card">
+    <section class="ox-float-card">
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-image', ['position' => 'top'])
         @yield('content')
         @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
-    </div>
+    </section>
     @stack('oxalis:after-card')
-</div>
+</main>
 
 @else
-{{-- ── Card (default): centered card on body bg ────────────────────────── --}}
-<div class="ox-wrap">
+<main class="ox-wrap">
     @if(session('status'))
-    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(25,135,84,.1);color:#198754"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
+    <div class="alert ox-alert-ok mb-3"><i class="bi bi-check-circle me-2"></i>{{ session('status') }}</div>
     @endif
     @if($errors->any())
-    <div class="alert rounded-3 border-0 mb-3" style="background:rgba(220,53,69,.1);color:#dc3545">
+    <div class="alert ox-alert-err mb-3">
     @foreach($errors->all() as $e)<div><i class="bi bi-exclamation-circle me-1"></i>{{ $e }}</div>@endforeach
     </div>
     @endif
     @stack('oxalis:before-card')
-    <div class="ox-card">
+    <section class="ox-card">
         @stack('oxalis:card-top')
         @include('oxalis::partials.card-header')
         @include('oxalis::partials.card-image', ['position' => 'top'])
         @yield('content')
         @include('oxalis::partials.card-image', ['position' => 'bottom'])
         @stack('oxalis:card-bottom')
-    </div>
+    </section>
     @stack('oxalis:after-card')
-</div>
+</main>
 @endif
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

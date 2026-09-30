@@ -349,22 +349,27 @@ td code{background:var(--code-bg);border:1px solid var(--border);padding:.1rem .
   <!-- THEMES AND LAYOUTS -->
   <section id="themes-layouts">
     <h2>Themes &amp; layouts</h2>
-    <p>Oxalis ships with six built-in themes and five auth-page layouts. Set them in <code>.env</code>; no view publishing is required.</p>
+    <p>Oxalis ships with six calm professional themes and five auth-page layouts. Existing theme/layout names stay backward-compatible; update the package and your auth pages immediately inherit the refreshed UI unless you published and overrode the views.</p>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>OXALIS_THEME=neon
 OXALIS_LAYOUT=split
 OXALIS_PRIMARY_COLOR=#e11d48</code></pre></div>
 
+    <div class="alert-box alert-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <div><strong>v1.9.1 UI refresh:</strong> the same theme and layout names now render a calmer, more professional interface with better spacing, focus rings, mobile behavior, and reduced-motion support. Keep using your existing <code>OXALIS_THEME</code> and <code>OXALIS_LAYOUT</code> values.</div>
+    </div>
+
     <h3>Built-in themes</h3>
     <table>
       <thead><tr><th>Value</th><th>Style</th></tr></thead>
       <tbody>
-        <tr><td><code>indigo</code></td><td>Default soft indigo UI with pill buttons and a light body background.</td></tr>
-        <tr><td><code>neon</code></td><td>Cyberpunk cyan glow, monospace details, sharp corners, dark mode.</td></tr>
-        <tr><td><code>aurora</code></td><td>Dark glassmorphism with purple/green aurora gradients and blurred cards.</td></tr>
-        <tr><td><code>obsidian</code></td><td>Minimal black-and-white brutalist style with reduced radius.</td></tr>
-        <tr><td><code>ember</code></td><td>Warm dark interface with amber accents.</td></tr>
-        <tr><td><code>frost</code></td><td>Light frosted-glass UI with sky-blue accents.</td></tr>
+        <tr><td><code>indigo</code></td><td>Default SaaS palette with calm indigo, balanced shadows, and bright surfaces.</td></tr>
+        <tr><td><code>neon</code></td><td>Professional dark teal for technical products without harsh cyberpunk glare.</td></tr>
+        <tr><td><code>aurora</code></td><td>Executive dark gradient with subtle glass and purple/teal depth.</td></tr>
+        <tr><td><code>obsidian</code></td><td>Premium dark neutral with clean monochrome surfaces and rounded controls.</td></tr>
+        <tr><td><code>ember</code></td><td>Warm dark palette with muted amber/orange for editorial or commerce apps.</td></tr>
+        <tr><td><code>frost</code></td><td>Light blue workspace: airy, polished, and friendly.</td></tr>
         <tr><td><code>custom</code></td><td>Loads your published <code>public/vendor/oxalis/theme.css</code>.</td></tr>
       </tbody>
     </table>
@@ -373,11 +378,11 @@ OXALIS_PRIMARY_COLOR=#e11d48</code></pre></div>
     <table>
       <thead><tr><th>Value</th><th>Layout</th></tr></thead>
       <tbody>
-        <tr><td><code>card</code></td><td>Centered auth card on the body background. This is the default.</td></tr>
-        <tr><td><code>split</code></td><td>Brand panel on the left, auth form on the right.</td></tr>
-        <tr><td><code>bare</code></td><td>Holographic dark background with animated border treatment.</td></tr>
-        <tr><td><code>glass</code></td><td>Frosted glass card over animated pastel bokeh.</td></tr>
-        <tr><td><code>float</code></td><td>Elevated card with brand/logo displayed above it.</td></tr>
+        <tr><td><code>card</code></td><td>Centered professional card on a softly layered background. This is the default.</td></tr>
+        <tr><td><code>split</code></td><td>Product-style brand panel on the left, focused auth form on the right.</td></tr>
+        <tr><td><code>bare</code></td><td>Focused minimal dark stage with a quiet premium border.</td></tr>
+        <tr><td><code>glass</code></td><td>Translucent card over restrained ambient gradients.</td></tr>
+        <tr><td><code>float</code></td><td>Elevated card with brand/logo displayed above it and subtle motion.</td></tr>
       </tbody>
     </table>
 
@@ -391,7 +396,7 @@ OXALIS_PRIMARY_COLOR=#e11d48</code></pre></div>
     <div class="code-wrap"><button class="copy-btn" onclick="copyPre(this)"><i class="bi bi-clipboard"></i></button>
     <pre class="language-bash"><code>php artisan oxalis:theme:publish
 OXALIS_THEME=custom</code></pre></div>
-    <p>The command writes <code>public/vendor/oxalis/theme.css</code>. Edit that file to define brand colors, surfaces, borders, button states, and focus rings.</p>
+    <p>The command writes <code>public/vendor/oxalis/theme.css</code>. Edit that file to define brand colors, gradients, surfaces, borders, shadows, button states, and focus rings.</p>
 
     <h3>Auth branding</h3>
     <p>Use a full URL, an absolute public path, or a path relative to Laravel's <code>public</code> directory.</p>

@@ -19,7 +19,7 @@ return [
 
     // ── Theme ─────────────────────────────────────────────────────────────────
     // Built-in presets: indigo | neon | aurora | obsidian | ember | frost
-    // Each has a distinct design language (not just a color swap).
+    // v1.9.1 keeps these names but moves them to calmer professional palettes.
     //
     // Use "custom" to load your own stylesheet:
     //   php artisan vendor:publish --tag=oxalis-theme
@@ -44,9 +44,9 @@ return [
     // ── Layout variant ────────────────────────────────────────────────────────
     // card  - centered card on body bg (default)
     // split - brand panel on the left, form on the right
-    // bare  - holographic: dark space bg, animated orbs, spinning rainbow border
-    // glass - frosted glassmorphism card over animated pastel bokeh blobs
-    // float - elevated card with brand/logo displayed above it; hover-lift effect
+    // bare  - focused minimal dark stage
+    // glass - translucent card over restrained ambient gradients
+    // float - elevated card with brand/logo displayed above it
     'layout' => env('OXALIS_LAYOUT', 'card'),
 
     // ── Branding ─────────────────────────────────────────────────────────────

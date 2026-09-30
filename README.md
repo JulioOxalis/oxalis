@@ -2,7 +2,7 @@
 
 **Advanced, multi-method authentication for Laravel.**
 
-Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic links, OTP, TOTP, social login, step-up auth, QR login, and rate-limited security — with zero boilerplate. Six built-in themes, five layout variants, and a deep customisation API.
+Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic links, OTP, TOTP, social login, step-up auth, QR login, and rate-limited security — with zero boilerplate. Six professional built-in themes, five layout variants, and a deep customisation API.
 
 ---
 
@@ -17,8 +17,8 @@ Drop it in, run one Artisan command, and your app gets WebAuthn passkeys, magic 
 - ⚡ **Smart Dispatch** — one field, Oxalis picks the best method automatically
 - 📷 **QR Login** — authenticated phone approves a desktop session by scanning a code
 - 🛡️ **Step-up auth** — protect sensitive routes with fresh TOTP/passkey verification
-- 🎨 **6 built-in themes + custom** — indigo, neon, aurora, obsidian, ember, frost
-- 🖼️ **5 layout variants** — card, split, bare (holographic), glass, float
+- 🎨 **6 professional themes + custom** — indigo, neon, aurora, obsidian, ember, frost
+- 🖼️ **5 layout variants** — card, split, bare, glass, float
 - 📊 **Auth event log** — every attempt recorded, viewable at `/oxalis/stats`
 - 🚫 **IP rate limiting** — DB-backed, works with any SQL connection
 - 🔍 **Risk engine** — geo/VPN scoring, impossible-travel detection
@@ -108,16 +108,16 @@ When `APP_ENV=local`, Oxalis shows OTP codes and magic link URLs directly on-scr
 
 ## Themes
 
-Six built-in themes, each with a distinct design language:
+Six built-in themes, each redesigned around calm professional UI tokens:
 
 | Value | Description |
 |---|---|
-| `indigo` | Default. Soft indigo, pill buttons, light body bg |
-| `neon` | Cyberpunk. Cyan glow, monospace font, sharp corners |
-| `aurora` | Glassmorphism. Purple, deep dark bg, blurred card |
-| `obsidian` | Brutalist minimal. Black/white, monospace, no border-radius |
-| `ember` | Warm dark. Amber accent, rich dark background |
-| `frost` | Light glassmorphism. Sky-blue, white frosted card |
+| `indigo` | Default SaaS palette. Calm indigo, balanced shadows, bright surfaces |
+| `neon` | Professional dark teal. Modern and technical without cyberpunk glare |
+| `aurora` | Executive dark gradient. Subtle glass and purple/teal depth |
+| `obsidian` | Premium dark neutral. Clean monochrome, rounded, boardroom feel |
+| `ember` | Warm dark. Muted amber/orange for editorial or commerce apps |
+| `frost` | Light blue workspace. Airy, polished, and friendly |
 | `custom` | Your own stylesheet (see below) |
 
 ```env
@@ -156,9 +156,9 @@ OXALIS_LAYOUT=split
 |---|---|
 | `card` | Centered card on the body background *(default)* |
 | `split` | Brand panel on the left, login form on the right |
-| `bare` | Holographic: deep-space animated background, spinning rainbow border, glassmorphism card with shimmer |
-| `glass` | Frosted glassmorphism card floating over animated pastel bokeh blobs |
-| `float` | Elevated card with multi-layer shadow and hover-lift; brand/logo shown above the card |
+| `bare` | Focused minimal dark stage with a quiet premium border |
+| `glass` | Translucent card over restrained ambient gradients |
+| `float` | Elevated card with brand/logo above it and subtle motion |
 
 > `bare` and `glass` always force dark mode regardless of the chosen theme.
 
@@ -608,6 +608,13 @@ Returns JSON describing whether `OXALIS_RP_ID`, `OXALIS_ORIGINS`, and the `oxali
 ---
 
 ## Changelog
+
+### v1.9.1
+- UI refresh: rebuilt the auth theme system into calmer professional palettes while keeping the existing `OXALIS_THEME` values backward-compatible.
+- Layout refresh: redesigned `card`, `split`, `bare`, `glass`, and `float` outputs with better spacing, surface tokens, focus states, mobile behavior, and reduced-motion support.
+- Account UI: aligned account/security pages with the refreshed professional theme tokens.
+- Custom themes: refreshed `php artisan oxalis:theme:publish` output with the new token model.
+- Docs: updated README and `/oxalis/docs` with the new theme/layout descriptions.
 
 ### v1.9.0
 - Security hardening: passkey login now goes through Oxalis `LoginHandler`, so TOTP, session regeneration, risk scoring, session limits, events, webhooks, and login notifications apply consistently.
